@@ -1,0 +1,125 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  MANAGER
+  CUSTOMER
+}
+
+model Brand {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  logoUrl     String?
+  country     String?
+  isFeatured  Boolean   @default(false)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@map("brands")
+}
+
+model Category {
+  id          String     @id @default(uuid())
+  name        String
+  slug        String     @unique
+  description String?
+  parentId    String?
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  products    Product[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
+
+  @@map("categories")
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  passwordHash  String
+  role          UserRole       @default(CUSTOMER)
+  isActive      Boolean        @default(true)
+  tokenVersion  Int            @default(0)
+  refreshTokens RefreshToken[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model Product {
+  id          String        @id @default(uuid())
+  title       String
+  slug        String        @unique
+  sku         String        @unique
+  description String?       @db.Text
+  price       Decimal       @db.Decimal(10, 2)
+  currency    String        @default("RUB")
+  status      ProductStatus @default(DRAFT)
+  stock       Int           @default(0)
+
+  attributes  Json          @default("{}")
+  specs       Json?
+
+  brandId     String
+  brand       Brand         @relation(fields: [brandId], references: [id])
+  categoryId  String
+  category    Category      @relation(fields: [categoryId], references: [id])
+  images      ProductImage[]
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+
+  @@index([status])
+  @@index([brandId])
+  @@index([categoryId])
+  @@index([attributes(ops: JsonbPathOps)], type: Gin)
+
+  @@map("products")
+}
+
+model ProductImage {
+  id        String   @id @default(uuid())
+  url       String
+  alt       String?
+  order     Int      @default(0)
+  isMain    Boolean  @default(false)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@map("product_images")
+}

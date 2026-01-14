@@ -1,0 +1,130 @@
+'use client';
+
+import { motion } from 'framer-motion';
+import { useInView } from 'framer-motion';
+import { useRef } from 'react';
+import Link from 'next/link';
+import { ArrowRight, Package } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useProducts } from '@/lib/hooks/use-products';
+import { formatPrice } from '@/lib/utils';
+
+function ProductCardSkeleton() {
+  return (
+    <Card className="overflow-hidden">
+      <Skeleton className="h-48 w-full rounded-none" />
+      <CardContent className="p-4">
+        <Skeleton className="h-4 w-20 mb-2" />
+        <Skeleton className="h-5 w-full mb-2" />
+        <Skeleton className="h-4 w-24" />
+      </CardContent>
+    </Card>
+  );
+}
+
+export function FeaturedProducts() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-100px' });
+  const { data: products, isLoading } = useProducts({ limit: 8, status: 'PUBLISHED' });
+
+  const displayProducts = products?.slice(0, 8) || [];
+
+  return (
+    <section className="py-16 lg:py-24 bg-muted/30" ref={ref}>
+      <div className="container-custom">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
+          <div>
+            <motion.h2
+              className="text-3xl md:text-4xl font-bold mb-2"
+              initial={{ opacity: 0, y: 20 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5 }}
+            >
+              Популярные товары
+            </motion.h2>
+            <motion.p
+              className="text-muted-foreground"
+              initial={{ opacity: 0, y: 20 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              Актуальные позиции из нашего каталога
+            </motion.p>
+          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <Button variant="outline" asChild>
+              <Link href="/catalog">
+                Весь каталог
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </motion.div>
+        </div>
+
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <ProductCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : displayProducts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {displayProducts.map((product, i) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={inView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.5, delay: 0.05 * i }}
+              >
+                <Link href={`/catalog/${product.slug}`}>
+                  <Card className="group overflow-hidden card-hover h-full">
+                    <div className="relative h-48 bg-muted flex items-center justify-center">
+                      {product.images?.[0] ? (
+                        <img
+                          src={product.images[0].url}
+                          alt={product.title}
+                          className="object-contain h-full w-full p-4 transition-transform duration-300 group-hover:scale-105"
+                        />
+                      ) : (
+                        <Package className="w-16 h-16 text-muted-foreground/30" />
+                      )}
+                      {product.brand && (
+                        <Badge variant="secondary" className="absolute top-3 left-3">
+                          {product.brand.name}
+                        </Badge>
+                      )}
+                    </div>
+                    <CardContent className="p-4">
+                      <p className="text-xs text-muted-foreground mb-1">{product.sku}</p>
+                      <h3 className="font-medium text-sm mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                        {product.title}
+                      </h3>
+                      <p className="font-bold text-lg text-primary">
+                        {formatPrice(product.price, product.currency)}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <Package className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+            <p className="text-muted-foreground">Каталог товаров загружается...</p>
+            <Button variant="outline" asChild className="mt-4">
+              <Link href="/catalog">Перейти в каталог</Link>
+            </Button>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}

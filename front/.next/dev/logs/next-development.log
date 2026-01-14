@@ -1,0 +1,256 @@
+[00:00:01.021] Server  LOG     ✓ Ready in 730ms
+[00:00:05.084] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:05.518] Browser WARN    Image with src "/assets/ponatech-logo-rectangular.PNG" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:00:35.734] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:00:35.734] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:01:20.076] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:01:20.461] Browser WARN    Image with src "/assets/ponatech-logo-rectangular.PNG" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:02:35.955] Server  LOG     ✓ Compiled in 120ms
+[00:02:40.186] Server  LOG     ✓ Compiled in 99ms
+[00:04:52.816] Server  LOG     ✓ Compiled in 53ms
+[00:15:36.043] Server  LOG     ✓ Compiled in 159ms
+[00:16:00.727] Server  LOG     ✓ Compiled in 58ms
+[00:16:24.609] Server  LOG     ✓ Compiled in 50ms
+[00:17:03.058] Server  LOG     ✓ Compiled in 56ms
+[00:17:15.414] Server  LOG     ✓ Compiled in 43ms
+[00:17:37.907] Server  LOG     ✓ Compiled in 56ms
+[00:17:38.011] Browser ERROR   ./front/app/catalog/page.tsx:106:19
+Parsing ecmascript source code failed
+  104 |                     <ProductPagination currentPage={currentPage} totalPages={totalPages} />
+  105 |                   </div>
+> 106 |                 </>
+      |                   ^
+  107 |               ) : (
+  108 |                 <div className="text-center py-16">
+  109 |                   <Package className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+
+Expression expected
+
+Import traces:
+  Client Component Browser:
+    ./front/app/catalog/page.tsx [Client Component Browser]
+    ./front/app/catalog/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./front/app/catalog/page.tsx [Client Component SSR]
+    ./front/app/catalog/page.tsx [Server Component]
+[00:17:41.967] Server  LOG     ✓ Compiled in 48ms
+[00:17:47.140] Server  LOG     ✓ Compiled in 49ms
+[00:18:03.848] Server  LOG     ✓ Compiled in 55ms
+[00:18:41.031] Server  LOG     ✓ Compiled in 46ms
+[00:18:45.356] Server  LOG     ✓ Compiled in 44ms
+[00:18:50.647] Server  LOG     ✓ Compiled in 68ms
+[00:18:55.012] Server  LOG     ✓ Compiled in 41ms
+[01:19:16.794] Server  LOG     ✓ Compiled in 101ms
+[01:25:40.365] Server  LOG     ✓ Compiled in 61ms
+[01:25:54.340] Server  LOG     ✓ Compiled in 56ms
+[01:25:54.444] Browser ERROR   uncaughtError: ReferenceError: minPrice is not defined
+[01:26:11.060] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[01:26:11.075] Server  LOG     ✓ Compiled in 42ms
+[01:26:11.419] Server  ERROR   ⨯ ReferenceError: minPrice is not defined
+[01:26:11.422] Browser ERROR   uncaughtError: ReferenceError: minPrice is not defined
+[01:26:11.705] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[01:26:11.949] Browser ERROR   uncaughtError: ReferenceError: minPrice is not defined
+[01:26:15.342] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[01:26:15.585] Server  ERROR   ⨯ ReferenceError: minPrice is not defined
+[01:26:15.587] Server  LOG     ✓ Compiled in 36ms
+[01:26:15.829] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[01:26:16.068] Browser ERROR   uncaughtError: ReferenceError: minPrice is not defined
+[01:26:20.040] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[01:26:20.287] Server  ERROR   ⨯ ReferenceError: minPrice is not defined
+[01:26:20.288] Server  LOG     ✓ Compiled in 48ms
+[01:26:20.539] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[01:26:20.745] Browser ERROR   uncaughtError: ReferenceError: minPrice is not defined
+[01:26:26.447] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[01:26:26.704] Server  ERROR   ⨯ ReferenceError: maxPrice is not defined
+[01:26:26.705] Server  LOG     ✓ Compiled in 36ms
+[01:26:26.952] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[01:26:27.146] Browser ERROR   uncaughtError: ReferenceError: maxPrice is not defined
+[01:26:30.881] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[01:26:31.167] Server  LOG     ✓ Compiled in 44ms
+[01:26:31.472] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[01:26:31.876] Browser WARN    Image with src "/assets/ponatech-logo-rectangular.PNG" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[01:33:41.792] Server  LOG     ✓ Compiled in 41ms
+[01:33:51.712] Server  LOG     ✓ Compiled in 43ms
+[01:34:02.474] Server  LOG     ✓ Compiled in 43ms
+[01:35:19.237] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[01:35:19.425] Browser WARN    Image with src "/assets/ponatech-logo-rectangular.PNG" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[01:35:21.745] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.745] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.745] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.745] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.745] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.745] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.745] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.745] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.745] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.745] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.745] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.745] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.745] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.745] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.745] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.745] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.745] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.745] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.745] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.745] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.745] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.745] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.746] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.746] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.746] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.746] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.746] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.746] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.746] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.746] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.746] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.746] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.746] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.746] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.861] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.861] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.861] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.861] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.861] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:21.861] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.308] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.309] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.482] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.482] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.482] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.482] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.482] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.482] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.482] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.482] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.482] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.482] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.482] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.482] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.742] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.742] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.742] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:22.742] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:23.103] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:23.103] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:23.298] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:23.298] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   params are being enumerated. `params` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:35:24.546] Browser ERROR   The keys of `searchParams` were accessed directly. `searchParams` is a Promise and must be unwrapped with `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[01:38:02.370] Server  LOG     ✓ Compiled in 89ms
+[01:38:15.302] Server  LOG     ✓ Compiled in 46ms
+[01:38:32.013] Server  LOG     ✓ Compiled in 63ms
+[01:38:48.440] Server  LOG     ✓ Compiled in 55ms
+[01:40:13.964] Server  LOG     ✓ Compiled in 47ms
+[01:40:17.840] Server  LOG     ✓ Compiled in 39ms
+[01:47:27.927] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[01:48:34.343] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[01:48:38.217] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[01:48:39.267] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[01:51:58.103] Server  LOG     ✓ Compiled in 73ms
+[01:53:08.564] Server  LOG     ✓ Compiled in 51ms
+[01:53:10.102] Browser ERROR   unhandledRejection: ApiError: Bad Request Exception
+[01:53:13.664] Browser ERROR   unhandledRejection: ApiError: Bad Request Exception
+[01:53:18.165] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[01:53:18.446] Browser WARN    Image with src "/assets/ponatech-logo-rectangular.PNG" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[01:53:42.367] Server  LOG     ✓ Compiled in 96ms
+[01:55:33.954] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[01:57:09.493] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[01:57:11.125] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[01:59:05.880] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[02:01:25.158] Server  LOG     ✓ Compiled in 68ms
+[02:01:44.372] Server  LOG     ✓ Compiled in 76ms

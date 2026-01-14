@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package catalog;
+
+service CatalogInternalService {
+  rpc GetProductById (GetProductByIdRequest) returns (ProductResponse);
+  rpc GetBrandById (GetBrandByIdRequest) returns (BrandResponse);
+}
+
+message GetProductByIdRequest {
+  string id = 1;
+}
+
+message GetBrandByIdRequest {
+  string id = 1;
+}
+
+message ProductResponse {
+  string id = 1;
+  string title = 2;
+  string slug = 3;
+  string sku = 4;
+  string brandId = 5;
+  string categoryId = 6;
+  string status = 7;
+}
+
+message BrandResponse {
+  string id = 1;
+  string name = 2;
+  string slug = 3;
+}

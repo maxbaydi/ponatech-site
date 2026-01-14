@@ -1,0 +1,17 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/admin/layout,_N_T_/admin/manage-products/layout,_N_T_/admin/manage-products/new/layout,_N_T_/admin/manage-products/new/page,_N_T_/admin/manage-products/new"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/admin/manage-products/new/__PAGE__",
+    "/admin/manage-products/new",
+    "/admin/manage-products",
+    "/admin",
+    "/_index",
+    "/_head"
+  ]
+}
