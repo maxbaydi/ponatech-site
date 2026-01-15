@@ -88,7 +88,12 @@ export function ProductPagination({ currentPage, totalPages }: ProductPagination
               <PaginationEllipsis />
             </PaginationItem>
           ) : (
-            <PaginationItem key={page}>
+            <PaginationItem
+              key={page}
+              className={
+                page !== 1 && page !== totalPages && page !== currentPage ? 'hidden sm:block' : ''
+              }
+            >
               <PaginationLink
                 href={createPageUrl(page)}
                 onClick={(e) => handlePageClick(page, e)}

@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { SITE_CONTACTS } from '@/lib/site-contacts';
+import { cn } from '@/lib/utils';
 
 const contactSchema = z.object({
   name: z.string().min(2, 'Введите ваше имя'),
@@ -28,6 +29,7 @@ type ContactItem = {
   title: string;
   value: string | string[];
   href: string | null;
+  className?: string;
 };
 
 const CONTACTS: ContactItem[] = [
@@ -48,12 +50,14 @@ const CONTACTS: ContactItem[] = [
     title: 'Email',
     value: SITE_CONTACTS.email.display,
     href: SITE_CONTACTS.email.mailto,
+    className: 'sm:col-span-2',
   },
   {
     icon: MapPin,
     title: 'Адрес',
     value: [...SITE_CONTACTS.address.lines],
     href: null,
+    className: 'sm:col-span-2',
   },
 ];
 
@@ -91,7 +95,7 @@ export default function ContactsPage() {
             <div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                 {CONTACTS.map((contact) => (
-                  <Card key={contact.title} className="card-hover">
+                  <Card key={contact.title} className={cn("card-hover", contact.className)}>
                     <CardContent className="p-4 flex items-start gap-4">
                       <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
                         <contact.icon className="w-6 h-6 text-primary" />
