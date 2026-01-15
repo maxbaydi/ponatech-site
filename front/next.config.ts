@@ -3,6 +3,9 @@ import path from 'node:path';
 
 const DEFAULT_CATALOG_API_URL = 'http://localhost:5000';
 const DEFAULT_AUTH_API_URL = 'http://localhost:4000';
+const LOCAL_MEDIA_PROTOCOL = 'http';
+const LOCAL_MEDIA_HOSTNAME = 'localhost';
+const LOCAL_MEDIA_PORT = '9000';
 
 const resolvedApiUrl = process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_CATALOG_API_URL;
 const resolvedCatalogApiUrl = process.env.NEXT_PUBLIC_CATALOG_API_URL ?? resolvedApiUrl;
@@ -14,6 +17,11 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [
+      {
+        protocol: LOCAL_MEDIA_PROTOCOL,
+        hostname: LOCAL_MEDIA_HOSTNAME,
+        port: LOCAL_MEDIA_PORT,
+      },
       {
         protocol: 'https',
         hostname: '**',

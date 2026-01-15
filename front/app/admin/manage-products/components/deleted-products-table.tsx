@@ -43,6 +43,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
+import { ProductImagePreview } from './product-image-preview';
 
 const STATUS_BADGES: Record<ProductStatus, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
   PUBLISHED: { label: 'Опубликован', variant: 'default' },
@@ -328,6 +329,7 @@ export function DeletedProductsTable() {
                       aria-label="Выбрать все товары на странице"
                     />
                   </TableHead>
+                  <TableHead className="w-12"></TableHead>
                   <TableHead>Товар</TableHead>
                   <TableHead>SKU</TableHead>
                   <TableHead>Бренд</TableHead>
@@ -348,6 +350,9 @@ export function DeletedProductsTable() {
                           onCheckedChange={() => toggleSelected(product.id)}
                           aria-label={`Выбрать товар ${product.title}`}
                         />
+                      </TableCell>
+                      <TableCell>
+                        <ProductImagePreview images={product.images} title={product.title} />
                       </TableCell>
                       <TableCell>
                         <div className="font-medium">{product.title}</div>

@@ -36,6 +36,7 @@ const CSV_COLUMNS: ProductCsvColumn[] = [
   'price',
   'img',
   'description',
+  'characteristics',
   'brand',
   'category',
 ];

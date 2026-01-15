@@ -39,6 +39,7 @@ export interface Product {
   slug: string;
   sku: string;
   description?: string | null;
+  characteristics?: string | null;
   price: string;
   currency: string;
   status: ProductStatus;
@@ -119,6 +120,7 @@ export interface CreateProductRequest {
   slug: string;
   sku: string;
   description?: string;
+  characteristics?: string;
   price: number;
   currency?: string;
   status?: ProductStatus;
@@ -159,6 +161,7 @@ export type ProductCsvColumn =
   | 'price'
   | 'img'
   | 'description'
+  | 'characteristics'
   | 'brand'
   | 'category';
 
@@ -172,6 +175,7 @@ export interface ImportProductsCsvResult {
 
 export interface ExportProductsCsvRequest {
   columns?: ProductCsvColumn[];
+  ids?: string[];
   brandId?: string;
   search?: string;
 }

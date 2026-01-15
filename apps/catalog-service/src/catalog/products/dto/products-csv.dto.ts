@@ -1,4 +1,4 @@
-import { IsArray, IsIn, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsIn, IsOptional, IsString, IsUUID } from 'class-validator';
 import { ProductStatus } from '@prisma/client';
 
 export const PRODUCT_CSV_COLUMNS = [
@@ -8,6 +8,7 @@ export const PRODUCT_CSV_COLUMNS = [
   'price',
   'img',
   'description',
+  'characteristics',
   'brand',
   'category',
 ] as const;
@@ -19,6 +20,11 @@ export class ExportProductsCsvDto {
   @IsArray()
   @IsIn(PRODUCT_CSV_COLUMNS, { each: true })
   columns?: ProductCsvColumn[];
+
+  @IsOptional()
+  @IsArray()
+  @IsUUID('4', { each: true })
+  ids?: string[];
 
   @IsOptional()
   @IsString()

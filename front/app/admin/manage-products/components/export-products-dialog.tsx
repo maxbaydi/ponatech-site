@@ -25,6 +25,7 @@ const CSV_COLUMNS: ProductCsvColumn[] = [
   'price',
   'img',
   'description',
+  'characteristics',
   'brand',
   'category',
 ];
@@ -33,15 +34,20 @@ const ALL_BRANDS_VALUE = '__ALL_BRANDS__';
 
 interface ExportProductsDialogProps {
   searchQuery?: string;
+  selectedIds?: string[];
 }
 
-export function ExportProductsDialog({ searchQuery }: ExportProductsDialogProps) {
+export function ExportProductsDialog({ searchQuery, selectedIds }: ExportProductsDialogProps) {
   const { data: brands } = useBrands();
   const exportCsv = useExportProductsCsv();
 
   const [open, setOpen] = useState(false);
   const [columns, setColumns] = useState<Set<ProductCsvColumn>>(() => new Set(CSV_COLUMNS));
   const [brandId, setBrandId] = useState<string>(ALL_BRANDS_VALUE);
+  const [exportSelected, setExportSelected] = useState(false);
+  const selectedCount = selectedIds?.length ?? 0;
+  const canExportSelected = selectedCount > 0;
+  const disableFilters = exportSelected && canExportSelected;
 
   const toggleColumn = (column: ProductCsvColumn) => {
     setColumns((prev) => {
@@ -53,10 +59,12 @@ export function ExportProductsDialog({ searchQuery }: ExportProductsDialogProps)
   };
 
   const handleExport = async () => {
+    const useSelected = exportSelected && canExportSelected;
     const payload: ExportProductsCsvRequest = {
       columns: Array.from(columns),
-      brandId: brandId === ALL_BRANDS_VALUE ? undefined : brandId,
-      search: searchQuery || undefined,
+      ids: useSelected ? selectedIds : undefined,
+      brandId: useSelected ? undefined : brandId === ALL_BRANDS_VALUE ? undefined : brandId,
+      search: useSelected ? undefined : searchQuery || undefined,
     };
 
     const blob = await exportCsv.mutateAsync(payload);
@@ -90,8 +98,25 @@ export function ExportProductsDialog({ searchQuery }: ExportProductsDialogProps)
           </p>
 
           <div className="space-y-2">
+            <Label>Область экспорта</Label>
+            <Label className="flex items-center gap-2 font-normal">
+              <Checkbox
+                checked={exportSelected}
+                onCheckedChange={(v) => setExportSelected(v === true)}
+                disabled={!canExportSelected}
+              />
+              <span className="text-sm">Только выделенные ({selectedCount})</span>
+            </Label>
+            {!canExportSelected && (
+              <p className="text-xs text-muted-foreground">
+                Выберите товары в списке, чтобы экспортировать только выделенные.
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
             <Label>Бренд</Label>
-            <Select value={brandId} onValueChange={setBrandId}>
+            <Select value={brandId} onValueChange={setBrandId} disabled={disableFilters}>
               <SelectTrigger>
                 <SelectValue placeholder="Все бренды" />
               </SelectTrigger>

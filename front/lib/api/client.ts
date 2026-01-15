@@ -272,8 +272,15 @@ class ApiClient {
   }
 
   async logout(): Promise<void> {
+    const refreshToken = this.getRefreshToken();
     try {
-      await this.request('/auth/logout', { method: 'POST' });
+      if (!refreshToken) return;
+
+      await this.request('/auth/logout', {
+        method: 'POST',
+        body: JSON.stringify({ refreshToken }),
+      });
+    } catch {
     } finally {
       this.clearTokens();
     }

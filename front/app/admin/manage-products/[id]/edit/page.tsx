@@ -16,6 +16,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { MediaLibraryPicker } from '@/components/admin/media-library-picker';
+import { SpecsEditor, specsItemsToRecord, specsRecordToItems } from '@/components/admin/specs-editor';
 import { useProduct, useUpdateProduct } from '@/lib/hooks/use-products';
 import { useBrands } from '@/lib/hooks/use-brands';
 import { useCategories } from '@/lib/hooks/use-categories';
@@ -26,6 +27,8 @@ const productSchema = z.object({
   slug: z.string().min(2, 'Введите slug'),
   sku: z.string().min(2, 'Введите SKU'),
   description: z.string().optional(),
+  characteristics: z.string().optional(),
+  specs: z.array(z.object({ key: z.string(), value: z.string() })),
   price: z.coerce.number().min(0, 'Цена должна быть положительной'),
   currency: z.string().default('RUB'),
   status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']),
@@ -62,6 +65,8 @@ export default function EditProductPage() {
       slug: '',
       sku: '',
       description: '',
+      characteristics: '',
+      specs: [],
       price: 0,
       currency: 'RUB',
       status: 'DRAFT',
@@ -117,6 +122,8 @@ export default function EditProductPage() {
         slug: product.slug,
         sku: product.sku,
         description: product.description || '',
+        characteristics: product.characteristics || '',
+        specs: specsRecordToItems(product.specs ?? undefined),
         price: Number(product.price),
         currency: product.currency,
         status: validStatus as 'DRAFT' | 'PUBLISHED' | 'ARCHIVED',
@@ -131,11 +138,13 @@ export default function EditProductPage() {
     try {
       const selectedMainImageId = toMainImageId(mainImage);
       const mainImageChanged = selectedMainImageId !== initialMainImageId.current;
+      const specs = specsItemsToRecord(data.specs);
 
       await updateProduct.mutateAsync({
         id: productId,
         data: {
           ...data,
+          specs,
           stock: trackStock ? data.stock : null,
           categoryId: data.categoryId || undefined,
           attributes: product?.attributes || {},
@@ -286,6 +295,41 @@ export default function EditProductPage() {
                       <FormLabel>Описание</FormLabel>
                       <FormControl>
                         <RichTextEditor value={field.value} onChange={field.onChange} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="characteristics"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Характеристики</FormLabel>
+                      <FormControl>
+                        <RichTextEditor value={field.value} onChange={field.onChange} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="specs"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Характеристики (таблица)</FormLabel>
+                      <FormControl>
+                        <SpecsEditor
+                          value={field.value}
+                          onChange={field.onChange}
+                          keyPlaceholder="Название"
+                          valuePlaceholder="Значение"
+                          addLabel="Добавить характеристику"
+                          removeLabel="Удалить характеристику"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

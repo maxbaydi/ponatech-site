@@ -273,6 +273,7 @@ export class ProductsRepository {
       slug: dto.slug,
       sku: dto.sku,
       description: dto.description,
+      characteristics: dto.characteristics,
       price: dto.price,
       currency: dto.currency ?? 'RUB',
       status: dto.status ?? ProductStatus.DRAFT,
@@ -291,6 +292,7 @@ export class ProductsRepository {
     if (dto.slug !== undefined) data.slug = dto.slug;
     if (dto.sku !== undefined) data.sku = dto.sku;
     if (dto.description !== undefined) data.description = dto.description;
+    if (dto.characteristics !== undefined) data.characteristics = dto.characteristics;
     if (dto.price !== undefined) data.price = dto.price;
     if (dto.currency !== undefined) data.currency = dto.currency;
     if (dto.status !== undefined) data.status = dto.status;

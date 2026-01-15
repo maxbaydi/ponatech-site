@@ -33,6 +33,10 @@ export class CreateProductDto {
   @IsString()
   description?: string;
 
+  @IsOptional()
+  @IsString()
+  characteristics?: string;
+
   @Type(() => Number)
   @IsNumber()
   @Min(0)
@@ -126,6 +130,7 @@ export interface ProductResponse {
   slug: string;
   sku: string;
   description?: string | null;
+  characteristics?: string | null;
   price: Prisma.Decimal;
   currency: string;
   status: ProductStatus;

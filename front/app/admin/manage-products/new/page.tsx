@@ -15,6 +15,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Checkbox } from '@/components/ui/checkbox';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { MediaLibraryPicker } from '@/components/admin/media-library-picker';
+import { SpecsEditor, specsItemsToRecord } from '@/components/admin/specs-editor';
 import { useCreateProduct } from '@/lib/hooks/use-products';
 import { useBrands } from '@/lib/hooks/use-brands';
 import { useCategories } from '@/lib/hooks/use-categories';
@@ -26,6 +27,8 @@ const productSchema = z.object({
   slug: z.string().min(2, 'Введите slug'),
   sku: z.string().min(2, 'Введите SKU'),
   description: z.string().optional(),
+  characteristics: z.string().optional(),
+  specs: z.array(z.object({ key: z.string(), value: z.string() })),
   price: z.coerce.number().min(0, 'Цена должна быть положительной'),
   currency: z.string().default('RUB'),
   status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']),
@@ -56,6 +59,8 @@ export default function NewProductPage() {
       slug: '',
       sku: '',
       description: '',
+      characteristics: '',
+      specs: [],
       price: 0,
       currency: 'RUB',
       status: 'DRAFT',
@@ -67,8 +72,10 @@ export default function NewProductPage() {
 
   const onSubmit = async (data: ProductFormData) => {
     try {
+      const specs = specsItemsToRecord(data.specs);
       await createProduct.mutateAsync({
         ...data,
+        specs,
         stock: trackStock ? data.stock : null,
         categoryId: data.categoryId || undefined,
         attributes: {},
@@ -178,6 +185,41 @@ export default function NewProductPage() {
                       <FormLabel>Описание</FormLabel>
                       <FormControl>
                         <RichTextEditor value={field.value} onChange={field.onChange} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="characteristics"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Характеристики</FormLabel>
+                      <FormControl>
+                        <RichTextEditor value={field.value} onChange={field.onChange} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="specs"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Характеристики (таблица)</FormLabel>
+                      <FormControl>
+                        <SpecsEditor
+                          value={field.value}
+                          onChange={field.onChange}
+                          keyPlaceholder="Название"
+                          valuePlaceholder="Значение"
+                          addLabel="Добавить характеристику"
+                          removeLabel="Удалить характеристику"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

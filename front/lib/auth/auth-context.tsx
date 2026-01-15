@@ -62,8 +62,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    await apiClient.logout();
-    setUser(null);
+    try {
+      await apiClient.logout();
+    } catch {
+    } finally {
+      setUser(null);
+    }
   };
 
   const hasRole = (roles: UserRole | UserRole[]): boolean => {

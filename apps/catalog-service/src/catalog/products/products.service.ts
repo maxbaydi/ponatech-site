@@ -215,6 +215,13 @@ export class ProductsService {
           case 'description':
             values.description = product.description ?? '';
             break;
+          case 'characteristics':
+            if (product.specs && typeof product.specs === 'object') {
+              values.characteristics = JSON.stringify(product.specs);
+            } else {
+              values.characteristics = product.characteristics ?? '';
+            }
+            break;
           case 'brand':
             values.brand = product.brand?.name ?? '';
             break;
@@ -228,7 +235,8 @@ export class ProductsService {
     });
 
     const buffer = await writeToBuffer(rows, { headers: columns });
-    return { buffer, filename: 'products.csv' };
+    const bom = Buffer.from('\ufeff', 'utf8');
+    return { buffer: Buffer.concat([bom, buffer]), filename: 'products.csv' };
   }
 
   private async ensureRelations(brandId?: string, categoryId?: string): Promise<void> {
@@ -293,6 +301,9 @@ export class ProductsService {
     const article = this.requireString(row.article, 'article');
     const price = this.requireNumber(row.price, 'price');
     const description = this.normalizeString(row.description);
+    const rawCharacteristics = this.normalizeString(row.characteristics);
+    const parsedSpecs = this.parseSpecsFromCsv(rawCharacteristics);
+    const characteristics = parsedSpecs.hasSpecs ? null : rawCharacteristics;
     const brandName = this.requireString(row.brand, 'brand');
     const categoryName = this.normalizeString(row.category);
     const imgUrl = this.normalizeString(row.img);
@@ -315,6 +326,8 @@ export class ProductsService {
         sku: article,
         price,
         description,
+        characteristics,
+        specs: parsedSpecs.specs,
         brandId,
       };
 
@@ -353,6 +366,8 @@ export class ProductsService {
           title: name,
           price,
           description,
+          characteristics,
+          specs: parsedSpecs.specs,
           brandId,
           status: opts.status,
         };
@@ -393,12 +408,13 @@ export class ProductsService {
           slug,
           sku: article,
           description,
+          characteristics,
           price,
           currency: DEFAULT_PRODUCT_CURRENCY,
           status: opts.status ?? DEFAULT_PRODUCT_STATUS,
           stock: null,
           attributes: {},
-          specs: undefined,
+          specs: parsedSpecs.specs,
           brandId,
           categoryId: categoryId ?? null,
         },
@@ -483,6 +499,10 @@ export class ProductsService {
 
   private buildWhereForExport(dto: ExportProductsCsvDto): Prisma.ProductWhereInput {
     const where: Prisma.ProductWhereInput = { deletedAt: null };
+    const ids = dto.ids?.filter((id) => id && id.trim());
+    if (ids && ids.length > 0) {
+      where.id = { in: ids };
+    }
     const brandId = dto.brandId?.trim();
     if (brandId) {
       where.brandId = brandId;
@@ -511,6 +531,67 @@ export class ProductsService {
     if (value === undefined || value === null) return undefined;
     const text = String(value).trim();
     return text ? text : undefined;
+  }
+
+  private parseSpecsFromCsv(
+    raw?: string,
+  ): { specs?: Record<string, string>; hasSpecs: boolean } {
+    if (!raw) {
+      return { hasSpecs: false };
+    }
+
+    const trimmed = raw.trim();
+    const candidates: string[] = [trimmed];
+    if (
+      (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+      (trimmed.startsWith("'") && trimmed.endsWith("'"))
+    ) {
+      candidates.push(trimmed.slice(1, -1));
+    }
+
+    let sawJsonMarker = false;
+
+    for (const candidate of candidates) {
+      const candidateTrim = candidate.trim();
+      if (candidateTrim.startsWith('{')) {
+        sawJsonMarker = true;
+      }
+
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(candidateTrim);
+      } catch {
+        continue;
+      }
+
+      if (typeof parsed === 'string') {
+        const nested = parsed.trim();
+        try {
+          parsed = JSON.parse(nested);
+        } catch {
+          continue;
+        }
+      }
+
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        continue;
+      }
+
+      const specs: Record<string, string> = {};
+      Object.entries(parsed as Record<string, unknown>).forEach(([key, value]) => {
+        const normalizedKey = String(key).trim();
+        if (!normalizedKey) return;
+        specs[normalizedKey] = value === null || value === undefined ? '' : String(value);
+      });
+
+      return { specs, hasSpecs: true };
+    }
+
+    if (sawJsonMarker) {
+      throw new BadRequestException('Invalid characteristics JSON');
+    }
+
+    return { hasSpecs: false };
   }
 
   private requireString(value: unknown, field: string): string {

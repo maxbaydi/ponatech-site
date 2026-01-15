@@ -48,7 +48,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import { ImportProductsDialog, ExportProductsDialog, DeletedProductsTable } from './components';
+import { ImportProductsDialog, ExportProductsDialog, DeletedProductsTable, ProductImagePreview } from './components';
 
 const STATUS_BADGES = {
   PUBLISHED: { label: 'Опубликован', variant: 'default' as const },
@@ -146,6 +146,7 @@ export default function ProductsPage() {
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const selectedCount = selectedIds.size;
+  const selectedIdsArray = Array.from(selectedIds);
 
   const [bulkStatusOpen, setBulkStatusOpen] = useState(false);
   const [bulkStatus, setBulkStatus] = useState<ProductStatus>('PUBLISHED');
@@ -295,7 +296,7 @@ export default function ProductsPage() {
         </div>
         <div className="flex items-center gap-2">
           <ImportProductsDialog />
-          <ExportProductsDialog searchQuery={searchQuery} />
+          <ExportProductsDialog searchQuery={searchQuery} selectedIds={selectedIdsArray} />
           <Button asChild>
             <Link href="/admin/manage-products/new">
               <Plus className="mr-2 h-4 w-4" />
@@ -523,6 +524,7 @@ export default function ProductsPage() {
                       aria-label="Выбрать все товары на странице"
                     />
                   </TableHead>
+                  <TableHead className="w-12"></TableHead>
                   <TableHead>Товар</TableHead>
                   <TableHead>SKU</TableHead>
                   <TableHead>Бренд</TableHead>
@@ -542,6 +544,9 @@ export default function ProductsPage() {
                           onCheckedChange={() => toggleSelected(product.id)}
                           aria-label={`Выбрать товар ${product.title}`}
                         />
+                      </TableCell>
+                      <TableCell>
+                        <ProductImagePreview images={product.images} title={product.title} />
                       </TableCell>
                       <TableCell>
                         <div className="font-medium">{product.title}</div>

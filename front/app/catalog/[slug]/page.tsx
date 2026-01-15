@@ -189,6 +189,8 @@ export default function ProductPage({ params }: ProductPageProps) {
   });
 
   const filteredRelated = relatedProductsPage?.data.filter((p) => p.id !== product?.id).slice(0, 4);
+  const hasCharacteristics = Boolean(product?.characteristics?.trim());
+  const hasSpecs = Boolean(product?.specs && Object.keys(product.specs).length > 0);
 
   if (error) {
     notFound();
@@ -202,7 +204,7 @@ export default function ProductPage({ params }: ProductPageProps) {
           {isLoading ? (
             <div className="space-y-8">
               <Skeleton className="h-6 w-64" />
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 pb-5">
                 <Skeleton className="aspect-square rounded-2xl" />
                 <div className="space-y-4">
                   <Skeleton className="h-8 w-24" />
@@ -251,7 +253,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                 <span className="text-foreground truncate max-w-[200px]">{product.title}</span>
               </motion.nav>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 pb-5">
                 {product.images && product.images.length > 0 ? (
                   <ImageGallery images={product.images} title={product.title} />
                 ) : (
@@ -339,7 +341,16 @@ export default function ProductPage({ params }: ProductPageProps) {
                 </TabsList>
                 
                 <TabsContent value="specs" className="mt-4">
-                  {product.specs && Object.keys(product.specs).length > 0 ? (
+                  {hasCharacteristics ? (
+                    <Card className="border-border/50">
+                      <CardContent
+                        className="p-6 rich-text"
+                        dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(product.characteristics ?? ''),
+                        }}
+                      />
+                    </Card>
+                  ) : hasSpecs ? (
                     <Card className="border-border/50">
                       <CardContent className="p-4">
                         <dl className="divide-y divide-border/50">
