@@ -72,6 +72,22 @@ const deriveFieldErrors = (messages)=>{
             }
             continue;
         }
+        if (lower.startsWith('name ')) {
+            errors.name = 'Введите ваше имя';
+            continue;
+        }
+        if (lower.startsWith('phone ')) {
+            errors.phone = 'Введите корректный номер телефона';
+            continue;
+        }
+        if (lower.startsWith('productname ')) {
+            errors.productName = 'Укажите название товара';
+            continue;
+        }
+        if (lower.startsWith('quantity ')) {
+            errors.quantity = 'Укажите количество';
+            continue;
+        }
     }
     return Object.keys(errors).length > 0 ? errors : undefined;
 };
@@ -226,6 +242,99 @@ class ApiClient {
         const payload = await safeParseResponseBody(response);
         return payload;
     }
+    async requestForm(endpoint, formData) {
+        const baseUrl = endpoint.startsWith('/auth/') ? this.authBaseUrl : this.catalogBaseUrl;
+        const url = `${baseUrl}${endpoint}`;
+        const accessToken = this.getAccessToken();
+        const headers = {};
+        if (accessToken) {
+            headers['Authorization'] = `Bearer ${accessToken}`;
+        }
+        let response;
+        try {
+            response = await fetch(url, {
+                method: 'POST',
+                headers,
+                body: formData
+            });
+        } catch (error) {
+            throw new __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$errors$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ApiError"]({
+                status: 0,
+                endpoint,
+                message: 'Сервис недоступен. Проверьте, что бэкенд запущен и адрес API указан верно.',
+                payload: error
+            });
+        }
+        if (response.status === 401) {
+            const refreshed = await this.refreshAccessToken();
+            if (refreshed) {
+                return this.requestForm(endpoint, formData);
+            }
+            this.clearTokens();
+            throw (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$errors$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toApiError"])({
+                status: 401,
+                endpoint,
+                payload: await safeParseResponseBody(response)
+            });
+        }
+        if (!response.ok) {
+            const payload = await safeParseResponseBody(response);
+            throw (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$errors$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toApiError"])({
+                status: response.status,
+                endpoint,
+                payload
+            });
+        }
+        const payload = await safeParseResponseBody(response);
+        return payload;
+    }
+    async requestBlob(endpoint, options = {}) {
+        const baseUrl = endpoint.startsWith('/auth/') ? this.authBaseUrl : this.catalogBaseUrl;
+        const url = `${baseUrl}${endpoint}`;
+        const accessToken = this.getAccessToken();
+        const headers = {
+            'Content-Type': 'application/json',
+            ...options.headers
+        };
+        if (accessToken) {
+            headers['Authorization'] = `Bearer ${accessToken}`;
+        }
+        let response;
+        try {
+            response = await fetch(url, {
+                ...options,
+                headers
+            });
+        } catch (error) {
+            throw new __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$errors$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ApiError"]({
+                status: 0,
+                endpoint,
+                message: 'Сервис недоступен. Проверьте, что бэкенд запущен и адрес API указан верно.',
+                payload: error
+            });
+        }
+        if (response.status === 401) {
+            const refreshed = await this.refreshAccessToken();
+            if (refreshed) {
+                return this.requestBlob(endpoint, options);
+            }
+            this.clearTokens();
+            throw (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$errors$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toApiError"])({
+                status: 401,
+                endpoint,
+                payload: await safeParseResponseBody(response)
+            });
+        }
+        if (!response.ok) {
+            const payload = await safeParseResponseBody(response);
+            throw (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$errors$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toApiError"])({
+                status: response.status,
+                endpoint,
+                payload
+            });
+        }
+        return response.blob();
+    }
     async refreshAccessToken() {
         const refreshToken = this.getRefreshToken();
         if (!refreshToken) return false;
@@ -311,6 +420,83 @@ class ApiClient {
             method: 'DELETE'
         });
     }
+    async deleteProductsBatch(ids) {
+        return this.request('/products/batch/delete', {
+            method: 'POST',
+            body: JSON.stringify({
+                ids
+            })
+        });
+    }
+    async updateProductsStatusBatch(data) {
+        return this.request('/products/batch/status', {
+            method: 'PATCH',
+            body: JSON.stringify(data)
+        });
+    }
+    async updateProductsBrandBatch(data) {
+        return this.request('/products/batch/brand', {
+            method: 'PATCH',
+            body: JSON.stringify(data)
+        });
+    }
+    async updateProductsCategoryBatch(data) {
+        return this.request('/products/batch/category', {
+            method: 'PATCH',
+            body: JSON.stringify(data)
+        });
+    }
+    async importProductsCsv(file, opts) {
+        const formData = new FormData();
+        formData.append('file', file);
+        if (opts?.status) formData.append('status', opts.status);
+        if (opts?.updateBySku !== undefined) formData.append('updateBySku', String(opts.updateBySku));
+        return this.requestForm('/products/import-csv', formData);
+    }
+    async exportProductsCsv(data) {
+        return this.requestBlob('/products/export-csv', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    }
+    async getDeletedProducts(filters) {
+        const params = new URLSearchParams();
+        if (filters) {
+            Object.entries(filters).forEach(([key, value])=>{
+                if (value !== undefined && value !== null && value !== '') {
+                    params.append(key, String(value));
+                }
+            });
+        }
+        const query = params.toString();
+        return this.request(`/products/trash/list${query ? `?${query}` : ''}`);
+    }
+    async restoreProduct(id) {
+        return this.request(`/products/trash/${id}/restore`, {
+            method: 'POST'
+        });
+    }
+    async restoreProductsBatch(ids) {
+        return this.request('/products/trash/batch/restore', {
+            method: 'POST',
+            body: JSON.stringify({
+                ids
+            })
+        });
+    }
+    async permanentDeleteProduct(id) {
+        return this.request(`/products/trash/${id}/permanent`, {
+            method: 'DELETE'
+        });
+    }
+    async permanentDeleteProductsBatch(ids) {
+        return this.request('/products/trash/batch/permanent-delete', {
+            method: 'POST',
+            body: JSON.stringify({
+                ids
+            })
+        });
+    }
     async getBrands() {
         return this.request('/brands');
     }
@@ -357,6 +543,12 @@ class ApiClient {
             method: 'DELETE'
         });
     }
+    async createSupplyRequest(data) {
+        return this.request('/requests', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    }
     async getUsers(filters) {
         const params = new URLSearchParams();
         if (filters?.page) params.append('page', String(filters.page));
@@ -383,6 +575,40 @@ class ApiClient {
     }
     isAuthenticated() {
         return !!this.getAccessToken();
+    }
+    async getMediaFiles(filters) {
+        const params = new URLSearchParams();
+        if (filters?.search) params.append('search', filters.search);
+        if (filters?.page) params.append('page', String(filters.page));
+        if (filters?.limit) params.append('limit', String(filters.limit));
+        const query = params.toString();
+        return this.request(`/media${query ? `?${query}` : ''}`);
+    }
+    async getMediaFile(id) {
+        return this.request(`/media/${id}`);
+    }
+    async uploadMedia(file, alt) {
+        const formData = new FormData();
+        formData.append('file', file);
+        if (alt) formData.append('alt', alt);
+        return this.requestForm('/media/upload', formData);
+    }
+    async uploadMediaFromUrl(data) {
+        return this.request('/media/upload-from-url', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    }
+    async updateMediaFile(id, data) {
+        return this.request(`/media/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify(data)
+        });
+    }
+    async deleteMediaFile(id) {
+        return this.request(`/media/${id}`, {
+            method: 'DELETE'
+        });
     }
 }
 const safeParseResponseBody = async (response)=>{

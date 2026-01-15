@@ -9,17 +9,22 @@ import { CategoriesService } from './categories/categories.service';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { RolesGuard } from './auth/roles.guard';
 import { CatalogGrpcController } from './grpc/catalog-grpc.controller';
+import { MediaModule } from './media/media.module';
 import { ProductsController } from './products/products.controller';
 import { ProductsRepository } from './products/products.repository';
 import { ProductsService } from './products/products.service';
+import { RequestsController } from './requests/requests.controller';
+import { RequestsRepository } from './requests/requests.repository';
+import { RequestsService } from './requests/requests.service';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, MediaModule],
   controllers: [
     BrandsController,
     CategoriesController,
     ProductsController,
     CatalogGrpcController,
+    RequestsController,
   ],
   providers: [
     BrandsRepository,
@@ -28,6 +33,8 @@ import { ProductsService } from './products/products.service';
     CategoriesService,
     ProductsRepository,
     ProductsService,
+    RequestsRepository,
+    RequestsService,
     JwtAuthGuard,
     RolesGuard,
   ],

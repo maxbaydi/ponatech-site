@@ -28,9 +28,9 @@ function ProductCardSkeleton() {
 export function FeaturedProducts() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-100px' });
-  const { data: products, isLoading } = useProducts({ limit: 8, status: 'PUBLISHED' });
+  const { data: productsPage, isLoading } = useProducts({ limit: 8, status: 'PUBLISHED' });
 
-  const displayProducts = products?.slice(0, 8) || [];
+  const displayProducts = productsPage?.data ?? [];
 
   return (
     <section className="py-16 lg:py-24 bg-muted/30" ref={ref}>
@@ -90,7 +90,7 @@ export function FeaturedProducts() {
                         <img
                           src={product.images[0].url}
                           alt={product.title}
-                          className="object-contain h-full w-full p-4 transition-transform duration-300 group-hover:scale-105"
+                          className="object-cover h-full w-full transition-transform duration-300 group-hover:scale-105"
                         />
                       ) : (
                         <Package className="w-16 h-16 text-muted-foreground/30" />

@@ -17,6 +17,19 @@ export class CategoriesRepository {
     return this.prisma.category.findFirst({ where: { id, deletedAt: null } });
   }
 
+  async findByName(name: string): Promise<CategoryResponse | null> {
+    return this.prisma.category.findFirst({
+      where: {
+        deletedAt: null,
+        name: { equals: name, mode: 'insensitive' },
+      },
+    });
+  }
+
+  async findBySlug(slug: string): Promise<CategoryResponse | null> {
+    return this.prisma.category.findFirst({ where: { slug, deletedAt: null } });
+  }
+
   async create(data: CreateCategoryDto): Promise<CategoryResponse> {
     return this.prisma.category.create({ data });
   }

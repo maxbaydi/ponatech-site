@@ -9,6 +9,7 @@ import {
   Package,
   Building2,
   FolderTree,
+  Image as ImageIcon,
   Users,
   ChevronLeft,
   Menu,
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
   { icon: Package, label: 'Товары', href: '/admin/manage-products' },
   { icon: Building2, label: 'Бренды', href: '/admin/manage-brands' },
   { icon: FolderTree, label: 'Категории', href: '/admin/manage-categories' },
+  { icon: ImageIcon, label: 'Медиабиблиотека', href: '/admin/media' },
 ];
 
 const ADMIN_NAV_ITEMS = [{ icon: Users, label: 'Пользователи', href: '/admin/users' }];

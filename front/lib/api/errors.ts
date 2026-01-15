@@ -65,6 +65,26 @@ const deriveFieldErrors = (messages: string[]): ApiFieldErrors | undefined => {
       }
       continue;
     }
+
+    if (lower.startsWith('name ')) {
+      errors.name = 'Введите ваше имя';
+      continue;
+    }
+
+    if (lower.startsWith('phone ')) {
+      errors.phone = 'Введите корректный номер телефона';
+      continue;
+    }
+
+    if (lower.startsWith('productname ')) {
+      errors.productName = 'Укажите название товара';
+      continue;
+    }
+
+    if (lower.startsWith('quantity ')) {
+      errors.quantity = 'Укажите количество';
+      continue;
+    }
   }
 
   return Object.keys(errors).length > 0 ? errors : undefined;

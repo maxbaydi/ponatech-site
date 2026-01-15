@@ -1,11 +1,11 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Send, CheckCircle2, Package, Shield, Truck } from 'lucide-react';
+import { Send, CheckCircle2, Package, Shield, Truck, Loader2 } from 'lucide-react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { apiClient } from '@/lib/api/client';
 
 const requestSchema = z.object({
   name: z.string().min(2, 'Введите ваше имя'),
@@ -46,6 +47,9 @@ const FEATURES = [
 
 function RequestForm() {
   const searchParams = useSearchParams();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [submitSuccess, setSubmitSuccess] = useState('');
   const productFromUrl = searchParams.get('product') || '';
   const skuFromUrl = searchParams.get('sku') || '';
   const brandFromUrl = searchParams.get('brand') || '';
@@ -56,23 +60,53 @@ function RequestForm() {
     ? `Оборудование ${brandFromUrl}`
     : '';
 
+  const initialValues: RequestFormData = {
+    name: '',
+    email: '',
+    phone: '',
+    company: '',
+    productName: defaultProductName,
+    quantity: 1,
+    description: '',
+  };
+
   const form = useForm<RequestFormData>({
     resolver: zodResolver(requestSchema),
-    defaultValues: {
-      name: '',
-      email: '',
-      phone: '',
-      company: '',
-      productName: defaultProductName,
-      quantity: 1,
-      description: '',
-    },
+    defaultValues: initialValues,
   });
 
   const onSubmit = async (data: RequestFormData) => {
-    console.log('Request form data:', data);
-    alert('Заявка успешно отправлена! Мы свяжемся с вами в ближайшее время.');
-    form.reset();
+    setIsSubmitting(true);
+    setSubmitError('');
+    setSubmitSuccess('');
+    try {
+      await apiClient.createSupplyRequest(data);
+      setSubmitSuccess('Заявка успешно отправлена! Мы свяжемся с вами в ближайшее время.');
+      form.reset(initialValues);
+    } catch (err: unknown) {
+      const apiErr = err as { message?: string; fieldErrors?: Record<string, string> } | null;
+      const message = apiErr?.message || 'Не удалось отправить заявку. Попробуйте ещё раз.';
+      setSubmitError(message);
+
+      const fieldErrors = apiErr?.fieldErrors;
+      if (fieldErrors?.name) {
+        form.setError('name', { message: fieldErrors.name });
+      }
+      if (fieldErrors?.email) {
+        form.setError('email', { message: fieldErrors.email });
+      }
+      if (fieldErrors?.phone) {
+        form.setError('phone', { message: fieldErrors.phone });
+      }
+      if (fieldErrors?.productName) {
+        form.setError('productName', { message: fieldErrors.productName });
+      }
+      if (fieldErrors?.quantity) {
+        form.setError('quantity', { message: fieldErrors.quantity });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -82,6 +116,12 @@ function RequestForm() {
         <CardDescription>Заполните форму, и мы подготовим коммерческое предложение</CardDescription>
       </CardHeader>
       <CardContent>
+        {submitError && (
+          <div className="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{submitError}</div>
+        )}
+        {submitSuccess && (
+          <div className="mb-4 rounded-lg bg-secondary/10 p-3 text-sm text-secondary">{submitSuccess}</div>
+        )}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -142,12 +182,12 @@ function RequestForm() {
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
               <FormField
                 control={form.control}
                 name="productName"
                 render={({ field }) => (
-                  <FormItem className="sm:col-span-2">
+                  <FormItem className="sm:flex-1 min-w-0">
                     <FormLabel>Название товара / SKU *</FormLabel>
                     <FormControl>
                       <Input placeholder="Например: Siemens 6ES7..." {...field} />
@@ -160,10 +200,12 @@ function RequestForm() {
                 control={form.control}
                 name="quantity"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="sm:shrink-0 text-right">
                     <FormLabel>Количество *</FormLabel>
                     <FormControl>
-                      <Input type="number" min={1} {...field} />
+                      <div className="flex justify-end">
+                        <Input type="number" min={1} {...field} className="quantity-input text-right" />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -189,8 +231,12 @@ function RequestForm() {
               )}
             />
 
-            <Button type="submit" className="w-full" size="lg">
-              <Send className="mr-2 h-4 w-4" />
+            <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="mr-2 h-4 w-4" />
+              )}
               Отправить заявку
             </Button>
           </form>

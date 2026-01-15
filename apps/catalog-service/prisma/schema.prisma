@@ -88,15 +88,15 @@ model Product {
   price       Decimal       @db.Decimal(10, 2)
   currency    String        @default("RUB")
   status      ProductStatus @default(DRAFT)
-  stock       Int           @default(0)
+  stock       Int?
 
   attributes  Json          @default("{}")
   specs       Json?
 
   brandId     String
   brand       Brand         @relation(fields: [brandId], references: [id])
-  categoryId  String
-  category    Category      @relation(fields: [categoryId], references: [id])
+  categoryId  String?
+  category    Category?     @relation(fields: [categoryId], references: [id])
   images      ProductImage[]
 
   createdAt   DateTime      @default(now())
@@ -111,15 +111,51 @@ model Product {
   @@map("products")
 }
 
-model ProductImage {
-  id        String   @id @default(uuid())
-  url       String
-  alt       String?
-  order     Int      @default(0)
-  isMain    Boolean  @default(false)
-  productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+model MediaFile {
+  id           String   @id @default(uuid())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String
+  width        Int?
+  height       Int?
+  alt          String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
+  productImages ProductImage[]
+
+  @@map("media_files")
+}
+
+model ProductImage {
+  id          String     @id @default(uuid())
+  url         String
+  alt         String?
+  order       Int        @default(0)
+  isMain      Boolean    @default(false)
+  productId   String
+  product     Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  mediaFileId String?
+  mediaFile   MediaFile? @relation(fields: [mediaFileId], references: [id])
+  createdAt   DateTime   @default(now())
+
+  @@index([mediaFileId])
   @@map("product_images")
+}
+
+model SupplyRequest {
+  id          String   @id @default(uuid())
+  name        String
+  email       String
+  phone       String
+  company     String?
+  productName String
+  quantity    Int
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("supply_requests")
 }

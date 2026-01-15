@@ -2907,14 +2907,36 @@ __turbopack_context__.s([
     ()=>useCreateProduct,
     "useDeleteProduct",
     ()=>useDeleteProduct,
+    "useDeleteProductsBatch",
+    ()=>useDeleteProductsBatch,
+    "useDeletedProducts",
+    ()=>useDeletedProducts,
+    "useExportProductsCsv",
+    ()=>useExportProductsCsv,
+    "useImportProductsCsv",
+    ()=>useImportProductsCsv,
+    "usePermanentDeleteProduct",
+    ()=>usePermanentDeleteProduct,
+    "usePermanentDeleteProductsBatch",
+    ()=>usePermanentDeleteProductsBatch,
     "useProduct",
     ()=>useProduct,
     "useProductBySlug",
     ()=>useProductBySlug,
     "useProducts",
     ()=>useProducts,
+    "useRestoreProduct",
+    ()=>useRestoreProduct,
+    "useRestoreProductsBatch",
+    ()=>useRestoreProductsBatch,
     "useUpdateProduct",
-    ()=>useUpdateProduct
+    ()=>useUpdateProduct,
+    "useUpdateProductsBrandBatch",
+    ()=>useUpdateProductsBrandBatch,
+    "useUpdateProductsCategoryBatch",
+    ()=>useUpdateProductsCategoryBatch,
+    "useUpdateProductsStatusBatch",
+    ()=>useUpdateProductsStatusBatch
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useQuery$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/front/node_modules/@tanstack/react-query/build/modern/useQuery.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/front/node_modules/@tanstack/react-query/build/modern/useMutation.js [app-ssr] (ecmascript)");
@@ -2990,6 +3012,138 @@ function useDeleteProduct() {
     return (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMutation"])({
         mutationFn: (id)=>__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["apiClient"].deleteProduct(id),
         onSuccess: ()=>{
+            queryClient.invalidateQueries({
+                queryKey: [
+                    'products'
+                ]
+            });
+        }
+    });
+}
+function useImportProductsCsv() {
+    const queryClient = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useQueryClient"])();
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMutation"])({
+        mutationFn: (payload)=>__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["apiClient"].importProductsCsv(payload.file, payload.opts),
+        onSuccess: ()=>{
+            queryClient.invalidateQueries({
+                queryKey: [
+                    'products'
+                ]
+            });
+        }
+    });
+}
+function useExportProductsCsv() {
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMutation"])({
+        mutationFn: (data)=>__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["apiClient"].exportProductsCsv(data)
+    });
+}
+function useDeleteProductsBatch() {
+    const queryClient = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useQueryClient"])();
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMutation"])({
+        mutationFn: (ids)=>__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["apiClient"].deleteProductsBatch(ids),
+        onSuccess: (_)=>{
+            queryClient.invalidateQueries({
+                queryKey: [
+                    'products'
+                ]
+            });
+        }
+    });
+}
+function useUpdateProductsStatusBatch() {
+    const queryClient = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useQueryClient"])();
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMutation"])({
+        mutationFn: (data)=>__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["apiClient"].updateProductsStatusBatch(data),
+        onSuccess: (_)=>{
+            queryClient.invalidateQueries({
+                queryKey: [
+                    'products'
+                ]
+            });
+        }
+    });
+}
+function useUpdateProductsBrandBatch() {
+    const queryClient = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useQueryClient"])();
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMutation"])({
+        mutationFn: (data)=>__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["apiClient"].updateProductsBrandBatch(data),
+        onSuccess: (_)=>{
+            queryClient.invalidateQueries({
+                queryKey: [
+                    'products'
+                ]
+            });
+        }
+    });
+}
+function useUpdateProductsCategoryBatch() {
+    const queryClient = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useQueryClient"])();
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMutation"])({
+        mutationFn: (data)=>__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["apiClient"].updateProductsCategoryBatch(data),
+        onSuccess: (_)=>{
+            queryClient.invalidateQueries({
+                queryKey: [
+                    'products'
+                ]
+            });
+        }
+    });
+}
+function useDeletedProducts(filters) {
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useQuery$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useQuery"])({
+        queryKey: [
+            'products',
+            'deleted',
+            filters
+        ],
+        queryFn: ()=>__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["apiClient"].getDeletedProducts(filters)
+    });
+}
+function useRestoreProduct() {
+    const queryClient = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useQueryClient"])();
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMutation"])({
+        mutationFn: (id)=>__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["apiClient"].restoreProduct(id),
+        onSuccess: ()=>{
+            queryClient.invalidateQueries({
+                queryKey: [
+                    'products'
+                ]
+            });
+        }
+    });
+}
+function useRestoreProductsBatch() {
+    const queryClient = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useQueryClient"])();
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMutation"])({
+        mutationFn: (ids)=>__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["apiClient"].restoreProductsBatch(ids),
+        onSuccess: (_)=>{
+            queryClient.invalidateQueries({
+                queryKey: [
+                    'products'
+                ]
+            });
+        }
+    });
+}
+function usePermanentDeleteProduct() {
+    const queryClient = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useQueryClient"])();
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMutation"])({
+        mutationFn: (id)=>__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["apiClient"].permanentDeleteProduct(id),
+        onSuccess: ()=>{
+            queryClient.invalidateQueries({
+                queryKey: [
+                    'products'
+                ]
+            });
+        }
+    });
+}
+function usePermanentDeleteProductsBatch() {
+    const queryClient = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useQueryClient"])();
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMutation"])({
+        mutationFn: (ids)=>__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["apiClient"].permanentDeleteProductsBatch(ids),
+        onSuccess: (_)=>{
             queryClient.invalidateQueries({
                 queryKey: [
                     'products'
@@ -3086,11 +3240,11 @@ function FeaturedProducts() {
         once: true,
         margin: '-100px'
     });
-    const { data: products, isLoading } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$hooks$2f$use$2d$products$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useProducts"])({
+    const { data: productsPage, isLoading } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$hooks$2f$use$2d$products$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useProducts"])({
         limit: 8,
         status: 'PUBLISHED'
     });
-    const displayProducts = products?.slice(0, 8) || [];
+    const displayProducts = productsPage?.data ?? [];
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
         className: "py-16 lg:py-24 bg-muted/30",
         ref: ref,
@@ -3235,7 +3389,7 @@ function FeaturedProducts() {
                                                 product.images?.[0] ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
                                                     src: product.images[0].url,
                                                     alt: product.title,
-                                                    className: "object-contain h-full w-full p-4 transition-transform duration-300 group-hover:scale-105"
+                                                    className: "object-cover h-full w-full transition-transform duration-300 group-hover:scale-105"
                                                 }, void 0, false, {
                                                     fileName: "[project]/front/components/home/featured-products.tsx",
                                                     lineNumber: 90,

@@ -17,6 +17,19 @@ export class BrandsRepository {
     return this.prisma.brand.findFirst({ where: { id, deletedAt: null } });
   }
 
+  async findByName(name: string): Promise<BrandResponse | null> {
+    return this.prisma.brand.findFirst({
+      where: {
+        deletedAt: null,
+        name: { equals: name, mode: 'insensitive' },
+      },
+    });
+  }
+
+  async findBySlug(slug: string): Promise<BrandResponse | null> {
+    return this.prisma.brand.findFirst({ where: { slug, deletedAt: null } });
+  }
+
   async create(data: CreateBrandDto): Promise<BrandResponse> {
     return this.prisma.brand.create({ data });
   }

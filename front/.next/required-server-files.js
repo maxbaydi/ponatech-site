@@ -145,7 +145,7 @@ self.__SERVER_FILES_MANIFEST={
       "isExperimentalCompile": false
     }
   },
-  "appDir": "C:\\Projects\\ponatech-site\\front",
+  "appDir": "c:\\Projects\\ponatech-site\\front",
   "relativeAppDir": "front",
   "files": [
     ".next\\routes-manifest.json",

@@ -114,20 +114,42 @@ __turbopack_context__.s([
     ()=>useCreateProduct,
     "useDeleteProduct",
     ()=>useDeleteProduct,
+    "useDeleteProductsBatch",
+    ()=>useDeleteProductsBatch,
+    "useDeletedProducts",
+    ()=>useDeletedProducts,
+    "useExportProductsCsv",
+    ()=>useExportProductsCsv,
+    "useImportProductsCsv",
+    ()=>useImportProductsCsv,
+    "usePermanentDeleteProduct",
+    ()=>usePermanentDeleteProduct,
+    "usePermanentDeleteProductsBatch",
+    ()=>usePermanentDeleteProductsBatch,
     "useProduct",
     ()=>useProduct,
     "useProductBySlug",
     ()=>useProductBySlug,
     "useProducts",
     ()=>useProducts,
+    "useRestoreProduct",
+    ()=>useRestoreProduct,
+    "useRestoreProductsBatch",
+    ()=>useRestoreProductsBatch,
     "useUpdateProduct",
-    ()=>useUpdateProduct
+    ()=>useUpdateProduct,
+    "useUpdateProductsBrandBatch",
+    ()=>useUpdateProductsBrandBatch,
+    "useUpdateProductsCategoryBatch",
+    ()=>useUpdateProductsCategoryBatch,
+    "useUpdateProductsStatusBatch",
+    ()=>useUpdateProductsStatusBatch
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useQuery$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/front/node_modules/@tanstack/react-query/build/modern/useQuery.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/front/node_modules/@tanstack/react-query/build/modern/useMutation.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/front/node_modules/@tanstack/react-query/build/modern/QueryClientProvider.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/front/lib/api/client.ts [app-client] (ecmascript)");
-var _s = __turbopack_context__.k.signature(), _s1 = __turbopack_context__.k.signature(), _s2 = __turbopack_context__.k.signature(), _s3 = __turbopack_context__.k.signature(), _s4 = __turbopack_context__.k.signature(), _s5 = __turbopack_context__.k.signature();
+var _s = __turbopack_context__.k.signature(), _s1 = __turbopack_context__.k.signature(), _s2 = __turbopack_context__.k.signature(), _s3 = __turbopack_context__.k.signature(), _s4 = __turbopack_context__.k.signature(), _s5 = __turbopack_context__.k.signature(), _s6 = __turbopack_context__.k.signature(), _s7 = __turbopack_context__.k.signature(), _s8 = __turbopack_context__.k.signature(), _s9 = __turbopack_context__.k.signature(), _s10 = __turbopack_context__.k.signature(), _s11 = __turbopack_context__.k.signature(), _s12 = __turbopack_context__.k.signature(), _s13 = __turbopack_context__.k.signature(), _s14 = __turbopack_context__.k.signature(), _s15 = __turbopack_context__.k.signature(), _s16 = __turbopack_context__.k.signature();
 'use client';
 ;
 ;
@@ -258,6 +280,253 @@ function useDeleteProduct() {
     });
 }
 _s5(useDeleteProduct, "YK0wzM21ECnncaq5SECwU+/SVdQ=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQueryClient"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"]
+    ];
+});
+function useImportProductsCsv() {
+    _s6();
+    const queryClient = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQueryClient"])();
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"])({
+        mutationFn: {
+            "useImportProductsCsv.useMutation": (payload)=>__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["apiClient"].importProductsCsv(payload.file, payload.opts)
+        }["useImportProductsCsv.useMutation"],
+        onSuccess: {
+            "useImportProductsCsv.useMutation": ()=>{
+                queryClient.invalidateQueries({
+                    queryKey: [
+                        'products'
+                    ]
+                });
+            }
+        }["useImportProductsCsv.useMutation"]
+    });
+}
+_s6(useImportProductsCsv, "YK0wzM21ECnncaq5SECwU+/SVdQ=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQueryClient"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"]
+    ];
+});
+function useExportProductsCsv() {
+    _s7();
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"])({
+        mutationFn: {
+            "useExportProductsCsv.useMutation": (data)=>__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["apiClient"].exportProductsCsv(data)
+        }["useExportProductsCsv.useMutation"]
+    });
+}
+_s7(useExportProductsCsv, "wwwtpB20p0aLiHIvSy5P98MwIUg=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"]
+    ];
+});
+function useDeleteProductsBatch() {
+    _s8();
+    const queryClient = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQueryClient"])();
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"])({
+        mutationFn: {
+            "useDeleteProductsBatch.useMutation": (ids)=>__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["apiClient"].deleteProductsBatch(ids)
+        }["useDeleteProductsBatch.useMutation"],
+        onSuccess: {
+            "useDeleteProductsBatch.useMutation": (_)=>{
+                queryClient.invalidateQueries({
+                    queryKey: [
+                        'products'
+                    ]
+                });
+            }
+        }["useDeleteProductsBatch.useMutation"]
+    });
+}
+_s8(useDeleteProductsBatch, "YK0wzM21ECnncaq5SECwU+/SVdQ=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQueryClient"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"]
+    ];
+});
+function useUpdateProductsStatusBatch() {
+    _s9();
+    const queryClient = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQueryClient"])();
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"])({
+        mutationFn: {
+            "useUpdateProductsStatusBatch.useMutation": (data)=>__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["apiClient"].updateProductsStatusBatch(data)
+        }["useUpdateProductsStatusBatch.useMutation"],
+        onSuccess: {
+            "useUpdateProductsStatusBatch.useMutation": (_)=>{
+                queryClient.invalidateQueries({
+                    queryKey: [
+                        'products'
+                    ]
+                });
+            }
+        }["useUpdateProductsStatusBatch.useMutation"]
+    });
+}
+_s9(useUpdateProductsStatusBatch, "YK0wzM21ECnncaq5SECwU+/SVdQ=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQueryClient"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"]
+    ];
+});
+function useUpdateProductsBrandBatch() {
+    _s10();
+    const queryClient = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQueryClient"])();
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"])({
+        mutationFn: {
+            "useUpdateProductsBrandBatch.useMutation": (data)=>__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["apiClient"].updateProductsBrandBatch(data)
+        }["useUpdateProductsBrandBatch.useMutation"],
+        onSuccess: {
+            "useUpdateProductsBrandBatch.useMutation": (_)=>{
+                queryClient.invalidateQueries({
+                    queryKey: [
+                        'products'
+                    ]
+                });
+            }
+        }["useUpdateProductsBrandBatch.useMutation"]
+    });
+}
+_s10(useUpdateProductsBrandBatch, "YK0wzM21ECnncaq5SECwU+/SVdQ=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQueryClient"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"]
+    ];
+});
+function useUpdateProductsCategoryBatch() {
+    _s11();
+    const queryClient = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQueryClient"])();
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"])({
+        mutationFn: {
+            "useUpdateProductsCategoryBatch.useMutation": (data)=>__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["apiClient"].updateProductsCategoryBatch(data)
+        }["useUpdateProductsCategoryBatch.useMutation"],
+        onSuccess: {
+            "useUpdateProductsCategoryBatch.useMutation": (_)=>{
+                queryClient.invalidateQueries({
+                    queryKey: [
+                        'products'
+                    ]
+                });
+            }
+        }["useUpdateProductsCategoryBatch.useMutation"]
+    });
+}
+_s11(useUpdateProductsCategoryBatch, "YK0wzM21ECnncaq5SECwU+/SVdQ=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQueryClient"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"]
+    ];
+});
+function useDeletedProducts(filters) {
+    _s12();
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useQuery$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQuery"])({
+        queryKey: [
+            'products',
+            'deleted',
+            filters
+        ],
+        queryFn: {
+            "useDeletedProducts.useQuery": ()=>__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["apiClient"].getDeletedProducts(filters)
+        }["useDeletedProducts.useQuery"]
+    });
+}
+_s12(useDeletedProducts, "4ZpngI1uv+Uo3WQHEZmTQ5FNM+k=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useQuery$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQuery"]
+    ];
+});
+function useRestoreProduct() {
+    _s13();
+    const queryClient = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQueryClient"])();
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"])({
+        mutationFn: {
+            "useRestoreProduct.useMutation": (id)=>__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["apiClient"].restoreProduct(id)
+        }["useRestoreProduct.useMutation"],
+        onSuccess: {
+            "useRestoreProduct.useMutation": ()=>{
+                queryClient.invalidateQueries({
+                    queryKey: [
+                        'products'
+                    ]
+                });
+            }
+        }["useRestoreProduct.useMutation"]
+    });
+}
+_s13(useRestoreProduct, "YK0wzM21ECnncaq5SECwU+/SVdQ=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQueryClient"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"]
+    ];
+});
+function useRestoreProductsBatch() {
+    _s14();
+    const queryClient = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQueryClient"])();
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"])({
+        mutationFn: {
+            "useRestoreProductsBatch.useMutation": (ids)=>__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["apiClient"].restoreProductsBatch(ids)
+        }["useRestoreProductsBatch.useMutation"],
+        onSuccess: {
+            "useRestoreProductsBatch.useMutation": (_)=>{
+                queryClient.invalidateQueries({
+                    queryKey: [
+                        'products'
+                    ]
+                });
+            }
+        }["useRestoreProductsBatch.useMutation"]
+    });
+}
+_s14(useRestoreProductsBatch, "YK0wzM21ECnncaq5SECwU+/SVdQ=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQueryClient"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"]
+    ];
+});
+function usePermanentDeleteProduct() {
+    _s15();
+    const queryClient = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQueryClient"])();
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"])({
+        mutationFn: {
+            "usePermanentDeleteProduct.useMutation": (id)=>__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["apiClient"].permanentDeleteProduct(id)
+        }["usePermanentDeleteProduct.useMutation"],
+        onSuccess: {
+            "usePermanentDeleteProduct.useMutation": ()=>{
+                queryClient.invalidateQueries({
+                    queryKey: [
+                        'products'
+                    ]
+                });
+            }
+        }["usePermanentDeleteProduct.useMutation"]
+    });
+}
+_s15(usePermanentDeleteProduct, "YK0wzM21ECnncaq5SECwU+/SVdQ=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQueryClient"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"]
+    ];
+});
+function usePermanentDeleteProductsBatch() {
+    _s16();
+    const queryClient = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQueryClient"])();
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"])({
+        mutationFn: {
+            "usePermanentDeleteProductsBatch.useMutation": (ids)=>__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["apiClient"].permanentDeleteProductsBatch(ids)
+        }["usePermanentDeleteProductsBatch.useMutation"],
+        onSuccess: {
+            "usePermanentDeleteProductsBatch.useMutation": (_)=>{
+                queryClient.invalidateQueries({
+                    queryKey: [
+                        'products'
+                    ]
+                });
+            }
+        }["usePermanentDeleteProductsBatch.useMutation"]
+    });
+}
+_s16(usePermanentDeleteProductsBatch, "YK0wzM21ECnncaq5SECwU+/SVdQ=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQueryClient"],
         __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"]
@@ -624,11 +893,31 @@ function StatCard({ title, value, icon, description }) {
 _c = StatCard;
 function DashboardPage() {
     _s();
-    const { data: products } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$hooks$2f$use$2d$products$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useProducts"])();
+    const { data: allProductsPage } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$hooks$2f$use$2d$products$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useProducts"])({
+        page: 1,
+        limit: 1
+    });
+    const { data: publishedProductsPage } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$hooks$2f$use$2d$products$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useProducts"])({
+        status: 'PUBLISHED',
+        page: 1,
+        limit: 1
+    });
+    const { data: draftProductsPage } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$hooks$2f$use$2d$products$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useProducts"])({
+        status: 'DRAFT',
+        page: 1,
+        limit: 1
+    });
+    const { data: latestProductsPage } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$hooks$2f$use$2d$products$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useProducts"])({
+        page: 1,
+        limit: 5,
+        sort: 'created_desc'
+    });
     const { data: brands } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$hooks$2f$use$2d$brands$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useBrands"])();
     const { data: categories } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$hooks$2f$use$2d$categories$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCategories"])();
-    const publishedProducts = products?.filter((p)=>p.status === 'PUBLISHED').length || 0;
-    const draftProducts = products?.filter((p)=>p.status === 'DRAFT').length || 0;
+    const totalProducts = allProductsPage?.total ?? 0;
+    const publishedProducts = publishedProductsPage?.total ?? 0;
+    const draftProducts = draftProductsPage?.total ?? 0;
+    const latestProducts = latestProductsPage?.data ?? [];
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -639,7 +928,7 @@ function DashboardPage() {
                         children: "Дашборд"
                     }, void 0, false, {
                         fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                        lineNumber: 42,
+                        lineNumber: 47,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -647,13 +936,13 @@ function DashboardPage() {
                         children: "Обзор системы управления каталогом"
                     }, void 0, false, {
                         fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                        lineNumber: 43,
+                        lineNumber: 48,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                lineNumber: 41,
+                lineNumber: 46,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -661,18 +950,18 @@ function DashboardPage() {
                 children: [
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(StatCard, {
                         title: "Всего товаров",
-                        value: products?.length || 0,
+                        value: totalProducts,
                         icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$package$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Package$3e$__["Package"], {
                             className: "h-4 w-4 text-muted-foreground"
                         }, void 0, false, {
                             fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                            lineNumber: 50,
+                            lineNumber: 55,
                             columnNumber: 17
                         }, void 0),
                         description: `${publishedProducts} опубликовано, ${draftProducts} черновиков`
                     }, void 0, false, {
                         fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                        lineNumber: 47,
+                        lineNumber: 52,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(StatCard, {
@@ -682,13 +971,13 @@ function DashboardPage() {
                             className: "h-4 w-4 text-muted-foreground"
                         }, void 0, false, {
                             fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                            lineNumber: 56,
+                            lineNumber: 61,
                             columnNumber: 17
                         }, void 0),
                         description: "Активных производителей"
                     }, void 0, false, {
                         fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                        lineNumber: 53,
+                        lineNumber: 58,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(StatCard, {
@@ -698,13 +987,13 @@ function DashboardPage() {
                             className: "h-4 w-4 text-muted-foreground"
                         }, void 0, false, {
                             fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                            lineNumber: 62,
+                            lineNumber: 67,
                             columnNumber: 17
                         }, void 0),
                         description: "Категорий товаров"
                     }, void 0, false, {
                         fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                        lineNumber: 59,
+                        lineNumber: 64,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(StatCard, {
@@ -714,19 +1003,19 @@ function DashboardPage() {
                             className: "h-4 w-4 text-muted-foreground"
                         }, void 0, false, {
                             fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                            lineNumber: 68,
+                            lineNumber: 73,
                             columnNumber: 17
                         }, void 0),
                         description: "За последний месяц"
                     }, void 0, false, {
                         fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                        lineNumber: 65,
+                        lineNumber: 70,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                lineNumber: 46,
+                lineNumber: 51,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -739,18 +1028,18 @@ function DashboardPage() {
                                     children: "Последние товары"
                                 }, void 0, false, {
                                     fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                                    lineNumber: 76,
+                                    lineNumber: 81,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                                lineNumber: 75,
+                                lineNumber: 80,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardContent"], {
-                                children: products && products.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                children: latestProducts.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "space-y-4",
-                                    children: products.slice(0, 5).map((product)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    children: latestProducts.map((product)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "flex items-center justify-between",
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -760,7 +1049,7 @@ function DashboardPage() {
                                                             children: product.title
                                                         }, void 0, false, {
                                                             fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                                                            lineNumber: 84,
+                                                            lineNumber: 89,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -768,13 +1057,13 @@ function DashboardPage() {
                                                             children: product.sku
                                                         }, void 0, false, {
                                                             fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                                                            lineNumber: 85,
+                                                            lineNumber: 90,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                                                    lineNumber: 83,
+                                                    lineNumber: 88,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -782,36 +1071,36 @@ function DashboardPage() {
                                                     children: product.status === 'PUBLISHED' ? 'Опубликован' : 'Черновик'
                                                 }, void 0, false, {
                                                     fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                                                    lineNumber: 87,
+                                                    lineNumber: 92,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, product.id, true, {
                                             fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                                            lineNumber: 82,
+                                            lineNumber: 87,
                                             columnNumber: 19
                                         }, this))
                                 }, void 0, false, {
                                     fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                                    lineNumber: 80,
+                                    lineNumber: 85,
                                     columnNumber: 15
                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                     className: "text-muted-foreground text-sm",
                                     children: "Нет товаров"
                                 }, void 0, false, {
                                     fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                                    lineNumber: 100,
+                                    lineNumber: 105,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                                lineNumber: 78,
+                                lineNumber: 83,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                        lineNumber: 74,
+                        lineNumber: 79,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
@@ -821,12 +1110,12 @@ function DashboardPage() {
                                     children: "Популярные бренды"
                                 }, void 0, false, {
                                     fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                                    lineNumber: 107,
+                                    lineNumber: 112,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                                lineNumber: 106,
+                                lineNumber: 111,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$front$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -845,12 +1134,12 @@ function DashboardPage() {
                                                                 children: brand.name.slice(0, 2)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                                                                lineNumber: 116,
+                                                                lineNumber: 121,
                                                                 columnNumber: 25
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                                                            lineNumber: 115,
+                                                            lineNumber: 120,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -860,7 +1149,7 @@ function DashboardPage() {
                                                                     children: brand.name
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                                                                    lineNumber: 119,
+                                                                    lineNumber: 124,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -868,19 +1157,19 @@ function DashboardPage() {
                                                                     children: brand.country
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                                                                    lineNumber: 120,
+                                                                    lineNumber: 125,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                                                            lineNumber: 118,
+                                                            lineNumber: 123,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                                                    lineNumber: 114,
+                                                    lineNumber: 119,
                                                     columnNumber: 21
                                                 }, this),
                                                 brand.isFeatured && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -888,53 +1177,56 @@ function DashboardPage() {
                                                     children: "Featured"
                                                 }, void 0, false, {
                                                     fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                                                    lineNumber: 124,
+                                                    lineNumber: 129,
                                                     columnNumber: 23
                                                 }, this)
                                             ]
                                         }, brand.id, true, {
                                             fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                                            lineNumber: 113,
+                                            lineNumber: 118,
                                             columnNumber: 19
                                         }, this))
                                 }, void 0, false, {
                                     fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                                    lineNumber: 111,
+                                    lineNumber: 116,
                                     columnNumber: 15
                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                     className: "text-muted-foreground text-sm",
                                     children: "Нет брендов"
                                 }, void 0, false, {
                                     fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                                    lineNumber: 132,
+                                    lineNumber: 137,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                                lineNumber: 109,
+                                lineNumber: 114,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                        lineNumber: 105,
+                        lineNumber: 110,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/front/app/admin/dashboard/page.tsx",
-                lineNumber: 73,
+                lineNumber: 78,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/front/app/admin/dashboard/page.tsx",
-        lineNumber: 40,
+        lineNumber: 45,
         columnNumber: 5
     }, this);
 }
-_s(DashboardPage, "uNSPxnEsfbGKnHdnRfIIJARGplQ=", false, function() {
+_s(DashboardPage, "24Ek4f+fAiFYv3aTN1LoJkrksv4=", false, function() {
     return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$hooks$2f$use$2d$products$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useProducts"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$hooks$2f$use$2d$products$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useProducts"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$hooks$2f$use$2d$products$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useProducts"],
         __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$hooks$2f$use$2d$products$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useProducts"],
         __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$hooks$2f$use$2d$brands$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useBrands"],
         __TURBOPACK__imported__module__$5b$project$5d2f$front$2f$lib$2f$hooks$2f$use$2d$categories$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCategories"]

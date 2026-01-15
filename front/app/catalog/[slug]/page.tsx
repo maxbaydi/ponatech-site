@@ -32,6 +32,7 @@ import { ProductCard } from '@/components/catalog';
 import { useProductBySlug, useProducts } from '@/lib/hooks/use-products';
 import { formatPrice } from '@/lib/utils';
 import type { ProductImage } from '@/lib/api/types';
+import DOMPurify from 'isomorphic-dompurify';
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
@@ -66,7 +67,7 @@ function ImageGallery({ images, title }: { images: ProductImage[]; title: string
               key={selectedIndex}
               src={mainImage.url}
               alt={mainImage.alt || title}
-              className="object-contain w-full h-full p-8"
+              className="object-cover w-full h-full"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -115,7 +116,7 @@ function ImageGallery({ images, title }: { images: ProductImage[]; title: string
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
               >
-                <img src={img.url} alt={img.alt || ''} className="object-contain w-full h-full p-1" />
+                <img src={img.url} alt={img.alt || ''} className="object-cover w-full h-full" />
               </motion.button>
             ))}
           </div>
@@ -135,7 +136,7 @@ function ImageGallery({ images, title }: { images: ProductImage[]; title: string
             <img
               src={mainImage.url}
               alt={mainImage.alt || title}
-              className="object-contain w-full h-full"
+              className="object-cover w-full h-full"
             />
             {images.length > 1 && (
               <>
@@ -163,7 +164,7 @@ function ImageGallery({ images, title }: { images: ProductImage[]; title: string
                   index === selectedIndex ? 'border-white' : 'border-white/30 hover:border-white/60'
                 }`}
               >
-                <img src={img.url} alt="" className="object-contain w-full h-full" />
+                <img src={img.url} alt="" className="object-cover w-full h-full" />
               </button>
             ))}
           </div>
@@ -214,13 +215,13 @@ export default function ProductPage({ params }: ProductPageProps) {
   const { slug } = use(params);
   const { data: product, isLoading, error } = useProductBySlug(slug);
 
-  const { data: relatedProducts } = useProducts({
-    categoryId: product?.categoryId,
+  const { data: relatedProductsPage } = useProducts({
+    categoryId: product?.categoryId ?? undefined,
     limit: 4,
     status: 'PUBLISHED',
   });
 
-  const filteredRelated = relatedProducts?.filter((p) => p.id !== product?.id).slice(0, 4);
+  const filteredRelated = relatedProductsPage?.data.filter((p) => p.id !== product?.id).slice(0, 4);
 
   if (error) {
     notFound();
@@ -306,12 +307,12 @@ export default function ProductPage({ params }: ProductPageProps) {
                     {product.category && (
                       <Badge variant="outline">{product.category.name}</Badge>
                     )}
-                    {product.status === 'PUBLISHED' && product.stock > 0 && (
+                    {product.status === 'PUBLISHED' && typeof product.stock === 'number' && product.stock > 0 && (
                       <Badge variant="success" className="bg-success/10 text-success border-success/20">
                         В наличии
                       </Badge>
                     )}
-                    {product.stock === 0 && (
+                    {typeof product.stock === 'number' && product.stock === 0 && (
                       <Badge variant="destructive">Под заказ</Badge>
                     )}
                   </div>
@@ -338,7 +339,10 @@ export default function ProductPage({ params }: ProductPageProps) {
                   </div>
 
                   {product.description && (
-                    <p className="text-muted-foreground mb-6 leading-relaxed">{product.description}</p>
+                    <div
+                      className="text-muted-foreground mb-6 rich-text"
+                      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(product.description) }}
+                    />
                   )}
 
                   <div className="flex flex-col sm:flex-row gap-3 mb-8">

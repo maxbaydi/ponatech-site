@@ -22,7 +22,7 @@ export class CatalogGrpcController {
       slug: product.slug,
       sku: product.sku,
       brandId: product.brandId,
-      categoryId: product.categoryId,
+      categoryId: product.categoryId ?? '',
       status: product.status,
     };
   }

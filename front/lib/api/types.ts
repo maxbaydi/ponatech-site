@@ -30,6 +30,7 @@ export interface ProductImage {
   alt?: string | null;
   order: number;
   isMain: boolean;
+  mediaFileId?: string | null;
 }
 
 export interface Product {
@@ -41,16 +42,17 @@ export interface Product {
   price: string;
   currency: string;
   status: ProductStatus;
-  stock: number;
+  stock?: number | null;
   attributes: Record<string, unknown>;
   specs?: Record<string, unknown> | null;
   brandId: string;
-  categoryId: string;
+  categoryId?: string | null;
   brand?: Brand;
   category?: Category;
   images?: ProductImage[];
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string | null;
 }
 
 export interface AuthUser {
@@ -104,6 +106,14 @@ export interface ProductFilters {
   sort?: 'price_asc' | 'price_desc' | 'title_asc' | 'title_desc' | 'created_desc' | 'created_asc';
 }
 
+export interface DeletedProductFilters {
+  brandId?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+  sort?: 'price_asc' | 'price_desc' | 'title_asc' | 'title_desc' | 'created_desc' | 'created_asc';
+}
+
 export interface CreateProductRequest {
   title: string;
   slug: string;
@@ -112,14 +122,64 @@ export interface CreateProductRequest {
   price: number;
   currency?: string;
   status?: ProductStatus;
-  stock?: number;
+  stock?: number | null;
   attributes: Record<string, unknown>;
   specs?: Record<string, unknown>;
   brandId: string;
-  categoryId: string;
+  categoryId?: string;
+  mainImageId?: string | null;
 }
 
 export interface UpdateProductRequest extends Partial<CreateProductRequest> {}
+
+export interface BatchOperationResult {
+  count: number;
+}
+
+export interface ProductIdsRequest {
+  ids: string[];
+}
+
+export interface UpdateProductsStatusBatchRequest extends ProductIdsRequest {
+  status: ProductStatus;
+}
+
+export interface UpdateProductsBrandBatchRequest extends ProductIdsRequest {
+  brandId: string;
+}
+
+export interface UpdateProductsCategoryBatchRequest extends ProductIdsRequest {
+  categoryId: string | null;
+}
+
+export type ProductCsvColumn =
+  | 'id'
+  | 'name'
+  | 'article'
+  | 'price'
+  | 'img'
+  | 'description'
+  | 'brand'
+  | 'category';
+
+export interface ImportProductsCsvResult {
+  total: number;
+  created: number;
+  updated: number;
+  failed: number;
+  errors: Array<{ row: number; message: string }>;
+}
+
+export interface ExportProductsCsvRequest {
+  columns?: ProductCsvColumn[];
+  brandId?: string;
+  search?: string;
+}
+
+export interface ImportProductsCsvRequest {
+  status?: ProductStatus;
+  updateBySku?: boolean;
+}
 
 export interface CreateBrandRequest {
   name: string;
@@ -159,6 +219,11 @@ export interface RequestFormData {
   description?: string;
 }
 
+export interface SupplyRequestResponse {
+  id: string;
+  createdAt: string;
+}
+
 export interface UsersResponse {
   users: User[];
   total: number;
@@ -175,4 +240,33 @@ export interface UsersFilters {
 
 export interface UpdateUserRoleRequest {
   role: UserRole;
+}
+
+export interface MediaFile {
+  id: string;
+  filename: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  url: string;
+  width?: number | null;
+  height?: number | null;
+  alt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MediaFilesFilters {
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface UploadFromUrlRequest {
+  url: string;
+  alt?: string;
+}
+
+export interface UpdateMediaFileRequest {
+  alt?: string;
 }

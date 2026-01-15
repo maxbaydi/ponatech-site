@@ -34,8 +34,9 @@ function CatalogContent() {
     status: 'PUBLISHED',
   };
 
-  const { data: products, isLoading } = useProducts(filters);
-  const totalPages = Math.ceil((products?.length || 0) / (filters.limit || 12));
+  const { data: productsPage, isLoading } = useProducts(filters);
+  const products = productsPage?.data ?? [];
+  const totalPages = productsPage?.totalPages ?? 0;
   const currentPage = filters.page || 1;
   const resultsKey = `${searchParams.toString()}|${viewMode}`;
 
@@ -84,10 +85,10 @@ function CatalogContent() {
                     </div>
                   ))}
                 </div>
-              ) : products && products.length > 0 ? (
+              ) : products.length > 0 ? (
                   <div key={`results-${resultsKey}`} className="smooth-appear">
                   <div className="text-sm text-muted-foreground mb-4">
-                    Найдено товаров: {products.length}
+                    Найдено товаров: {productsPage?.total ?? products.length}
                   </div>
                   <div
                     className={

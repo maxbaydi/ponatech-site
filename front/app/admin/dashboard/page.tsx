@@ -29,12 +29,17 @@ function StatCard({ title, value, icon, description }: StatCardProps) {
 }
 
 export default function DashboardPage() {
-  const { data: products } = useProducts();
+  const { data: allProductsPage } = useProducts({ page: 1, limit: 1 });
+  const { data: publishedProductsPage } = useProducts({ status: 'PUBLISHED', page: 1, limit: 1 });
+  const { data: draftProductsPage } = useProducts({ status: 'DRAFT', page: 1, limit: 1 });
+  const { data: latestProductsPage } = useProducts({ page: 1, limit: 5, sort: 'created_desc' });
   const { data: brands } = useBrands();
   const { data: categories } = useCategories();
 
-  const publishedProducts = products?.filter((p) => p.status === 'PUBLISHED').length || 0;
-  const draftProducts = products?.filter((p) => p.status === 'DRAFT').length || 0;
+  const totalProducts = allProductsPage?.total ?? 0;
+  const publishedProducts = publishedProductsPage?.total ?? 0;
+  const draftProducts = draftProductsPage?.total ?? 0;
+  const latestProducts = latestProductsPage?.data ?? [];
 
   return (
     <div>
@@ -46,7 +51,7 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Всего товаров"
-          value={products?.length || 0}
+          value={totalProducts}
           icon={<Package className="h-4 w-4 text-muted-foreground" />}
           description={`${publishedProducts} опубликовано, ${draftProducts} черновиков`}
         />
@@ -76,9 +81,9 @@ export default function DashboardPage() {
             <CardTitle>Последние товары</CardTitle>
           </CardHeader>
           <CardContent>
-            {products && products.length > 0 ? (
+            {latestProducts.length > 0 ? (
               <div className="space-y-4">
-                {products.slice(0, 5).map((product) => (
+                {latestProducts.map((product) => (
                   <div key={product.id} className="flex items-center justify-between">
                     <div>
                       <p className="font-medium text-sm">{product.title}</p>

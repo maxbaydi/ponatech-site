@@ -11,6 +11,7 @@
   "/admin/manage-products/[id]/edit/page": "app/admin/manage-products/[id]/edit/page.js",
   "/admin/manage-products/new/page": "app/admin/manage-products/new/page.js",
   "/admin/manage-products/page": "app/admin/manage-products/page.js",
+  "/admin/media/page": "app/admin/media/page.js",
   "/admin/users/page": "app/admin/users/page.js",
   "/brands/[slug]/page": "app/brands/[slug]/page.js",
   "/brands/page": "app/brands/page.js",

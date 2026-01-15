@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, ProductStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import { CreateProductDto, ProductResponse, UpdateProductDto } from './dto/product.dto';
+import { CreateProductDto, PaginatedResponse, ProductResponse, UpdateProductDto } from './dto/product.dto';
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 12;
@@ -26,7 +26,7 @@ export class ProductsRepository {
 
   async findAll(
     filters?: Record<string, string | string[] | undefined>,
-  ): Promise<ProductResponse[]> {
+  ): Promise<PaginatedResponse<ProductResponse>> {
     const where: Prisma.ProductWhereInput = { deletedAt: null };
     const brandId = this.normalizeFilterValue(filters?.brandId);
     const brandSlug = this.normalizeFilterValue(filters?.brandSlug);
@@ -77,17 +77,30 @@ export class ProductsRepository {
     const orderBy = this.buildOrderBy(sort);
     const skip = (page - 1) * limit;
 
-    return this.prisma.product.findMany({
-      where,
-      orderBy,
-      skip,
-      take: limit,
-      include: {
-        brand: true,
-        category: true,
-        images: { orderBy: { order: 'asc' } },
-      },
-    });
+    const [total, data] = await this.prisma.$transaction([
+      this.prisma.product.count({ where }),
+      this.prisma.product.findMany({
+        where,
+        orderBy,
+        skip,
+        take: limit,
+        include: {
+          brand: true,
+          category: true,
+          images: { orderBy: { order: 'asc' } },
+        },
+      }),
+    ]);
+
+    const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
   }
 
   async findOne(id: string): Promise<ProductResponse | null> {
@@ -115,6 +128,11 @@ export class ProductsRepository {
   async create(dto: CreateProductDto): Promise<ProductResponse> {
     return this.prisma.product.create({
       data: this.toCreateInput(dto),
+      include: {
+        brand: true,
+        category: true,
+        images: { orderBy: { order: 'asc' } },
+      },
     });
   }
 
@@ -122,6 +140,11 @@ export class ProductsRepository {
     return this.prisma.product.update({
       where: { id },
       data: this.toUpdateInput(dto),
+      include: {
+        brand: true,
+        category: true,
+        images: { orderBy: { order: 'asc' } },
+      },
     });
   }
 
@@ -130,6 +153,118 @@ export class ProductsRepository {
       where: { id },
       data: { deletedAt: new Date() },
     });
+  }
+
+  async removeMany(ids: string[]): Promise<{ count: number }> {
+    return this.prisma.product.updateMany({
+      where: { id: { in: ids }, deletedAt: null },
+      data: { deletedAt: new Date() },
+    });
+  }
+
+  async updateStatusMany(ids: string[], status: ProductStatus): Promise<{ count: number }> {
+    return this.prisma.product.updateMany({
+      where: { id: { in: ids }, deletedAt: null },
+      data: { status },
+    });
+  }
+
+  async updateBrandMany(ids: string[], brandId: string): Promise<{ count: number }> {
+    return this.prisma.product.updateMany({
+      where: { id: { in: ids }, deletedAt: null },
+      data: { brandId },
+    });
+  }
+
+  async updateCategoryMany(ids: string[], categoryId: string | null): Promise<{ count: number }> {
+    return this.prisma.product.updateMany({
+      where: { id: { in: ids }, deletedAt: null },
+      data: { categoryId },
+    });
+  }
+
+  async findAllDeleted(
+    filters?: Record<string, string | string[] | undefined>,
+  ): Promise<PaginatedResponse<ProductResponse>> {
+    const where: Prisma.ProductWhereInput = { deletedAt: { not: null } };
+    const brandId = this.normalizeFilterValue(filters?.brandId);
+    const search = this.normalizeFilterValue(filters?.search);
+    const page = this.parseIntFilter(filters?.page, DEFAULT_PAGE);
+    const limit = this.parseIntFilter(filters?.limit, DEFAULT_LIMIT, MAX_LIMIT);
+    const sort = this.normalizeFilterValue(filters?.sort);
+
+    if (brandId) {
+      where.brandId = brandId;
+    }
+
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { sku: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const orderBy = this.buildOrderBy(sort);
+    const skip = (page - 1) * limit;
+
+    const [total, data] = await this.prisma.$transaction([
+      this.prisma.product.count({ where }),
+      this.prisma.product.findMany({
+        where,
+        orderBy,
+        skip,
+        take: limit,
+        include: {
+          brand: true,
+          category: true,
+          images: { orderBy: { order: 'asc' } },
+        },
+      }),
+    ]);
+
+    const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
+  }
+
+  async restoreOne(id: string): Promise<ProductResponse> {
+    return this.prisma.product.update({
+      where: { id },
+      data: { deletedAt: null },
+      include: {
+        brand: true,
+        category: true,
+        images: { orderBy: { order: 'asc' } },
+      },
+    });
+  }
+
+  async restoreMany(ids: string[]): Promise<{ count: number }> {
+    return this.prisma.product.updateMany({
+      where: { id: { in: ids }, deletedAt: { not: null } },
+      data: { deletedAt: null },
+    });
+  }
+
+  async hardDeleteOne(id: string): Promise<void> {
+    await this.prisma.$transaction([
+      this.prisma.productImage.deleteMany({ where: { productId: id } }),
+      this.prisma.product.delete({ where: { id } }),
+    ]);
+  }
+
+  async hardDeleteMany(ids: string[]): Promise<{ count: number }> {
+    const [, result] = await this.prisma.$transaction([
+      this.prisma.productImage.deleteMany({ where: { productId: { in: ids } } }),
+      this.prisma.product.deleteMany({ where: { id: { in: ids }, deletedAt: { not: null } } }),
+    ]);
+    return result;
   }
 
   private toCreateInput(dto: CreateProductDto): Prisma.ProductUncheckedCreateInput {
@@ -141,11 +276,11 @@ export class ProductsRepository {
       price: dto.price,
       currency: dto.currency ?? 'RUB',
       status: dto.status ?? ProductStatus.DRAFT,
-      stock: dto.stock ?? 0,
+      stock: dto.stock ?? null,
       attributes: dto.attributes as Prisma.InputJsonValue,
       specs: dto.specs as Prisma.InputJsonValue | undefined,
       brandId: dto.brandId,
-      categoryId: dto.categoryId,
+      categoryId: dto.categoryId ?? null,
     };
   }
 
@@ -163,7 +298,7 @@ export class ProductsRepository {
     if (dto.attributes !== undefined) data.attributes = dto.attributes as Prisma.InputJsonValue;
     if (dto.specs !== undefined) data.specs = dto.specs as Prisma.InputJsonValue;
     if (dto.brandId !== undefined) data.brandId = dto.brandId;
-    if (dto.categoryId !== undefined) data.categoryId = dto.categoryId;
+    if (dto.categoryId !== undefined) data.categoryId = dto.categoryId || null;
 
     return data;
   }

@@ -473,7 +473,7 @@ const common_1 = __webpack_require__(1);
 const config_1 = __webpack_require__(2);
 const common_2 = __webpack_require__(7);
 const catalog_module_1 = __webpack_require__(19);
-const env_validation_1 = __webpack_require__(43);
+const env_validation_1 = __webpack_require__(60);
 const envFilePath = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
 let AppModule = class AppModule {
 };
@@ -517,20 +517,25 @@ const categories_service_1 = __webpack_require__(33);
 const jwt_auth_guard_1 = __webpack_require__(24);
 const roles_guard_1 = __webpack_require__(27);
 const catalog_grpc_controller_1 = __webpack_require__(36);
-const products_controller_1 = __webpack_require__(40);
-const products_repository_1 = __webpack_require__(38);
+const media_module_1 = __webpack_require__(48);
+const products_controller_1 = __webpack_require__(54);
+const products_repository_1 = __webpack_require__(44);
 const products_service_1 = __webpack_require__(37);
+const requests_controller_1 = __webpack_require__(56);
+const requests_repository_1 = __webpack_require__(59);
+const requests_service_1 = __webpack_require__(58);
 let CatalogModule = class CatalogModule {
 };
 exports.CatalogModule = CatalogModule;
 exports.CatalogModule = CatalogModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule],
+        imports: [prisma_module_1.PrismaModule, media_module_1.MediaModule],
         controllers: [
             brands_controller_1.BrandsController,
             categories_controller_1.CategoriesController,
             products_controller_1.ProductsController,
             catalog_grpc_controller_1.CatalogGrpcController,
+            requests_controller_1.RequestsController,
         ],
         providers: [
             brands_repository_1.BrandsRepository,
@@ -539,6 +544,8 @@ exports.CatalogModule = CatalogModule = __decorate([
             categories_service_1.CategoriesService,
             products_repository_1.ProductsRepository,
             products_service_1.ProductsService,
+            requests_repository_1.RequestsRepository,
+            requests_service_1.RequestsService,
             jwt_auth_guard_1.JwtAuthGuard,
             roles_guard_1.RolesGuard,
         ],
@@ -989,6 +996,17 @@ let BrandsRepository = class BrandsRepository {
     async findOne(id) {
         return this.prisma.brand.findFirst({ where: { id, deletedAt: null } });
     }
+    async findByName(name) {
+        return this.prisma.brand.findFirst({
+            where: {
+                deletedAt: null,
+                name: { equals: name, mode: 'insensitive' },
+            },
+        });
+    }
+    async findBySlug(slug) {
+        return this.prisma.brand.findFirst({ where: { slug, deletedAt: null } });
+    }
     async create(data) {
         return this.prisma.brand.create({ data });
     }
@@ -1277,6 +1295,17 @@ let CategoriesRepository = class CategoriesRepository {
     async findOne(id) {
         return this.prisma.category.findFirst({ where: { id, deletedAt: null } });
     }
+    async findByName(name) {
+        return this.prisma.category.findFirst({
+            where: {
+                deletedAt: null,
+                name: { equals: name, mode: 'insensitive' },
+            },
+        });
+    }
+    async findBySlug(slug) {
+        return this.prisma.category.findFirst({ where: { slug, deletedAt: null } });
+    }
     async create(data) {
         return this.prisma.category.create({ data });
     }
@@ -1369,7 +1398,7 @@ const common_1 = __webpack_require__(1);
 const microservices_1 = __webpack_require__(4);
 const brands_service_1 = __webpack_require__(28);
 const products_service_1 = __webpack_require__(37);
-const catalog_grpc_1 = __webpack_require__(39);
+const catalog_grpc_1 = __webpack_require__(47);
 let CatalogGrpcController = class CatalogGrpcController {
     productsService;
     brandsService;
@@ -1385,7 +1414,7 @@ let CatalogGrpcController = class CatalogGrpcController {
             slug: product.slug,
             sku: product.sku,
             brandId: product.brandId,
-            categoryId: product.categoryId,
+            categoryId: product.categoryId ?? '',
             status: product.status,
         };
     }
@@ -1431,21 +1460,38 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c;
+var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ProductsService = void 0;
 const common_1 = __webpack_require__(1);
+const client_1 = __webpack_require__(22);
+const fast_csv_1 = __webpack_require__(38);
 const brands_repository_1 = __webpack_require__(29);
 const categories_repository_1 = __webpack_require__(34);
-const products_repository_1 = __webpack_require__(38);
+const media_service_1 = __webpack_require__(39);
+const prisma_service_1 = __webpack_require__(21);
+const products_repository_1 = __webpack_require__(44);
+const products_csv_dto_1 = __webpack_require__(45);
+const slugify_1 = __webpack_require__(46);
+const CSV_REQUIRED_COLUMNS = ['name', 'article', 'price', 'brand'];
+const DEFAULT_PRODUCT_CURRENCY = 'RUB';
+const DEFAULT_PRODUCT_STATUS = client_1.ProductStatus.DRAFT;
+const DEFAULT_IMPORT_STATUS = client_1.ProductStatus.PUBLISHED;
+const MAX_SLUG_ATTEMPTS = 50;
+const MAX_EXPORT_LIMIT = 50_000;
+const PRODUCT_MAIN_IMAGE_ORDER = 0;
 let ProductsService = class ProductsService {
     productsRepository;
     brandsRepository;
     categoriesRepository;
-    constructor(productsRepository, brandsRepository, categoriesRepository) {
+    mediaService;
+    prisma;
+    constructor(productsRepository, brandsRepository, categoriesRepository, mediaService, prisma) {
         this.productsRepository = productsRepository;
         this.brandsRepository = brandsRepository;
         this.categoriesRepository = categoriesRepository;
+        this.mediaService = mediaService;
+        this.prisma = prisma;
     }
     async findAll(filters) {
         return this.productsRepository.findAll(filters);
@@ -1466,14 +1512,142 @@ let ProductsService = class ProductsService {
     }
     async create(dto) {
         await this.ensureRelations(dto.brandId, dto.categoryId);
-        return this.productsRepository.create(dto);
+        const created = await this.productsRepository.create(dto);
+        await this.syncMainImage(created.id, dto.mainImageId, created.title);
+        return this.findOne(created.id);
     }
     async update(id, dto) {
         await this.ensureRelations(dto.brandId, dto.categoryId);
-        return this.productsRepository.update(id, dto);
+        const updated = await this.productsRepository.update(id, dto);
+        await this.syncMainImage(updated.id, dto.mainImageId, updated.title);
+        return this.findOne(updated.id);
     }
     async remove(id) {
         await this.productsRepository.remove(id);
+    }
+    async removeMany(dto) {
+        return this.productsRepository.removeMany(dto.ids);
+    }
+    async updateStatusMany(dto) {
+        return this.productsRepository.updateStatusMany(dto.ids, dto.status);
+    }
+    async updateBrandMany(dto) {
+        await this.ensureRelations(dto.brandId, undefined);
+        return this.productsRepository.updateBrandMany(dto.ids, dto.brandId);
+    }
+    async updateCategoryMany(dto) {
+        await this.ensureRelations(undefined, dto.categoryId ?? undefined);
+        return this.productsRepository.updateCategoryMany(dto.ids, dto.categoryId);
+    }
+    async findAllDeleted(filters) {
+        return this.productsRepository.findAllDeleted(filters);
+    }
+    async restore(id) {
+        return this.productsRepository.restoreOne(id);
+    }
+    async restoreMany(dto) {
+        return this.productsRepository.restoreMany(dto.ids);
+    }
+    async hardDelete(id) {
+        await this.productsRepository.hardDeleteOne(id);
+    }
+    async hardDeleteMany(dto) {
+        return this.productsRepository.hardDeleteMany(dto.ids);
+    }
+    async importCsv(buffer, opts) {
+        const text = buffer.toString('utf8');
+        const status = opts?.status ?? DEFAULT_IMPORT_STATUS;
+        const updateBySku = opts?.updateBySku !== 'false';
+        const result = {
+            total: 0,
+            created: 0,
+            updated: 0,
+            failed: 0,
+            errors: [],
+        };
+        let rowIndex = 0;
+        await new Promise((resolve, reject) => {
+            const parser = (0, fast_csv_1.parseString)(text, { headers: true, trim: true, ignoreEmpty: true });
+            parser.on('error', reject);
+            parser.on('headers', (headers) => {
+                const normalized = new Set(headers.map((h) => String(h).trim()));
+                const missing = CSV_REQUIRED_COLUMNS.filter((col) => !normalized.has(col));
+                if (missing.length > 0) {
+                    reject(new common_1.BadRequestException(`Missing CSV columns: ${missing.join(', ')}`));
+                    return;
+                }
+            });
+            parser.on('data', async (row) => {
+                rowIndex += 1;
+                const csvRowNumber = rowIndex + 1;
+                result.total += 1;
+                parser.pause();
+                try {
+                    const outcome = await this.upsertFromCsvRow(row, { status, updateBySku });
+                    if (outcome === 'created')
+                        result.created += 1;
+                    if (outcome === 'updated')
+                        result.updated += 1;
+                }
+                catch (error) {
+                    result.failed += 1;
+                    result.errors.push({ row: csvRowNumber, message: this.toCsvErrorMessage(error) });
+                }
+                finally {
+                    parser.resume();
+                }
+            });
+            parser.on('end', () => resolve());
+        });
+        return result;
+    }
+    async exportCsv(dto) {
+        const columns = this.normalizeExportColumns(dto.columns);
+        const products = await this.prisma.product.findMany({
+            where: this.buildWhereForExport(dto),
+            orderBy: { createdAt: 'desc' },
+            take: MAX_EXPORT_LIMIT,
+            include: {
+                brand: true,
+                category: true,
+                images: { orderBy: { order: 'asc' } },
+            },
+        });
+        const rows = products.map((product) => {
+            const mainImage = product.images.find((img) => img.isMain) ?? product.images[0];
+            const values = {};
+            for (const column of columns) {
+                switch (column) {
+                    case 'id':
+                        values.id = product.id;
+                        break;
+                    case 'name':
+                        values.name = product.title;
+                        break;
+                    case 'article':
+                        values.article = product.sku;
+                        break;
+                    case 'price':
+                        values.price = String(product.price);
+                        break;
+                    case 'img':
+                        values.img = mainImage?.url ?? '';
+                        break;
+                    case 'description':
+                        values.description = product.description ?? '';
+                        break;
+                    case 'brand':
+                        values.brand = product.brand?.name ?? '';
+                        break;
+                    case 'category':
+                        values.category = product.category?.name ?? '';
+                        break;
+                }
+            }
+            return values;
+        });
+        const buffer = await (0, fast_csv_1.writeToBuffer)(rows, { headers: columns });
+        return { buffer, filename: 'products.csv' };
     }
     async ensureRelations(brandId, categoryId) {
         const [brand, category] = await Promise.all([
@@ -1487,16 +1661,719 @@ let ProductsService = class ProductsService {
             throw new common_1.NotFoundException('Category not found');
         }
     }
+    async syncMainImage(productId, mainImageId, fallbackAlt) {
+        if (mainImageId === undefined)
+            return;
+        if (mainImageId === null) {
+            await this.prisma.productImage.deleteMany({ where: { productId } });
+            return;
+        }
+        const mediaFile = await this.prisma.mediaFile.findUnique({
+            where: { id: mainImageId },
+            select: { id: true, url: true, alt: true },
+        });
+        if (!mediaFile) {
+            throw new common_1.NotFoundException('Media file not found');
+        }
+        const alt = mediaFile.alt ?? fallbackAlt;
+        await this.prisma.$transaction(async (tx) => {
+            await tx.productImage.deleteMany({ where: { productId } });
+            await tx.productImage.create({
+                data: {
+                    productId,
+                    url: mediaFile.url,
+                    alt,
+                    order: PRODUCT_MAIN_IMAGE_ORDER,
+                    isMain: true,
+                    mediaFileId: mediaFile.id,
+                },
+            });
+        });
+    }
+    async upsertFromCsvRow(row, opts) {
+        const id = this.normalizeString(row.id);
+        const name = this.requireString(row.name, 'name');
+        const article = this.requireString(row.article, 'article');
+        const price = this.requireNumber(row.price, 'price');
+        const description = this.normalizeString(row.description);
+        const brandName = this.requireString(row.brand, 'brand');
+        const categoryName = this.normalizeString(row.category);
+        const imgUrl = this.normalizeString(row.img);
+        const brandId = await this.getOrCreateBrandId(brandName);
+        const categoryId = categoryName ? await this.getOrCreateCategoryId(categoryName) : undefined;
+        const mediaFile = imgUrl ? await this.uploadImageToMediaLibrary(imgUrl, name) : null;
+        const existingById = id
+            ? await this.prisma.product.findFirst({
+                where: { id, deletedAt: null },
+                select: { id: true, slug: true, categoryId: true },
+            })
+            : null;
+        if (existingById) {
+            const data = {
+                title: name,
+                sku: article,
+                price,
+                description,
+                brandId,
+            };
+            if (categoryId) {
+                data.categoryId = categoryId;
+            }
+            await this.prisma.$transaction(async (tx) => {
+                await tx.product.update({ where: { id: existingById.id }, data });
+                if (mediaFile) {
+                    await tx.productImage.deleteMany({ where: { productId: existingById.id } });
+                    await tx.productImage.create({
+                        data: {
+                            url: mediaFile.url,
+                            order: 0,
+                            isMain: true,
+                            productId: existingById.id,
+                            alt: name,
+                            mediaFileId: mediaFile.id,
+                        },
+                    });
+                }
+            });
+            return 'updated';
+        }
+        if (opts.updateBySku) {
+            const existingBySku = await this.prisma.product.findFirst({
+                where: { sku: article, deletedAt: null },
+                select: { id: true },
+            });
+            if (existingBySku) {
+                const data = {
+                    title: name,
+                    price,
+                    description,
+                    brandId,
+                    status: opts.status,
+                };
+                if (categoryId) {
+                    data.categoryId = categoryId;
+                }
+                await this.prisma.$transaction(async (tx) => {
+                    await tx.product.update({ where: { id: existingBySku.id }, data });
+                    if (mediaFile) {
+                        await tx.productImage.deleteMany({ where: { productId: existingBySku.id } });
+                        await tx.productImage.create({
+                            data: {
+                                url: mediaFile.url,
+                                order: 0,
+                                isMain: true,
+                                productId: existingBySku.id,
+                                alt: name,
+                                mediaFileId: mediaFile.id,
+                            },
+                        });
+                    }
+                });
+                return 'updated';
+            }
+        }
+        const slug = await this.buildUniqueProductSlug(name, article);
+        const productId = id || undefined;
+        await this.prisma.$transaction(async (tx) => {
+            const created = await tx.product.create({
+                data: {
+                    ...(productId ? { id: productId } : {}),
+                    title: name,
+                    slug,
+                    sku: article,
+                    description,
+                    price,
+                    currency: DEFAULT_PRODUCT_CURRENCY,
+                    status: opts.status ?? DEFAULT_PRODUCT_STATUS,
+                    stock: null,
+                    attributes: {},
+                    specs: undefined,
+                    brandId,
+                    categoryId: categoryId ?? null,
+                },
+            });
+            if (mediaFile) {
+                await tx.productImage.create({
+                    data: {
+                        url: mediaFile.url,
+                        order: 0,
+                        isMain: true,
+                        productId: created.id,
+                        alt: name,
+                        mediaFileId: mediaFile.id,
+                    },
+                });
+            }
+        });
+        return 'created';
+    }
+    async uploadImageToMediaLibrary(imgUrl, alt) {
+        try {
+            const mediaFile = await this.mediaService.uploadFromUrl(imgUrl, alt);
+            return { id: mediaFile.id, url: mediaFile.url };
+        }
+        catch {
+            return null;
+        }
+    }
+    async getOrCreateBrandId(name) {
+        const existing = await this.brandsRepository.findByName(name);
+        if (existing)
+            return existing.id;
+        const base = (0, slugify_1.slugify)(name) || 'brand';
+        const slug = await this.buildUniqueSlug(base, (candidate) => this.brandsRepository.findBySlug(candidate));
+        const created = await this.prisma.brand.create({ data: { name, slug } });
+        return created.id;
+    }
+    async getOrCreateCategoryId(name) {
+        const existing = await this.categoriesRepository.findByName(name);
+        if (existing)
+            return existing.id;
+        const base = (0, slugify_1.slugify)(name) || 'category';
+        const slug = await this.buildUniqueSlug(base, (candidate) => this.categoriesRepository.findBySlug(candidate));
+        const created = await this.prisma.category.create({ data: { name, slug } });
+        return created.id;
+    }
+    async buildUniqueProductSlug(title, sku) {
+        const base = (0, slugify_1.slugify)(title) || (0, slugify_1.slugify)(sku) || 'product';
+        const skuSuffix = (0, slugify_1.slugify)(sku);
+        const candidates = skuSuffix && base !== skuSuffix ? [base, `${base}-${skuSuffix}`] : [base];
+        for (const candidate of candidates) {
+            const available = await this.prisma.product.findUnique({ where: { slug: candidate } });
+            if (!available)
+                return candidate;
+        }
+        return this.buildUniqueSlug(base, (candidate) => this.prisma.product.findUnique({ where: { slug: candidate } }));
+    }
+    async buildUniqueSlug(base, findExisting) {
+        const normalizedBase = base || 'item';
+        for (let i = 0; i < MAX_SLUG_ATTEMPTS; i += 1) {
+            const candidate = i === 0 ? normalizedBase : `${normalizedBase}-${i + 1}`;
+            const existing = await findExisting(candidate);
+            if (!existing)
+                return candidate;
+        }
+        throw new common_1.BadRequestException('Unable to generate unique slug');
+    }
+    buildWhereForExport(dto) {
+        const where = { deletedAt: null };
+        const brandId = dto.brandId?.trim();
+        if (brandId) {
+            where.brandId = brandId;
+        }
+        const search = dto.search?.trim();
+        if (search) {
+            where.OR = [
+                { title: { contains: search, mode: 'insensitive' } },
+                { sku: { contains: search, mode: 'insensitive' } },
+            ];
+        }
+        return where;
+    }
+    normalizeExportColumns(columns) {
+        if (!columns || columns.length === 0) {
+            return [...products_csv_dto_1.PRODUCT_CSV_COLUMNS];
+        }
+        const unique = Array.from(new Set(columns));
+        const filtered = unique.filter((c) => products_csv_dto_1.PRODUCT_CSV_COLUMNS.includes(c));
+        return filtered.length > 0 ? filtered : [...products_csv_dto_1.PRODUCT_CSV_COLUMNS];
+    }
+    normalizeString(value) {
+        if (value === undefined || value === null)
+            return undefined;
+        const text = String(value).trim();
+        return text ? text : undefined;
+    }
+    requireString(value, field) {
+        const text = this.normalizeString(value);
+        if (!text) {
+            throw new common_1.BadRequestException(`Invalid ${field}`);
+        }
+        return text;
+    }
+    requireNumber(value, field) {
+        const text = this.normalizeString(value);
+        const parsed = text ? Number(text) : NaN;
+        if (!Number.isFinite(parsed)) {
+            throw new common_1.BadRequestException(`Invalid ${field}`);
+        }
+        return parsed;
+    }
+    toCsvErrorMessage(error) {
+        if (error instanceof common_1.BadRequestException) {
+            const response = error.getResponse();
+            if (typeof response === 'string')
+                return response;
+            if (response && typeof response === 'object' && 'message' in response) {
+                const message = response.message;
+                if (typeof message === 'string')
+                    return message;
+                if (Array.isArray(message))
+                    return message.map(String).join('; ');
+            }
+            return 'Bad request';
+        }
+        if (error && typeof error === 'object' && 'code' in error) {
+            const prismaError = error;
+            const code = String(prismaError.code ?? '');
+            if (code === 'P2002') {
+                const target = prismaError.meta && typeof prismaError.meta === 'object' && 'target' in prismaError.meta
+                    ? prismaError.meta.target
+                    : undefined;
+                const targetText = Array.isArray(target) ? target.join(', ') : target ? String(target) : '';
+                return targetText ? `Дубликат уникального поля: ${targetText}` : 'Дубликат уникального поля (P2002)';
+            }
+            return `Database error: ${code}`;
+        }
+        return error instanceof Error ? error.message : 'Unknown error';
+    }
 };
 exports.ProductsService = ProductsService;
 exports.ProductsService = ProductsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [typeof (_a = typeof products_repository_1.ProductsRepository !== "undefined" && products_repository_1.ProductsRepository) === "function" ? _a : Object, typeof (_b = typeof brands_repository_1.BrandsRepository !== "undefined" && brands_repository_1.BrandsRepository) === "function" ? _b : Object, typeof (_c = typeof categories_repository_1.CategoriesRepository !== "undefined" && categories_repository_1.CategoriesRepository) === "function" ? _c : Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof products_repository_1.ProductsRepository !== "undefined" && products_repository_1.ProductsRepository) === "function" ? _a : Object, typeof (_b = typeof brands_repository_1.BrandsRepository !== "undefined" && brands_repository_1.BrandsRepository) === "function" ? _b : Object, typeof (_c = typeof categories_repository_1.CategoriesRepository !== "undefined" && categories_repository_1.CategoriesRepository) === "function" ? _c : Object, typeof (_d = typeof media_service_1.MediaService !== "undefined" && media_service_1.MediaService) === "function" ? _d : Object, typeof (_e = typeof prisma_service_1.PrismaService !== "undefined" && prisma_service_1.PrismaService) === "function" ? _e : Object])
 ], ProductsService);
 
 
 /***/ }),
 /* 38 */
+/***/ ((module) => {
+
+module.exports = require("fast-csv");
+
+/***/ }),
+/* 39 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MediaService = void 0;
+const common_1 = __webpack_require__(1);
+const minio_service_1 = __webpack_require__(40);
+const media_repository_1 = __webpack_require__(43);
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+let MediaService = class MediaService {
+    minioService;
+    mediaRepository;
+    constructor(minioService, mediaRepository) {
+        this.minioService = minioService;
+        this.mediaRepository = mediaRepository;
+    }
+    async findAll(query) {
+        return this.mediaRepository.findAll(query);
+    }
+    async findOne(id) {
+        const file = await this.mediaRepository.findOne(id);
+        if (!file) {
+            throw new common_1.NotFoundException('Media file not found');
+        }
+        return file;
+    }
+    async upload(file, alt) {
+        this.validateFile(file);
+        const result = await this.minioService.upload(file.buffer, file.originalname, file.mimetype);
+        const dimensions = await this.getImageDimensions(file.buffer);
+        return this.mediaRepository.create({
+            filename: result.key,
+            originalName: file.originalname,
+            mimeType: file.mimetype,
+            size: result.size,
+            url: result.url,
+            width: dimensions?.width,
+            height: dimensions?.height,
+            alt,
+        });
+    }
+    async uploadFromUrl(url, alt) {
+        const existingFile = await this.mediaRepository.findByUrl(url);
+        if (existingFile) {
+            return existingFile;
+        }
+        try {
+            const response = await fetch(url, {
+                headers: { 'User-Agent': 'PonatechBot/1.0' },
+                signal: AbortSignal.timeout(30000),
+            });
+            if (!response.ok) {
+                throw new common_1.BadRequestException(`Failed to fetch image: ${response.status}`);
+            }
+            const contentType = response.headers.get('content-type') || 'image/jpeg';
+            const mimeType = contentType.split(';')[0].trim();
+            if (!ALLOWED_MIME_TYPES.includes(mimeType)) {
+                throw new common_1.BadRequestException(`Unsupported image type: ${mimeType}`);
+            }
+            const buffer = Buffer.from(await response.arrayBuffer());
+            if (buffer.length > MAX_FILE_SIZE) {
+                throw new common_1.BadRequestException('File too large');
+            }
+            const filename = this.extractFilenameFromUrl(url);
+            const result = await this.minioService.upload(buffer, filename, mimeType);
+            const dimensions = await this.getImageDimensions(buffer);
+            return this.mediaRepository.create({
+                filename: result.key,
+                originalName: filename,
+                mimeType,
+                size: result.size,
+                url: result.url,
+                width: dimensions?.width,
+                height: dimensions?.height,
+                alt,
+            });
+        }
+        catch (error) {
+            if (error instanceof common_1.BadRequestException) {
+                throw error;
+            }
+            throw new common_1.BadRequestException(`Failed to download image from URL: ${url}`);
+        }
+    }
+    async update(id, dto) {
+        await this.findOne(id);
+        return this.mediaRepository.update(id, dto);
+    }
+    async delete(id) {
+        const file = await this.findOne(id);
+        await this.minioService.delete(file.filename);
+        await this.mediaRepository.delete(id);
+    }
+    validateFile(file) {
+        if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+            throw new common_1.BadRequestException(`Unsupported file type: ${file.mimetype}`);
+        }
+        if (file.size > MAX_FILE_SIZE) {
+            throw new common_1.BadRequestException(`File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB`);
+        }
+    }
+    async getImageDimensions(buffer) {
+        try {
+            const signature = buffer.slice(0, 8);
+            if (this.isPng(signature)) {
+                return this.getPngDimensions(buffer);
+            }
+            if (this.isJpeg(signature)) {
+                return this.getJpegDimensions(buffer);
+            }
+            if (this.isGif(signature)) {
+                return this.getGifDimensions(buffer);
+            }
+            if (this.isWebp(buffer)) {
+                return this.getWebpDimensions(buffer);
+            }
+            return null;
+        }
+        catch {
+            return null;
+        }
+    }
+    isPng(sig) {
+        return sig[0] === 0x89 && sig[1] === 0x50 && sig[2] === 0x4e && sig[3] === 0x47;
+    }
+    isJpeg(sig) {
+        return sig[0] === 0xff && sig[1] === 0xd8;
+    }
+    isGif(sig) {
+        return sig[0] === 0x47 && sig[1] === 0x49 && sig[2] === 0x46;
+    }
+    isWebp(buffer) {
+        return (buffer[0] === 0x52 &&
+            buffer[1] === 0x49 &&
+            buffer[2] === 0x46 &&
+            buffer[3] === 0x46 &&
+            buffer[8] === 0x57 &&
+            buffer[9] === 0x45 &&
+            buffer[10] === 0x42 &&
+            buffer[11] === 0x50);
+    }
+    getPngDimensions(buffer) {
+        return {
+            width: buffer.readUInt32BE(16),
+            height: buffer.readUInt32BE(20),
+        };
+    }
+    getJpegDimensions(buffer) {
+        let offset = 2;
+        while (offset < buffer.length) {
+            if (buffer[offset] !== 0xff)
+                break;
+            const marker = buffer[offset + 1];
+            if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc) {
+                return {
+                    height: buffer.readUInt16BE(offset + 5),
+                    width: buffer.readUInt16BE(offset + 7),
+                };
+            }
+            offset += 2 + buffer.readUInt16BE(offset + 2);
+        }
+        return null;
+    }
+    getGifDimensions(buffer) {
+        return {
+            width: buffer.readUInt16LE(6),
+            height: buffer.readUInt16LE(8),
+        };
+    }
+    getWebpDimensions(buffer) {
+        const vp8Offset = buffer.indexOf('VP8 ');
+        if (vp8Offset !== -1) {
+            return {
+                width: buffer.readUInt16LE(vp8Offset + 14) & 0x3fff,
+                height: buffer.readUInt16LE(vp8Offset + 16) & 0x3fff,
+            };
+        }
+        const vp8lOffset = buffer.indexOf('VP8L');
+        if (vp8lOffset !== -1) {
+            const bits = buffer.readUInt32LE(vp8lOffset + 9);
+            return {
+                width: (bits & 0x3fff) + 1,
+                height: ((bits >> 14) & 0x3fff) + 1,
+            };
+        }
+        return null;
+    }
+    extractFilenameFromUrl(url) {
+        try {
+            const pathname = new URL(url).pathname;
+            const filename = pathname.split('/').pop() || 'image';
+            return filename.replace(/[^a-zA-Z0-9.-]/g, '_');
+        }
+        catch {
+            return 'image';
+        }
+    }
+};
+exports.MediaService = MediaService;
+exports.MediaService = MediaService = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof minio_service_1.MinioService !== "undefined" && minio_service_1.MinioService) === "function" ? _a : Object, typeof (_b = typeof media_repository_1.MediaRepository !== "undefined" && media_repository_1.MediaRepository) === "function" ? _b : Object])
+], MediaService);
+
+
+/***/ }),
+/* 40 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MinioService = void 0;
+const common_1 = __webpack_require__(1);
+const config_1 = __webpack_require__(2);
+const client_s3_1 = __webpack_require__(41);
+const lib_storage_1 = __webpack_require__(42);
+let MinioService = class MinioService {
+    config;
+    client;
+    bucket;
+    endpoint;
+    port;
+    useSSL;
+    constructor(config) {
+        this.config = config;
+        this.endpoint = this.config.get('MINIO_ENDPOINT', 'localhost');
+        this.port = this.config.get('MINIO_PORT', 9000);
+        this.useSSL = this.config.get('MINIO_USE_SSL', false);
+        this.bucket = this.config.get('MINIO_BUCKET', 'ponatech-media');
+        const protocol = this.useSSL ? 'https' : 'http';
+        const endpointUrl = `${protocol}://${this.endpoint}:${this.port}`;
+        this.client = new client_s3_1.S3Client({
+            endpoint: endpointUrl,
+            region: 'us-east-1',
+            credentials: {
+                accessKeyId: this.config.get('MINIO_ROOT_USER', 'minioadmin'),
+                secretAccessKey: this.config.get('MINIO_ROOT_PASSWORD', 'minioadmin'),
+            },
+            forcePathStyle: true,
+        });
+    }
+    async onModuleInit() {
+        await this.ensureBucketExists();
+    }
+    async ensureBucketExists() {
+        try {
+            await this.client.send(new client_s3_1.HeadBucketCommand({ Bucket: this.bucket }));
+        }
+        catch (error) {
+            const err = error;
+            if (err.name === 'NotFound' || err.name === 'NoSuchBucket') {
+                await this.client.send(new client_s3_1.CreateBucketCommand({ Bucket: this.bucket }));
+            }
+        }
+    }
+    async upload(buffer, filename, mimeType) {
+        const key = this.generateKey(filename);
+        await this.client.send(new client_s3_1.PutObjectCommand({
+            Bucket: this.bucket,
+            Key: key,
+            Body: buffer,
+            ContentType: mimeType,
+        }));
+        return {
+            key,
+            url: this.getPublicUrl(key),
+            size: buffer.length,
+        };
+    }
+    async uploadStream(stream, filename, mimeType, size) {
+        const key = this.generateKey(filename);
+        const upload = new lib_storage_1.Upload({
+            client: this.client,
+            params: {
+                Bucket: this.bucket,
+                Key: key,
+                Body: stream,
+                ContentType: mimeType,
+            },
+        });
+        await upload.done();
+        return {
+            key,
+            url: this.getPublicUrl(key),
+            size: size ?? 0,
+        };
+    }
+    async delete(key) {
+        await this.client.send(new client_s3_1.DeleteObjectCommand({
+            Bucket: this.bucket,
+            Key: key,
+        }));
+    }
+    async getObject(key) {
+        const response = await this.client.send(new client_s3_1.GetObjectCommand({
+            Bucket: this.bucket,
+            Key: key,
+        }));
+        return response.Body;
+    }
+    getPublicUrl(key) {
+        const protocol = this.useSSL ? 'https' : 'http';
+        return `${protocol}://${this.endpoint}:${this.port}/${this.bucket}/${key}`;
+    }
+    generateKey(filename) {
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substring(2, 8);
+        const safeFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
+        return `${timestamp}-${random}-${safeFilename}`;
+    }
+};
+exports.MinioService = MinioService;
+exports.MinioService = MinioService = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof config_1.ConfigService !== "undefined" && config_1.ConfigService) === "function" ? _a : Object])
+], MinioService);
+
+
+/***/ }),
+/* 41 */
+/***/ ((module) => {
+
+module.exports = require("@aws-sdk/client-s3");
+
+/***/ }),
+/* 42 */
+/***/ ((module) => {
+
+module.exports = require("@aws-sdk/lib-storage");
+
+/***/ }),
+/* 43 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MediaRepository = void 0;
+const common_1 = __webpack_require__(1);
+const prisma_service_1 = __webpack_require__(21);
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 24;
+let MediaRepository = class MediaRepository {
+    prisma;
+    constructor(prisma) {
+        this.prisma = prisma;
+    }
+    async findAll(query) {
+        const page = query.page ?? DEFAULT_PAGE;
+        const limit = query.limit ?? DEFAULT_LIMIT;
+        const skip = (page - 1) * limit;
+        const where = query.search
+            ? {
+                OR: [
+                    { originalName: { contains: query.search, mode: 'insensitive' } },
+                    { filename: { contains: query.search, mode: 'insensitive' } },
+                ],
+            }
+            : {};
+        const [data, total] = await Promise.all([
+            this.prisma.mediaFile.findMany({
+                where,
+                skip,
+                take: limit,
+                orderBy: { createdAt: 'desc' },
+            }),
+            this.prisma.mediaFile.count({ where }),
+        ]);
+        return {
+            data,
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+        };
+    }
+    async findOne(id) {
+        return this.prisma.mediaFile.findUnique({ where: { id } });
+    }
+    async findByUrl(url) {
+        return this.prisma.mediaFile.findFirst({ where: { url } });
+    }
+    async create(data) {
+        return this.prisma.mediaFile.create({ data });
+    }
+    async update(id, data) {
+        return this.prisma.mediaFile.update({ where: { id }, data });
+    }
+    async delete(id) {
+        return this.prisma.mediaFile.delete({ where: { id } });
+    }
+};
+exports.MediaRepository = MediaRepository;
+exports.MediaRepository = MediaRepository = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof prisma_service_1.PrismaService !== "undefined" && prisma_service_1.PrismaService) === "function" ? _a : Object])
+], MediaRepository);
+
+
+/***/ }),
+/* 44 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1577,17 +2454,28 @@ let ProductsRepository = class ProductsRepository {
         }
         const orderBy = this.buildOrderBy(sort);
         const skip = (page - 1) * limit;
-        return this.prisma.product.findMany({
-            where,
-            orderBy,
-            skip,
-            take: limit,
-            include: {
-                brand: true,
-                category: true,
-                images: { orderBy: { order: 'asc' } },
-            },
-        });
+        const [total, data] = await this.prisma.$transaction([
+            this.prisma.product.count({ where }),
+            this.prisma.product.findMany({
+                where,
+                orderBy,
+                skip,
+                take: limit,
+                include: {
+                    brand: true,
+                    category: true,
+                    images: { orderBy: { order: 'asc' } },
+                },
+            }),
+        ]);
+        const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
+        return {
+            data,
+            total,
+            page,
+            limit,
+            totalPages,
+        };
     }
     async findOne(id) {
         return this.prisma.product.findFirst({
@@ -1612,12 +2500,22 @@ let ProductsRepository = class ProductsRepository {
     async create(dto) {
         return this.prisma.product.create({
             data: this.toCreateInput(dto),
+            include: {
+                brand: true,
+                category: true,
+                images: { orderBy: { order: 'asc' } },
+            },
         });
     }
     async update(id, dto) {
         return this.prisma.product.update({
             where: { id },
             data: this.toUpdateInput(dto),
+            include: {
+                brand: true,
+                category: true,
+                images: { orderBy: { order: 'asc' } },
+            },
         });
     }
     async remove(id) {
@@ -1625,6 +2523,101 @@ let ProductsRepository = class ProductsRepository {
             where: { id },
             data: { deletedAt: new Date() },
         });
+    }
+    async removeMany(ids) {
+        return this.prisma.product.updateMany({
+            where: { id: { in: ids }, deletedAt: null },
+            data: { deletedAt: new Date() },
+        });
+    }
+    async updateStatusMany(ids, status) {
+        return this.prisma.product.updateMany({
+            where: { id: { in: ids }, deletedAt: null },
+            data: { status },
+        });
+    }
+    async updateBrandMany(ids, brandId) {
+        return this.prisma.product.updateMany({
+            where: { id: { in: ids }, deletedAt: null },
+            data: { brandId },
+        });
+    }
+    async updateCategoryMany(ids, categoryId) {
+        return this.prisma.product.updateMany({
+            where: { id: { in: ids }, deletedAt: null },
+            data: { categoryId },
+        });
+    }
+    async findAllDeleted(filters) {
+        const where = { deletedAt: { not: null } };
+        const brandId = this.normalizeFilterValue(filters?.brandId);
+        const search = this.normalizeFilterValue(filters?.search);
+        const page = this.parseIntFilter(filters?.page, DEFAULT_PAGE);
+        const limit = this.parseIntFilter(filters?.limit, DEFAULT_LIMIT, MAX_LIMIT);
+        const sort = this.normalizeFilterValue(filters?.sort);
+        if (brandId) {
+            where.brandId = brandId;
+        }
+        if (search) {
+            where.OR = [
+                { title: { contains: search, mode: 'insensitive' } },
+                { sku: { contains: search, mode: 'insensitive' } },
+            ];
+        }
+        const orderBy = this.buildOrderBy(sort);
+        const skip = (page - 1) * limit;
+        const [total, data] = await this.prisma.$transaction([
+            this.prisma.product.count({ where }),
+            this.prisma.product.findMany({
+                where,
+                orderBy,
+                skip,
+                take: limit,
+                include: {
+                    brand: true,
+                    category: true,
+                    images: { orderBy: { order: 'asc' } },
+                },
+            }),
+        ]);
+        const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
+        return {
+            data,
+            total,
+            page,
+            limit,
+            totalPages,
+        };
+    }
+    async restoreOne(id) {
+        return this.prisma.product.update({
+            where: { id },
+            data: { deletedAt: null },
+            include: {
+                brand: true,
+                category: true,
+                images: { orderBy: { order: 'asc' } },
+            },
+        });
+    }
+    async restoreMany(ids) {
+        return this.prisma.product.updateMany({
+            where: { id: { in: ids }, deletedAt: { not: null } },
+            data: { deletedAt: null },
+        });
+    }
+    async hardDeleteOne(id) {
+        await this.prisma.$transaction([
+            this.prisma.productImage.deleteMany({ where: { productId: id } }),
+            this.prisma.product.delete({ where: { id } }),
+        ]);
+    }
+    async hardDeleteMany(ids) {
+        const [, result] = await this.prisma.$transaction([
+            this.prisma.productImage.deleteMany({ where: { productId: { in: ids } } }),
+            this.prisma.product.deleteMany({ where: { id: { in: ids }, deletedAt: { not: null } } }),
+        ]);
+        return result;
     }
     toCreateInput(dto) {
         return {
@@ -1635,11 +2628,11 @@ let ProductsRepository = class ProductsRepository {
             price: dto.price,
             currency: dto.currency ?? 'RUB',
             status: dto.status ?? client_1.ProductStatus.DRAFT,
-            stock: dto.stock ?? 0,
+            stock: dto.stock ?? null,
             attributes: dto.attributes,
             specs: dto.specs,
             brandId: dto.brandId,
-            categoryId: dto.categoryId,
+            categoryId: dto.categoryId ?? null,
         };
     }
     toUpdateInput(dto) {
@@ -1667,7 +2660,7 @@ let ProductsRepository = class ProductsRepository {
         if (dto.brandId !== undefined)
             data.brandId = dto.brandId;
         if (dto.categoryId !== undefined)
-            data.categoryId = dto.categoryId;
+            data.categoryId = dto.categoryId || null;
         return data;
     }
     buildAttributeFilters(filters) {
@@ -1736,7 +2729,91 @@ exports.ProductsRepository = ProductsRepository = __decorate([
 
 
 /***/ }),
-/* 39 */
+/* 45 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ImportProductsCsvDto = exports.ExportProductsCsvDto = exports.PRODUCT_CSV_COLUMNS = void 0;
+const class_validator_1 = __webpack_require__(31);
+const client_1 = __webpack_require__(22);
+exports.PRODUCT_CSV_COLUMNS = [
+    'id',
+    'name',
+    'article',
+    'price',
+    'img',
+    'description',
+    'brand',
+    'category',
+];
+class ExportProductsCsvDto {
+    columns;
+    brandId;
+    search;
+}
+exports.ExportProductsCsvDto = ExportProductsCsvDto;
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsIn)(exports.PRODUCT_CSV_COLUMNS, { each: true }),
+    __metadata("design:type", Array)
+], ExportProductsCsvDto.prototype, "columns", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], ExportProductsCsvDto.prototype, "brandId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], ExportProductsCsvDto.prototype, "search", void 0);
+class ImportProductsCsvDto {
+    status;
+    updateBySku;
+}
+exports.ImportProductsCsvDto = ImportProductsCsvDto;
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsIn)(['DRAFT', 'PUBLISHED', 'ARCHIVED']),
+    __metadata("design:type", typeof (_a = typeof client_1.ProductStatus !== "undefined" && client_1.ProductStatus) === "function" ? _a : Object)
+], ImportProductsCsvDto.prototype, "status", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsIn)(['true', 'false']),
+    __metadata("design:type", String)
+], ImportProductsCsvDto.prototype, "updateBySku", void 0);
+
+
+/***/ }),
+/* 46 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.slugify = slugify;
+function slugify(text) {
+    return text
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/[\s_-]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+}
+
+
+/***/ }),
+/* 47 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -1747,7 +2824,65 @@ exports.CATALOG_INTERNAL_SERVICE = 'CatalogInternalService';
 
 
 /***/ }),
-/* 40 */
+/* 48 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MediaModule = void 0;
+const common_1 = __webpack_require__(1);
+const minio_module_1 = __webpack_require__(49);
+const prisma_module_1 = __webpack_require__(20);
+const media_controller_1 = __webpack_require__(50);
+const media_repository_1 = __webpack_require__(43);
+const media_service_1 = __webpack_require__(39);
+let MediaModule = class MediaModule {
+};
+exports.MediaModule = MediaModule;
+exports.MediaModule = MediaModule = __decorate([
+    (0, common_1.Module)({
+        imports: [minio_module_1.MinioModule, prisma_module_1.PrismaModule],
+        controllers: [media_controller_1.MediaController],
+        providers: [media_service_1.MediaService, media_repository_1.MediaRepository],
+        exports: [media_service_1.MediaService],
+    })
+], MediaModule);
+
+
+/***/ }),
+/* 49 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MinioModule = void 0;
+const common_1 = __webpack_require__(1);
+const minio_service_1 = __webpack_require__(40);
+let MinioModule = class MinioModule {
+};
+exports.MinioModule = MinioModule;
+exports.MinioModule = MinioModule = __decorate([
+    (0, common_1.Module)({
+        providers: [minio_service_1.MinioService],
+        exports: [minio_service_1.MinioService],
+    })
+], MinioModule);
+
+
+/***/ }),
+/* 50 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1763,17 +2898,235 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MediaController = void 0;
+const common_1 = __webpack_require__(1);
+const platform_express_1 = __webpack_require__(51);
+const swagger_1 = __webpack_require__(5);
+const jwt_auth_guard_1 = __webpack_require__(24);
+const roles_guard_1 = __webpack_require__(27);
+const roles_decorator_1 = __webpack_require__(26);
+const role_enum_1 = __webpack_require__(25);
+const media_service_1 = __webpack_require__(39);
+const media_dto_1 = __webpack_require__(52);
+let MediaController = class MediaController {
+    mediaService;
+    constructor(mediaService) {
+        this.mediaService = mediaService;
+    }
+    async findAll(query) {
+        return this.mediaService.findAll(query);
+    }
+    async findOne(id) {
+        return this.mediaService.findOne(id);
+    }
+    async upload(file, alt) {
+        return this.mediaService.upload(file, alt);
+    }
+    async uploadFromUrl(dto) {
+        return this.mediaService.uploadFromUrl(dto.url, dto.alt);
+    }
+    async update(id, dto) {
+        return this.mediaService.update(id, dto);
+    }
+    async delete(id) {
+        return this.mediaService.delete(id);
+    }
+};
+exports.MediaController = MediaController;
+__decorate([
+    (0, common_1.Get)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Получить список медиафайлов' }),
+    __param(0, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof media_dto_1.MediaFilesQueryDto !== "undefined" && media_dto_1.MediaFilesQueryDto) === "function" ? _b : Object]),
+    __metadata("design:returntype", typeof (_c = typeof Promise !== "undefined" && Promise) === "function" ? _c : Object)
+], MediaController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Получить медиафайл по ID' }),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", typeof (_d = typeof Promise !== "undefined" && Promise) === "function" ? _d : Object)
+], MediaController.prototype, "findOne", null);
+__decorate([
+    (0, common_1.Post)('upload'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.SuperAdmin, role_enum_1.Role.Admin, role_enum_1.Role.Manager),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Загрузить файл' }),
+    (0, swagger_1.ApiConsumes)('multipart/form-data'),
+    (0, swagger_1.ApiBody)({
+        schema: {
+            type: 'object',
+            properties: {
+                file: { type: 'string', format: 'binary' },
+                alt: { type: 'string' },
+            },
+            required: ['file'],
+        },
+    }),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file')),
+    __param(0, (0, common_1.UploadedFile)()),
+    __param(1, (0, common_1.Body)('alt')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_f = typeof Express !== "undefined" && (_e = Express.Multer) !== void 0 && _e.File) === "function" ? _f : Object, String]),
+    __metadata("design:returntype", typeof (_g = typeof Promise !== "undefined" && Promise) === "function" ? _g : Object)
+], MediaController.prototype, "upload", null);
+__decorate([
+    (0, common_1.Post)('upload-from-url'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.SuperAdmin, role_enum_1.Role.Admin, role_enum_1.Role.Manager),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Загрузить файл по URL' }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_h = typeof media_dto_1.UploadFromUrlDto !== "undefined" && media_dto_1.UploadFromUrlDto) === "function" ? _h : Object]),
+    __metadata("design:returntype", typeof (_j = typeof Promise !== "undefined" && Promise) === "function" ? _j : Object)
+], MediaController.prototype, "uploadFromUrl", null);
+__decorate([
+    (0, common_1.Patch)(':id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.SuperAdmin, role_enum_1.Role.Admin, role_enum_1.Role.Manager),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Обновить медиафайл' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_k = typeof media_dto_1.UpdateMediaFileDto !== "undefined" && media_dto_1.UpdateMediaFileDto) === "function" ? _k : Object]),
+    __metadata("design:returntype", typeof (_l = typeof Promise !== "undefined" && Promise) === "function" ? _l : Object)
+], MediaController.prototype, "update", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.SuperAdmin, role_enum_1.Role.Admin, role_enum_1.Role.Manager),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Удалить медиафайл' }),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", typeof (_m = typeof Promise !== "undefined" && Promise) === "function" ? _m : Object)
+], MediaController.prototype, "delete", null);
+exports.MediaController = MediaController = __decorate([
+    (0, swagger_1.ApiTags)('Media'),
+    (0, common_1.Controller)('media'),
+    __metadata("design:paramtypes", [typeof (_a = typeof media_service_1.MediaService !== "undefined" && media_service_1.MediaService) === "function" ? _a : Object])
+], MediaController);
+
+
+/***/ }),
+/* 51 */
+/***/ ((module) => {
+
+module.exports = require("@nestjs/platform-express");
+
+/***/ }),
+/* 52 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MediaFilesQueryDto = exports.UpdateMediaFileDto = exports.UploadFromUrlDto = void 0;
+const class_validator_1 = __webpack_require__(31);
+const class_transformer_1 = __webpack_require__(53);
+class UploadFromUrlDto {
+    url;
+    alt;
+}
+exports.UploadFromUrlDto = UploadFromUrlDto;
+__decorate([
+    (0, class_validator_1.IsUrl)(),
+    __metadata("design:type", String)
+], UploadFromUrlDto.prototype, "url", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UploadFromUrlDto.prototype, "alt", void 0);
+class UpdateMediaFileDto {
+    alt;
+}
+exports.UpdateMediaFileDto = UpdateMediaFileDto;
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateMediaFileDto.prototype, "alt", void 0);
+class MediaFilesQueryDto {
+    search;
+    page;
+    limit;
+}
+exports.MediaFilesQueryDto = MediaFilesQueryDto;
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], MediaFilesQueryDto.prototype, "search", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(1),
+    __metadata("design:type", Number)
+], MediaFilesQueryDto.prototype, "page", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(100),
+    __metadata("design:type", Number)
+], MediaFilesQueryDto.prototype, "limit", void 0);
+
+
+/***/ }),
+/* 53 */
+/***/ ((module) => {
+
+module.exports = require("class-transformer");
+
+/***/ }),
+/* 54 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5, _6, _7;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ProductsController = void 0;
 const common_1 = __webpack_require__(1);
 const swagger_1 = __webpack_require__(5);
+const platform_express_1 = __webpack_require__(51);
 const jwt_auth_guard_1 = __webpack_require__(24);
 const role_enum_1 = __webpack_require__(25);
 const roles_decorator_1 = __webpack_require__(26);
 const roles_guard_1 = __webpack_require__(27);
 const products_service_1 = __webpack_require__(37);
-const product_dto_1 = __webpack_require__(41);
+const product_dto_1 = __webpack_require__(55);
+const products_csv_dto_1 = __webpack_require__(45);
 let ProductsController = class ProductsController {
     productsService;
     constructor(productsService) {
@@ -1791,11 +3144,50 @@ let ProductsController = class ProductsController {
     async create(dto) {
         return this.productsService.create(dto);
     }
+    async importCsv(file, dto) {
+        if (!file?.buffer) {
+            throw new common_1.BadRequestException('CSV file is required');
+        }
+        return this.productsService.importCsv(file.buffer, dto);
+    }
+    async exportCsv(dto, res) {
+        const { buffer, filename } = await this.productsService.exportCsv(dto);
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        return new common_1.StreamableFile(buffer);
+    }
     async update(id, dto) {
         return this.productsService.update(id, dto);
     }
     async remove(id) {
         await this.productsService.remove(id);
+    }
+    async removeMany(dto) {
+        return this.productsService.removeMany(dto);
+    }
+    async updateStatusMany(dto) {
+        return this.productsService.updateStatusMany(dto);
+    }
+    async updateBrandMany(dto) {
+        return this.productsService.updateBrandMany(dto);
+    }
+    async updateCategoryMany(dto) {
+        return this.productsService.updateCategoryMany(dto);
+    }
+    async findAllDeleted(filters) {
+        return this.productsService.findAllDeleted(filters);
+    }
+    async restore(id) {
+        return this.productsService.restore(id);
+    }
+    async restoreMany(dto) {
+        return this.productsService.restoreMany(dto);
+    }
+    async hardDelete(id) {
+        await this.productsService.hardDelete(id);
+    }
+    async hardDeleteMany(dto) {
+        return this.productsService.hardDeleteMany(dto);
     }
 };
 exports.ProductsController = ProductsController;
@@ -1830,14 +3222,35 @@ __decorate([
     __metadata("design:returntype", typeof (_g = typeof Promise !== "undefined" && Promise) === "function" ? _g : Object)
 ], ProductsController.prototype, "create", null);
 __decorate([
+    (0, common_1.Post)('import-csv'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.Manager, role_enum_1.Role.Admin, role_enum_1.Role.SuperAdmin),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file')),
+    __param(0, (0, common_1.UploadedFile)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_j = typeof Express !== "undefined" && (_h = Express.Multer) !== void 0 && _h.File) === "function" ? _j : Object, typeof (_k = typeof products_csv_dto_1.ImportProductsCsvDto !== "undefined" && products_csv_dto_1.ImportProductsCsvDto) === "function" ? _k : Object]),
+    __metadata("design:returntype", typeof (_l = typeof Promise !== "undefined" && Promise) === "function" ? _l : Object)
+], ProductsController.prototype, "importCsv", null);
+__decorate([
+    (0, common_1.Post)('export-csv'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.Manager, role_enum_1.Role.Admin, role_enum_1.Role.SuperAdmin),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Res)({ passthrough: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_m = typeof products_csv_dto_1.ExportProductsCsvDto !== "undefined" && products_csv_dto_1.ExportProductsCsvDto) === "function" ? _m : Object, Object]),
+    __metadata("design:returntype", typeof (_o = typeof Promise !== "undefined" && Promise) === "function" ? _o : Object)
+], ProductsController.prototype, "exportCsv", null);
+__decorate([
     (0, common_1.Patch)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(role_enum_1.Role.Manager, role_enum_1.Role.Admin, role_enum_1.Role.SuperAdmin),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, typeof (_h = typeof product_dto_1.UpdateProductDto !== "undefined" && product_dto_1.UpdateProductDto) === "function" ? _h : Object]),
-    __metadata("design:returntype", typeof (_j = typeof Promise !== "undefined" && Promise) === "function" ? _j : Object)
+    __metadata("design:paramtypes", [String, typeof (_p = typeof product_dto_1.UpdateProductDto !== "undefined" && product_dto_1.UpdateProductDto) === "function" ? _p : Object]),
+    __metadata("design:returntype", typeof (_q = typeof Promise !== "undefined" && Promise) === "function" ? _q : Object)
 ], ProductsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
@@ -1846,8 +3259,89 @@ __decorate([
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", typeof (_k = typeof Promise !== "undefined" && Promise) === "function" ? _k : Object)
+    __metadata("design:returntype", typeof (_r = typeof Promise !== "undefined" && Promise) === "function" ? _r : Object)
 ], ProductsController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Post)('batch/delete'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.Manager, role_enum_1.Role.Admin, role_enum_1.Role.SuperAdmin),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_s = typeof product_dto_1.ProductIdsDto !== "undefined" && product_dto_1.ProductIdsDto) === "function" ? _s : Object]),
+    __metadata("design:returntype", typeof (_t = typeof Promise !== "undefined" && Promise) === "function" ? _t : Object)
+], ProductsController.prototype, "removeMany", null);
+__decorate([
+    (0, common_1.Patch)('batch/status'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.Manager, role_enum_1.Role.Admin, role_enum_1.Role.SuperAdmin),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_u = typeof product_dto_1.BatchUpdateProductStatusDto !== "undefined" && product_dto_1.BatchUpdateProductStatusDto) === "function" ? _u : Object]),
+    __metadata("design:returntype", typeof (_v = typeof Promise !== "undefined" && Promise) === "function" ? _v : Object)
+], ProductsController.prototype, "updateStatusMany", null);
+__decorate([
+    (0, common_1.Patch)('batch/brand'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.Manager, role_enum_1.Role.Admin, role_enum_1.Role.SuperAdmin),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_w = typeof product_dto_1.BatchUpdateProductBrandDto !== "undefined" && product_dto_1.BatchUpdateProductBrandDto) === "function" ? _w : Object]),
+    __metadata("design:returntype", typeof (_x = typeof Promise !== "undefined" && Promise) === "function" ? _x : Object)
+], ProductsController.prototype, "updateBrandMany", null);
+__decorate([
+    (0, common_1.Patch)('batch/category'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.Manager, role_enum_1.Role.Admin, role_enum_1.Role.SuperAdmin),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_y = typeof product_dto_1.BatchUpdateProductCategoryDto !== "undefined" && product_dto_1.BatchUpdateProductCategoryDto) === "function" ? _y : Object]),
+    __metadata("design:returntype", typeof (_z = typeof Promise !== "undefined" && Promise) === "function" ? _z : Object)
+], ProductsController.prototype, "updateCategoryMany", null);
+__decorate([
+    (0, common_1.Get)('trash/list'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.Manager, role_enum_1.Role.Admin, role_enum_1.Role.SuperAdmin),
+    __param(0, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_0 = typeof Record !== "undefined" && Record) === "function" ? _0 : Object]),
+    __metadata("design:returntype", typeof (_1 = typeof Promise !== "undefined" && Promise) === "function" ? _1 : Object)
+], ProductsController.prototype, "findAllDeleted", null);
+__decorate([
+    (0, common_1.Post)('trash/:id/restore'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.Manager, role_enum_1.Role.Admin, role_enum_1.Role.SuperAdmin),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", typeof (_2 = typeof Promise !== "undefined" && Promise) === "function" ? _2 : Object)
+], ProductsController.prototype, "restore", null);
+__decorate([
+    (0, common_1.Post)('trash/batch/restore'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.Manager, role_enum_1.Role.Admin, role_enum_1.Role.SuperAdmin),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_3 = typeof product_dto_1.ProductIdsDto !== "undefined" && product_dto_1.ProductIdsDto) === "function" ? _3 : Object]),
+    __metadata("design:returntype", typeof (_4 = typeof Promise !== "undefined" && Promise) === "function" ? _4 : Object)
+], ProductsController.prototype, "restoreMany", null);
+__decorate([
+    (0, common_1.Delete)('trash/:id/permanent'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.Admin, role_enum_1.Role.SuperAdmin),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", typeof (_5 = typeof Promise !== "undefined" && Promise) === "function" ? _5 : Object)
+], ProductsController.prototype, "hardDelete", null);
+__decorate([
+    (0, common_1.Post)('trash/batch/permanent-delete'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.Admin, role_enum_1.Role.SuperAdmin),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_6 = typeof product_dto_1.ProductIdsDto !== "undefined" && product_dto_1.ProductIdsDto) === "function" ? _6 : Object]),
+    __metadata("design:returntype", typeof (_7 = typeof Promise !== "undefined" && Promise) === "function" ? _7 : Object)
+], ProductsController.prototype, "hardDeleteMany", null);
 exports.ProductsController = ProductsController = __decorate([
     (0, swagger_1.ApiTags)('products'),
     (0, common_1.Controller)('products'),
@@ -1856,7 +3350,7 @@ exports.ProductsController = ProductsController = __decorate([
 
 
 /***/ }),
-/* 41 */
+/* 55 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1869,11 +3363,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c;
+var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UpdateProductDto = exports.CreateProductDto = void 0;
+exports.BatchUpdateProductCategoryDto = exports.BatchUpdateProductBrandDto = exports.BatchUpdateProductStatusDto = exports.ProductIdsDto = exports.UpdateProductDto = exports.CreateProductDto = void 0;
 const swagger_1 = __webpack_require__(5);
-const class_transformer_1 = __webpack_require__(42);
+const class_transformer_1 = __webpack_require__(53);
 const class_validator_1 = __webpack_require__(31);
 const client_1 = __webpack_require__(22);
 class CreateProductDto {
@@ -1889,6 +3383,7 @@ class CreateProductDto {
     specs;
     brandId;
     categoryId;
+    mainImageId;
 }
 exports.CreateProductDto = CreateProductDto;
 __decorate([
@@ -1926,10 +3421,10 @@ __decorate([
 ], CreateProductDto.prototype, "status", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.ValidateIf)((_, value) => value !== null),
     (0, class_validator_1.IsInt)(),
     (0, class_validator_1.Min)(0),
-    __metadata("design:type", Number)
+    __metadata("design:type", Object)
 ], CreateProductDto.prototype, "stock", void 0);
 __decorate([
     (0, class_validator_1.IsObject)(),
@@ -1945,22 +3440,266 @@ __decorate([
     __metadata("design:type", String)
 ], CreateProductDto.prototype, "brandId", void 0);
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateProductDto.prototype, "categoryId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.ValidateIf)((_, value) => value !== null),
+    (0, class_validator_1.IsUUID)('4'),
+    __metadata("design:type", Object)
+], CreateProductDto.prototype, "mainImageId", void 0);
 class UpdateProductDto extends (0, swagger_1.PartialType)(CreateProductDto) {
 }
 exports.UpdateProductDto = UpdateProductDto;
+class ProductIdsDto {
+    ids;
+}
+exports.ProductIdsDto = ProductIdsDto;
+__decorate([
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.ArrayNotEmpty)(),
+    (0, class_validator_1.ArrayUnique)(),
+    (0, class_validator_1.IsUUID)('4', { each: true }),
+    __metadata("design:type", Array)
+], ProductIdsDto.prototype, "ids", void 0);
+class BatchUpdateProductStatusDto extends ProductIdsDto {
+    status;
+}
+exports.BatchUpdateProductStatusDto = BatchUpdateProductStatusDto;
+__decorate([
+    (0, class_validator_1.IsEnum)(client_1.ProductStatus),
+    __metadata("design:type", typeof (_d = typeof client_1.ProductStatus !== "undefined" && client_1.ProductStatus) === "function" ? _d : Object)
+], BatchUpdateProductStatusDto.prototype, "status", void 0);
+class BatchUpdateProductBrandDto extends ProductIdsDto {
+    brandId;
+}
+exports.BatchUpdateProductBrandDto = BatchUpdateProductBrandDto;
+__decorate([
+    (0, class_validator_1.IsUUID)('4'),
+    __metadata("design:type", String)
+], BatchUpdateProductBrandDto.prototype, "brandId", void 0);
+class BatchUpdateProductCategoryDto extends ProductIdsDto {
+    categoryId;
+}
+exports.BatchUpdateProductCategoryDto = BatchUpdateProductCategoryDto;
+__decorate([
+    (0, class_validator_1.IsDefined)(),
+    (0, class_validator_1.ValidateIf)((_, value) => value !== null),
+    (0, class_validator_1.IsUUID)('4'),
+    __metadata("design:type", Object)
+], BatchUpdateProductCategoryDto.prototype, "categoryId", void 0);
 
 
 /***/ }),
-/* 42 */
-/***/ ((module) => {
+/* 56 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
-module.exports = require("class-transformer");
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RequestsController = void 0;
+const common_1 = __webpack_require__(1);
+const swagger_1 = __webpack_require__(5);
+const request_dto_1 = __webpack_require__(57);
+const requests_service_1 = __webpack_require__(58);
+let RequestsController = class RequestsController {
+    requestsService;
+    constructor(requestsService) {
+        this.requestsService = requestsService;
+    }
+    async create(dto) {
+        return this.requestsService.create(dto);
+    }
+};
+exports.RequestsController = RequestsController;
+__decorate([
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof request_dto_1.CreateRequestDto !== "undefined" && request_dto_1.CreateRequestDto) === "function" ? _b : Object]),
+    __metadata("design:returntype", typeof (_c = typeof Promise !== "undefined" && Promise) === "function" ? _c : Object)
+], RequestsController.prototype, "create", null);
+exports.RequestsController = RequestsController = __decorate([
+    (0, swagger_1.ApiTags)('requests'),
+    (0, common_1.Controller)('requests'),
+    __metadata("design:paramtypes", [typeof (_a = typeof requests_service_1.RequestsService !== "undefined" && requests_service_1.RequestsService) === "function" ? _a : Object])
+], RequestsController);
+
 
 /***/ }),
-/* 43 */
+/* 57 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CreateRequestDto = void 0;
+const class_transformer_1 = __webpack_require__(53);
+const class_validator_1 = __webpack_require__(31);
+const trimValue = ({ value }) => {
+    if (typeof value !== 'string')
+        return value;
+    return value.trim();
+};
+const trimOptionalValue = ({ value }) => {
+    if (typeof value !== 'string')
+        return value;
+    const trimmed = value.trim();
+    return trimmed === '' ? undefined : trimmed;
+};
+class CreateRequestDto {
+    name;
+    email;
+    phone;
+    company;
+    productName;
+    quantity;
+    description;
+}
+exports.CreateRequestDto = CreateRequestDto;
+__decorate([
+    (0, class_transformer_1.Transform)(trimValue),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(2),
+    __metadata("design:type", String)
+], CreateRequestDto.prototype, "name", void 0);
+__decorate([
+    (0, class_transformer_1.Transform)(trimValue),
+    (0, class_validator_1.IsEmail)(),
+    __metadata("design:type", String)
+], CreateRequestDto.prototype, "email", void 0);
+__decorate([
+    (0, class_transformer_1.Transform)(trimValue),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(10),
+    __metadata("design:type", String)
+], CreateRequestDto.prototype, "phone", void 0);
+__decorate([
+    (0, class_transformer_1.Transform)(trimOptionalValue),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateRequestDto.prototype, "company", void 0);
+__decorate([
+    (0, class_transformer_1.Transform)(trimValue),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(2),
+    __metadata("design:type", String)
+], CreateRequestDto.prototype, "productName", void 0);
+__decorate([
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(1),
+    __metadata("design:type", Number)
+], CreateRequestDto.prototype, "quantity", void 0);
+__decorate([
+    (0, class_transformer_1.Transform)(trimOptionalValue),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateRequestDto.prototype, "description", void 0);
+
+
+/***/ }),
+/* 58 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RequestsService = void 0;
+const common_1 = __webpack_require__(1);
+const requests_repository_1 = __webpack_require__(59);
+let RequestsService = class RequestsService {
+    requestsRepository;
+    constructor(requestsRepository) {
+        this.requestsRepository = requestsRepository;
+    }
+    async create(dto) {
+        return this.requestsRepository.create(dto);
+    }
+};
+exports.RequestsService = RequestsService;
+exports.RequestsService = RequestsService = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof requests_repository_1.RequestsRepository !== "undefined" && requests_repository_1.RequestsRepository) === "function" ? _a : Object])
+], RequestsService);
+
+
+/***/ }),
+/* 59 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RequestsRepository = void 0;
+const common_1 = __webpack_require__(1);
+const prisma_service_1 = __webpack_require__(21);
+let RequestsRepository = class RequestsRepository {
+    prisma;
+    constructor(prisma) {
+        this.prisma = prisma;
+    }
+    async create(dto) {
+        return this.prisma.supplyRequest.create({
+            data: dto,
+            select: {
+                id: true,
+                createdAt: true,
+            },
+        });
+    }
+};
+exports.RequestsRepository = RequestsRepository;
+exports.RequestsRepository = RequestsRepository = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof prisma_service_1.PrismaService !== "undefined" && prisma_service_1.PrismaService) === "function" ? _a : Object])
+], RequestsRepository);
+
+
+/***/ }),
+/* 60 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1999,7 +3738,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.catalogValidationSchema = void 0;
-const Joi = __importStar(__webpack_require__(44));
+const Joi = __importStar(__webpack_require__(61));
 exports.catalogValidationSchema = Joi.object({
     NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
     CATALOG_HTTP_PORT: Joi.number().port().required(),
@@ -2008,11 +3747,17 @@ exports.catalogValidationSchema = Joi.object({
     JWT_SECRET: Joi.string().min(16).default('change-me-please-change-me'),
     CORS_ORIGINS: Joi.string().default('http://localhost:3000'),
     REDIS_URL: Joi.string().uri().optional(),
+    MINIO_ENDPOINT: Joi.string().default('localhost'),
+    MINIO_PORT: Joi.number().port().default(9000),
+    MINIO_ROOT_USER: Joi.string().default('minioadmin'),
+    MINIO_ROOT_PASSWORD: Joi.string().default('minioadmin'),
+    MINIO_BUCKET: Joi.string().default('ponatech-media'),
+    MINIO_USE_SSL: Joi.boolean().default(false),
 });
 
 
 /***/ }),
-/* 44 */
+/* 61 */
 /***/ ((module) => {
 
 module.exports = require("joi");
@@ -2059,7 +3804,7 @@ const swagger_1 = __webpack_require__(5);
 const node_path_1 = __webpack_require__(6);
 const common_2 = __webpack_require__(7);
 const app_module_1 = __webpack_require__(18);
-const catalog_grpc_1 = __webpack_require__(39);
+const catalog_grpc_1 = __webpack_require__(47);
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule, { bufferLogs: true });
     const configService = app.get(config_1.ConfigService);

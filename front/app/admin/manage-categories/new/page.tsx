@@ -15,6 +15,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useCreateCategory, useCategories } from '@/lib/hooks/use-categories';
 import { slugify } from '@/lib/utils';
 
+const ROOT_CATEGORY_VALUE = '__ROOT_CATEGORY__';
+
 const categorySchema = z.object({
   name: z.string().min(2, 'Введите название категории'),
   slug: z.string().min(2, 'Введите slug'),
@@ -43,7 +45,7 @@ export default function NewCategoryPage() {
     try {
       await createCategory.mutateAsync({
         ...data,
-        parentId: data.parentId || undefined,
+        parentId: data.parentId && data.parentId !== ROOT_CATEGORY_VALUE ? data.parentId : undefined,
       });
       router.push('/admin/manage-categories');
     } catch {
@@ -124,7 +126,7 @@ export default function NewCategoryPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Нет (корневая категория)</SelectItem>
+                        <SelectItem value={ROOT_CATEGORY_VALUE}>Нет (корневая категория)</SelectItem>
                         {categories?.map((category) => (
                           <SelectItem key={category.id} value={category.id}>
                             {category.name}

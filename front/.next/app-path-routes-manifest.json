@@ -11,6 +11,7 @@
   "/admin/manage-products/[id]/edit/page": "/admin/manage-products/[id]/edit",
   "/admin/manage-products/new/page": "/admin/manage-products/new",
   "/admin/manage-products/page": "/admin/manage-products",
+  "/admin/media/page": "/admin/media",
   "/admin/users/page": "/admin/users",
   "/brands/[slug]/page": "/brands/[slug]",
   "/brands/page": "/brands",

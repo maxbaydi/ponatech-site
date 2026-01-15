@@ -4,19 +4,22 @@ import { useParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { MediaLibraryPicker } from '@/components/admin/media-library-picker';
 import { useProduct, useUpdateProduct } from '@/lib/hooks/use-products';
 import { useBrands } from '@/lib/hooks/use-brands';
 import { useCategories } from '@/lib/hooks/use-categories';
+import type { MediaFile } from '@/lib/api/types';
 
 const productSchema = z.object({
   title: z.string().min(2, 'Введите название товара'),
@@ -26,12 +29,17 @@ const productSchema = z.object({
   price: z.coerce.number().min(0, 'Цена должна быть положительной'),
   currency: z.string().default('RUB'),
   status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']),
-  stock: z.coerce.number().min(0).default(0),
+  stock: z.union([z.coerce.number().min(0), z.null()]).default(null),
   brandId: z.string().min(1, 'Выберите бренд'),
-  categoryId: z.string().min(1, 'Выберите категорию'),
+  categoryId: z.string().optional(),
 });
 
 type ProductFormData = z.infer<typeof productSchema>;
+
+const toMainImageId = (file: MediaFile | null): string | null => {
+  const id = file?.id?.trim();
+  return id ? id : null;
+};
 
 export default function EditProductPage() {
   const params = useParams();
@@ -43,6 +51,9 @@ export default function EditProductPage() {
   const { data: categories, isLoading: categoriesLoading } = useCategories();
   const formInitialized = useRef(false);
   const prevProductId = useRef<string | null>(null);
+  const initialMainImageId = useRef<string | null>(null);
+  const [trackStock, setTrackStock] = useState(false);
+  const [mainImage, setMainImage] = useState<MediaFile | null>(null);
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -68,7 +79,38 @@ export default function EditProductPage() {
   }, [productId]);
 
   useEffect(() => {
-    if (product && brands && categories && !formInitialized.current) {
+    const hasBrands = brands && brands.length > 0;
+    const hasCategories = categories && categories.length >= 0;
+    const canInitialize = product && hasBrands && hasCategories && !formInitialized.current;
+    
+    if (canInitialize) {
+      const brandExists = brands.some((b) => b.id === product.brandId);
+      const validBrandId = brandExists ? product.brandId : '';
+      const validStatus = ['DRAFT', 'PUBLISHED', 'ARCHIVED'].includes(product.status) 
+        ? product.status 
+        : 'DRAFT';
+      const hasStock = typeof product.stock === 'number';
+      
+      const productMainImage = product.images?.find((img) => img.isMain) || product.images?.[0];
+      if (productMainImage) {
+        initialMainImageId.current = productMainImage.mediaFileId ?? null;
+        setMainImage({
+          id: productMainImage.mediaFileId ?? '',
+          filename: '',
+          originalName: productMainImage.alt || product.title,
+          mimeType: 'image/jpeg',
+          size: 0,
+          url: productMainImage.url,
+          alt: productMainImage.alt,
+          createdAt: '',
+          updatedAt: '',
+        });
+      } else {
+        initialMainImageId.current = null;
+        setMainImage(null);
+      }
+      
+      setTrackStock(hasStock);
       formInitialized.current = true;
       form.reset({
         title: product.title,
@@ -77,21 +119,27 @@ export default function EditProductPage() {
         description: product.description || '',
         price: Number(product.price),
         currency: product.currency,
-        status: product.status,
-        stock: product.stock,
-        brandId: product.brandId,
-        categoryId: product.categoryId,
+        status: validStatus as 'DRAFT' | 'PUBLISHED' | 'ARCHIVED',
+        stock: hasStock ? product.stock : null,
+        brandId: validBrandId,
+        categoryId: product.categoryId ?? '',
       });
     }
   }, [product, brands, categories, form]);
 
   const onSubmit = async (data: ProductFormData) => {
     try {
+      const selectedMainImageId = toMainImageId(mainImage);
+      const mainImageChanged = selectedMainImageId !== initialMainImageId.current;
+
       await updateProduct.mutateAsync({
         id: productId,
         data: {
           ...data,
+          stock: trackStock ? data.stock : null,
+          categoryId: data.categoryId || undefined,
           attributes: product?.attributes || {},
+          ...(mainImageChanged ? { mainImageId: selectedMainImageId } : {}),
         },
       });
       router.push('/admin/manage-products');
@@ -164,184 +212,255 @@ export default function EditProductPage() {
         <p className="text-muted-foreground">Изменение данных товара в каталоге</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Информация о товаре</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Название *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Название товара" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="slug"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Slug *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="slug-tovara" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <FormField
-                  control={form.control}
-                  name="sku"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>SKU *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="ABC-123" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="price"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Цена *</FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.01" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="stock"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Остаток</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Описание</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Описание товара..." className="min-h-[100px]" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <FormField
-                  control={form.control}
-                  name="brandId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Бренд *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <div className="grid grid-cols-1 lg:grid-cols-[7fr_3fr] gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Информация о товаре</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Название *</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Выберите бренд" />
-                          </SelectTrigger>
+                          <Input placeholder="Название товара" {...field} />
                         </FormControl>
-                        <SelectContent>
-                          {brands?.map((brand) => (
-                            <SelectItem key={brand.id} value={brand.id}>
-                              {brand.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="categoryId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Категория *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="slug"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Slug *</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Выберите категорию" />
-                          </SelectTrigger>
+                          <Input placeholder="slug-tovara" {...field} />
                         </FormControl>
-                        <SelectContent>
-                          {categories?.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Статус</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="DRAFT">Черновик</SelectItem>
-                          <SelectItem value="PUBLISHED">Опубликован</SelectItem>
-                          <SelectItem value="ARCHIVED">В архиве</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-              <div className="flex justify-end gap-4">
-                <Button variant="outline" type="button" asChild>
-                  <Link href="/admin/manage-products">Отмена</Link>
-                </Button>
-                <Button type="submit" disabled={updateProduct.isPending}>
-                  {updateProduct.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Сохранить изменения
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="sku"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>SKU *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="ABC-123" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Цена *</FormLabel>
+                        <FormControl>
+                          <Input type="number" step="0.01" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Описание</FormLabel>
+                      <FormControl>
+                        <RichTextEditor value={field.value} onChange={field.onChange} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex justify-end gap-4">
+                  <Button variant="outline" type="button" asChild>
+                    <Link href="/admin/manage-products">Отмена</Link>
+                  </Button>
+                  <Button type="submit" disabled={updateProduct.isPending}>
+                    {updateProduct.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Сохранить изменения
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Изображение</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <MediaLibraryPicker value={mainImage} onChange={setMainImage} />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Выберите изображение из медиабиблиотеки или загрузите новое
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Параметры</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="brandId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Бренд *</FormLabel>
+                        <Select 
+                          key={`brand-${field.value}`}
+                          onValueChange={field.onChange} 
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Выберите бренд" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {brands?.map((brand) => (
+                              <SelectItem key={brand.id} value={brand.id}>
+                                {brand.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="categoryId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Категория</FormLabel>
+                        <Select 
+                          key={`category-${field.value}`}
+                          onValueChange={field.onChange} 
+                          value={field.value || ''}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Выберите категорию" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {categories?.map((category) => (
+                              <SelectItem key={category.id} value={category.id}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Статус</FormLabel>
+                        <Select 
+                          key={`status-${field.value}`}
+                          onValueChange={field.onChange} 
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Выберите статус" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="DRAFT">Черновик</SelectItem>
+                            <SelectItem value="PUBLISHED">Опубликован</SelectItem>
+                            <SelectItem value="ARCHIVED">В архиве</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="stock"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Остаток</FormLabel>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Checkbox
+                              id="track-stock"
+                              checked={trackStock}
+                              onCheckedChange={(checked) => {
+                                setTrackStock(!!checked);
+                                if (!checked) {
+                                  field.onChange(null);
+                                } else {
+                                  field.onChange(0);
+                                }
+                              }}
+                            />
+                            <label 
+                              htmlFor="track-stock" 
+                              className="text-sm text-muted-foreground cursor-pointer"
+                            >
+                              Учитывать остаток
+                            </label>
+                          </div>
+                          {trackStock && (
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min="0"
+                                value={field.value === null ? '' : String(field.value)}
+                                onChange={(e) => {
+                                  const next = e.target.value.trim();
+                                  field.onChange(next === '' ? 0 : Number(next));
+                                }}
+                                onBlur={field.onBlur}
+                                name={field.name}
+                                ref={field.ref}
+                              />
+                            </FormControl>
+                          )}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </form>
+      </Form>
     </div>
   );
 }

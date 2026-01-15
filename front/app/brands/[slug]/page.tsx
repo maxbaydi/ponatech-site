@@ -28,11 +28,12 @@ export default function BrandPage({ params }: BrandPageProps) {
   
   const brand = apiBrand || staticBrand;
 
-  const { data: products, isLoading: productsLoading } = useProducts({
+  const { data: productsPage, isLoading: productsLoading } = useProducts({
     brandSlug: slug,
     status: 'PUBLISHED',
     limit: 12,
   });
+  const products = productsPage?.data ?? [];
 
   if (!brand) {
     notFound();
@@ -119,7 +120,7 @@ export default function BrandPage({ params }: BrandPageProps) {
                   </div>
                 ))}
               </div>
-            ) : products && products.length > 0 ? (
+            ) : products.length > 0 ? (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                   {products.map((product) => (
