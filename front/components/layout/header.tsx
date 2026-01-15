@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
-import { Menu, X, Search, User, ChevronDown } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Menu, Search, User, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
@@ -24,15 +25,107 @@ const NAV_ITEMS = [
   { label: 'Контакты', href: '/contacts' },
 ];
 
+const CATALOG_PATH = '/catalog';
+const SEARCH_PARAM = 'search';
+const PAGE_PARAM = 'page';
+const FIRST_PAGE = '1';
+
+function buildCatalogSearchHref(args: {
+  searchValue: string;
+  currentSearch: string | null;
+  keepExistingParams: boolean;
+}) {
+  const { searchValue, currentSearch, keepExistingParams } = args;
+
+  const trimmed = searchValue.trim();
+  const params = keepExistingParams ? new URLSearchParams(currentSearch || '') : new URLSearchParams();
+
+  if (trimmed) {
+    params.set(SEARCH_PARAM, trimmed);
+  } else {
+    params.delete(SEARCH_PARAM);
+  }
+
+  params.set(PAGE_PARAM, FIRST_PAGE);
+  const query = params.toString();
+  return query ? `${CATALOG_PATH}?${query}` : CATALOG_PATH;
+}
+
+function HeaderNavLinks(props: {
+  className?: string;
+  linkClassName?: string;
+  onNavigate?: () => void;
+}) {
+  const { className, linkClassName, onNavigate } = props;
+
+  return (
+    <nav className={className}>
+      {NAV_ITEMS.map((item) => (
+        <Link key={item.href} href={item.href} className={linkClassName} onClick={onNavigate}>
+          {item.label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
 export function Header() {
+  const router = useRouter();
+  const pathname = usePathname();
+
   const { user, isAuthenticated, logout, isManager } = useAuth();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState('');
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchAreaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isSearchOpen) return;
+    searchInputRef.current?.focus();
+  }, [isSearchOpen]);
+
+  useEffect(() => {
+    if (isSearchOpen) return;
+    if (typeof window === 'undefined') return;
+
+    const params = new URLSearchParams(window.location.search);
+    const urlValue = params.get(SEARCH_PARAM) || '';
+    setSearchValue(pathname === CATALOG_PATH ? urlValue : '');
+  }, [pathname, isSearchOpen]);
+
+  useEffect(() => {
+    if (!isSearchOpen) return;
+
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target;
+      if (!(target instanceof Node)) return;
+      if (searchAreaRef.current?.contains(target)) return;
+      setIsSearchOpen(false);
+    };
+
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [isSearchOpen]);
+
+  const runSearch = (opts?: { closeMobileMenu?: boolean }) => {
+    const currentSearch = typeof window === 'undefined' ? null : window.location.search;
+    const href = buildCatalogSearchHref({
+      searchValue,
+      currentSearch,
+      keepExistingParams: pathname === CATALOG_PATH,
+    });
+    router.push(href);
+    setIsSearchOpen(false);
+    if (opts?.closeMobileMenu) setIsMobileMenuOpen(false);
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container-custom">
-        <div className="flex h-16 items-center justify-between gap-4">
-          <div className="flex items-center gap-6">
+        <div className="grid h-16 grid-cols-[auto_1fr_auto] items-center gap-4">
+          <div className="flex items-center">
             <Link href="/" className="flex items-center">
               <Image
                 src="/assets/ponatech-logo-rectangular.PNG"
@@ -43,30 +136,56 @@ export function Header() {
                 priority
               />
             </Link>
-
-            <nav className="hidden lg:flex items-center gap-1">
-              {NAV_ITEMS.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="px-4 py-2 text-sm font-medium text-foreground/80 transition-colors hover:text-primary"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className={cn('hidden md:flex items-center transition-all', isSearchOpen ? 'w-64' : 'w-0')}>
-              {isSearchOpen && (
-                <Input placeholder="Поиск товаров..." className="h-9" autoFocus onBlur={() => setIsSearchOpen(false)} />
-              )}
-            </div>
+          <div className="hidden lg:flex min-w-0 items-center justify-center gap-1">
+            <HeaderNavLinks
+              className="flex items-center gap-1"
+              linkClassName="px-4 py-2 text-sm font-medium text-foreground/80 transition-colors hover:text-primary whitespace-nowrap"
+            />
+          </div>
 
-            <Button variant="ghost" size="icon" className="hidden md:flex" onClick={() => setIsSearchOpen(!isSearchOpen)}>
-              <Search className="h-5 w-5" />
-            </Button>
+          <div className="ml-auto flex items-center gap-3">
+            <div ref={searchAreaRef} className="hidden md:flex items-center gap-2">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  runSearch();
+                }}
+              >
+                <div
+                  className={cn(
+                    'flex items-center overflow-hidden transition-[width] duration-300 ease-in-out',
+                    isSearchOpen ? 'w-64' : 'w-0',
+                  )}
+                >
+                  <Input
+                    ref={searchInputRef}
+                    placeholder="Поиск товаров..."
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') setIsSearchOpen(false);
+                    }}
+                    className={cn('h-9 transition-opacity duration-200', isSearchOpen ? 'opacity-100' : 'opacity-0')}
+                    tabIndex={isSearchOpen ? 0 : -1}
+                    disabled={!isSearchOpen}
+                  />
+                </div>
+              </form>
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setIsSearchOpen((v) => !v);
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                <Search className="h-5 w-5" />
+              </Button>
+            </div>
 
             {isAuthenticated ? (
               <DropdownMenu>
@@ -110,28 +229,40 @@ export function Header() {
               <Link href="/request">Оставить заявку</Link>
             </Button>
 
-            <Sheet>
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="lg:hidden"
+                  onClick={() => setIsSearchOpen(false)}
+                >
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-80">
                 <SheetTitle className="sr-only">Меню навигации</SheetTitle>
                 <div className="flex flex-col gap-6 pt-6">
-                  <Input placeholder="Поиск товаров..." className="h-10" />
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      runSearch({ closeMobileMenu: true });
+                    }}
+                  >
+                    <Input
+                      placeholder="Поиск товаров..."
+                      className="h-10"
+                      value={searchValue}
+                      onChange={(e) => setSearchValue(e.target.value)}
+                    />
+                  </form>
 
-                  <nav className="flex flex-col gap-1">
-                    {NAV_ITEMS.map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className="px-4 py-3 text-base font-medium rounded-md transition-colors hover:bg-muted"
-                      >
-                        {item.label}
-                      </Link>
-                    ))}
-                  </nav>
+                  <HeaderNavLinks
+                    className="flex flex-col gap-1"
+                    linkClassName="px-4 py-3 text-base font-medium rounded-md transition-colors hover:bg-muted"
+                    onNavigate={() => setIsMobileMenuOpen(false)}
+                  />
 
                   <div className="flex flex-col gap-2 pt-4 border-t">
                     {isAuthenticated ? (

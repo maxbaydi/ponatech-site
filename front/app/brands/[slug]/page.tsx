@@ -79,9 +79,9 @@ export default function BrandPage({ params }: BrandPageProps) {
                 </div>
               </div>
 
-              {(apiBrand?.description || staticBrand?.description) && (
-                <p className="text-muted-foreground leading-relaxed">
-                  {apiBrand?.description || staticBrand?.description}
+              {staticBrand?.about && (
+                <p className="text-muted-foreground leading-relaxed mt-4">
+                  {staticBrand.about}
                 </p>
               )}
             </div>
