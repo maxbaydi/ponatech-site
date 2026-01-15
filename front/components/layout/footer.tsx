@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { Mail, Phone, MapPin } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { BRAND_CATEGORIES } from '@/data/brands';
+import { SITE_CONTACTS } from '@/lib/site-contacts';
 
 const FOOTER_LINKS = {
   catalog: [
@@ -20,12 +21,6 @@ const FOOTER_LINKS = {
     { label: 'FAQ', href: '/faq' },
     { label: 'Политика конфиденциальности', href: '/privacy' },
   ],
-};
-
-const CONTACTS = {
-  email: 'info@ponatech.com',
-  phone: '+7 (800) 000-00-00',
-  address: 'Москва, Россия',
 };
 
 export function Footer() {
@@ -50,17 +45,38 @@ export function Footer() {
               брендов.
             </p>
             <div className="flex flex-col gap-3">
-              <a href={`mailto:${CONTACTS.email}`} className="flex items-center gap-2 text-sm text-background/70 hover:text-background transition-colors">
+              <a
+                href={SITE_CONTACTS.email.mailto}
+                className="flex items-center gap-2 text-sm text-background/70 hover:text-background transition-colors"
+              >
                 <Mail className="h-4 w-4" />
-                {CONTACTS.email}
+                {SITE_CONTACTS.email.display}
               </a>
-              <a href={`tel:${CONTACTS.phone.replace(/\D/g, '')}`} className="flex items-center gap-2 text-sm text-background/70 hover:text-background transition-colors">
+              <a
+                href={`tel:${SITE_CONTACTS.phones.telegram.tel}`}
+                className="flex items-center gap-2 text-sm text-background/70 hover:text-background transition-colors"
+              >
                 <Phone className="h-4 w-4" />
-                {CONTACTS.phone}
+                <span>
+                  {SITE_CONTACTS.phones.telegram.display} — {SITE_CONTACTS.phones.telegram.title}
+                </span>
+              </a>
+              <a
+                href={`tel:${SITE_CONTACTS.phones.office.tel}`}
+                className="flex items-center gap-2 text-sm text-background/70 hover:text-background transition-colors"
+              >
+                <Phone className="h-4 w-4" />
+                <span>
+                  {SITE_CONTACTS.phones.office.display} — {SITE_CONTACTS.phones.office.title}
+                </span>
               </a>
               <span className="flex items-center gap-2 text-sm text-background/70">
                 <MapPin className="h-4 w-4" />
-                {CONTACTS.address}
+                <span className="flex flex-col">
+                  {SITE_CONTACTS.address.lines.map((line) => (
+                    <span key={line}>{line}</span>
+                  ))}
+                </span>
               </span>
             </div>
           </div>

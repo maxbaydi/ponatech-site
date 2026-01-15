@@ -76,13 +76,8 @@ const deriveFieldErrors = (messages: string[]): ApiFieldErrors | undefined => {
       continue;
     }
 
-    if (lower.startsWith('productname ')) {
-      errors.productName = 'Укажите название товара';
-      continue;
-    }
-
-    if (lower.startsWith('quantity ')) {
-      errors.quantity = 'Укажите количество';
+    if (lower.startsWith('description ') || lower.includes('description')) {
+      errors.description = 'Опишите ваш запрос (минимум 10 символов)';
       continue;
     }
   }

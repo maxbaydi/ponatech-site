@@ -1,48 +1,135 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Globe, Shield, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { FEATURED_BRANDS } from '@/data/brands';
+import heroSectionCollage from '@/assets/herosection-1.jpg';
+import abbLogo from '@/assets/ABB.png';
+import ciscoLogo from '@/assets/cisco.png';
+import omronLogo from '@/assets/omron.png';
+import sickLogo from '@/assets/sick.png';
+import siemensLogo from '@/assets/siemens.png';
+import wagoLogo from '@/assets/wago.png';
+import yaskawaLogo from '@/assets/yaskawa.png';
 
-const FLOATING_BRANDS = FEATURED_BRANDS.slice(0, 6);
+const LOGO_SIZES = ['w-32 h-32', 'w-40 h-40', 'w-48 h-48'] as const;
+const LOGO_OPACITIES = ['opacity-35', 'opacity-45', 'opacity-55'] as const;
+
+const BRAND_LOGOS = [
+  { name: 'ABB', src: abbLogo, slug: 'abb' },
+  { name: 'Cisco', src: ciscoLogo, slug: 'cisco' },
+  { name: 'Omron', src: omronLogo, slug: 'omron' },
+  { name: 'SICK', src: sickLogo, slug: 'sick' },
+  { name: 'Siemens', src: siemensLogo, slug: 'siemens' },
+  { name: 'WAGO', src: wagoLogo, slug: 'wago' },
+  { name: 'Yaskawa', src: yaskawaLogo, slug: 'yaskawa' },
+] as const;
+
+const LOGO_POSITION_OVERRIDES: Partial<
+  Record<(typeof BRAND_LOGOS)[number]['slug'], { top?: number; left?: number; right?: number }>
+> = {
+  abb: { top: 18 },
+  cisco: { left: 24, top: 10 },
+  omron: { left: 8 },
+  yaskawa: { top: 33 },
+};
+
+function hashStringToSeed(input: string) {
+  let hash = 2166136261;
+  for (let i = 0; i < input.length; i += 1) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function mulberry32(seed: number) {
+  let t = seed;
+  return () => {
+    t += 0x6d2b79f5;
+    let r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function pick<T>(arr: readonly T[], index01: number) {
+  const idx = Math.floor(index01 * arr.length);
+  return arr[Math.min(Math.max(idx, 0), arr.length - 1)];
+}
+
+const FLOATING_LOGOS = BRAND_LOGOS.map((logo) => {
+  const rng = mulberry32(hashStringToSeed(logo.slug));
+
+  const topMin = 14;
+  const topMax = 82;
+  const edgeMin = 3;
+  const edgeMax = 18;
+
+  const override = LOGO_POSITION_OVERRIDES[logo.slug];
+
+  const defaultTop = topMin + rng() * (topMax - topMin);
+  const defaultIsLeftSide = rng() < 0.5;
+  const defaultEdge = edgeMin + rng() * (edgeMax - edgeMin);
+
+  const top = override?.top ?? defaultTop;
+  const isLeftSide =
+    override?.left != null ? true : override?.right != null ? false : defaultIsLeftSide;
+  const edge = defaultEdge;
+  const left = override?.left ?? (isLeftSide ? edge : undefined);
+  const right = override?.right ?? (!isLeftSide ? edge : undefined);
+
+  const size = pick(LOGO_SIZES, rng());
+  const opacity = pick(LOGO_OPACITIES, rng());
+
+  return {
+    ...logo,
+    size,
+    opacity,
+    positionStyle: {
+      top: `${top}%`,
+      left: left != null ? `${left}%` : undefined,
+      right: right != null ? `${right}%` : undefined,
+    } as const,
+  };
+});
 
 export function HeroSection() {
   return (
-    <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-background via-muted/50 to-background">
-      <div className="absolute inset-0 overflow-hidden">
+    <section className="relative h-[800px] flex items-center overflow-hidden bg-gradient-to-br from-background via-muted/50 to-background">
+      <div className="absolute inset-0 z-0">
+        <Image
+          src={heroSectionCollage}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background/75 to-background/75 backdrop-blur-sm" />
+      </div>
+
+      <div className="absolute inset-0 z-10 overflow-hidden flex items-center justify-center text-center pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/5 rounded-full blur-3xl" />
 
-        {FLOATING_BRANDS.map((brand, i) => (
-          <motion.div
-            key={brand.slug}
-            className="absolute hidden lg:flex items-center justify-center w-20 h-20 rounded-2xl bg-white shadow-lg border border-border/50"
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{
-              opacity: [0.4, 0.7, 0.4],
-              scale: [1, 1.1, 1],
-              y: [0, -20, 0],
-            }}
-            transition={{
-              duration: 4 + i * 0.5,
-              repeat: Infinity,
-              delay: i * 0.3,
-            }}
-            style={{
-              top: `${20 + (i % 3) * 25}%`,
-              left: i < 3 ? `${5 + i * 8}%` : undefined,
-              right: i >= 3 ? `${5 + (i - 3) * 8}%` : undefined,
-            }}
+        {FLOATING_LOGOS.map((logo) => (
+          <div
+            key={logo.slug}
+            className={`absolute hidden lg:block pointer-events-none ${logo.opacity}`}
+            style={logo.positionStyle}
           >
-            <span className="text-xs font-semibold text-foreground/70 text-center px-2">{brand.name}</span>
-          </motion.div>
+            <div className={`relative ${logo.size} drop-shadow-sm`}>
+              <Image src={logo.src} alt={logo.name} fill className="object-contain" />
+            </div>
+          </div>
         ))}
       </div>
 
-      <div className="container-custom relative z-10">
-        <div className="max-w-3xl">
+      <div className="container-custom relative z-20">
+        <div className="hero-content-max-w mx-auto flex flex-col items-center text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -60,12 +147,20 @@ export function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            Промышленное оборудование от{' '}
-            <span className="text-gradient">70+ мировых брендов</span>
+            Промышленное оборудование
           </motion.h1>
 
           <motion.p
-            className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl"
+            className="text-2xl md:text-3xl font-semibold text-foreground/90 mb-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+          >
+            от <span className="text-gradient">70+ мировых брендов</span>
+          </motion.p>
+
+          <motion.p
+            className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -75,7 +170,7 @@ export function HeroSection() {
           </motion.p>
 
           <motion.div
-            className="flex flex-wrap gap-4 mb-12"
+            className="flex flex-wrap justify-center gap-4 mb-12"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
@@ -92,7 +187,7 @@ export function HeroSection() {
           </motion.div>
 
           <motion.div
-            className="grid grid-cols-1 sm:grid-cols-3 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}

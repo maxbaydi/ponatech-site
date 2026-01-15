@@ -14,12 +14,15 @@ const CATEGORIES_TO_SHOW: BrandCategory[] = [
   'industrial-components',
 ];
 
-const ROW_SPEED_PX_PER_SECOND = [90, 80, 85] as const;
+const ROW_SPEED_PX_PER_SECOND = [80, 70, 75] as const;
+const ROW_SPEED_MULTIPLIER = 1 / 3;
 const MIN_ROW_DURATION_SECONDS = 10;
 const MAX_ROW_DURATION_SECONDS = 28;
 
 function getRowSpeedPxPerSecond(rowIndex: number) {
-  return ROW_SPEED_PX_PER_SECOND[rowIndex] ?? ROW_SPEED_PX_PER_SECOND[ROW_SPEED_PX_PER_SECOND.length - 1];
+  const base =
+    ROW_SPEED_PX_PER_SECOND[rowIndex] ?? ROW_SPEED_PX_PER_SECOND[ROW_SPEED_PX_PER_SECOND.length - 1];
+  return base * ROW_SPEED_MULTIPLIER;
 }
 
 function clampNumber(value: number, min: number, max: number) {

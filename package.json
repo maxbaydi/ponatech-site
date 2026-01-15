@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build",
+    "build": "nest build catalog-service",
     "build:auth": "nest build auth-service",
     "build:catalog": "nest build catalog-service",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",

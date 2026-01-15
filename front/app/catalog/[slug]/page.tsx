@@ -36,6 +36,7 @@ import { useProductBySlug, useProducts } from '@/lib/hooks/use-products';
 import { formatPrice } from '@/lib/utils';
 import type { ProductImage } from '@/lib/api/types';
 import DOMPurify from 'isomorphic-dompurify';
+import { SITE_CONTACTS } from '@/lib/site-contacts';
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
@@ -324,7 +325,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                       </Link>
                     </Button>
                     <Button size="lg" variant="outline" className="h-14 text-base" asChild>
-                      <Link href="tel:+78000000000">
+                      <Link href={`tel:${SITE_CONTACTS.phones.telegram.tel}`}>
                         <Phone className="mr-2 h-5 w-5" />
                         Позвонить
                       </Link>

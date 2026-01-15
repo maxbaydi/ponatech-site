@@ -218,9 +218,7 @@ export interface RequestFormData {
   email: string;
   phone: string;
   company?: string;
-  productName: string;
-  quantity: number;
-  description?: string;
+  description: string;
 }
 
 export interface SupplyRequestResponse {

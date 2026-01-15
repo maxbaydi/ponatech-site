@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Mail, Phone, MapPin, Clock, Send } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, type LucideIcon } from 'lucide-react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { SITE_CONTACTS } from '@/lib/site-contacts';
 
 const contactSchema = z.object({
   name: z.string().min(2, 'Введите ваше имя'),
@@ -22,29 +23,36 @@ const contactSchema = z.object({
 
 type ContactFormData = z.infer<typeof contactSchema>;
 
-const CONTACTS = [
+type ContactItem = {
+  icon: LucideIcon;
+  title: string;
+  value: string | string[];
+  href: string | null;
+};
+
+const CONTACTS: ContactItem[] = [
   {
-    icon: Mail,
-    title: 'Email',
-    value: 'info@ponatech.com',
-    href: 'mailto:info@ponatech.com',
+    icon: Phone,
+    title: 'Telegram',
+    value: SITE_CONTACTS.phones.telegram.display,
+    href: `tel:${SITE_CONTACTS.phones.telegram.tel}`,
   },
   {
     icon: Phone,
-    title: 'Телефон',
-    value: '+7 (800) 000-00-00',
-    href: 'tel:+78000000000',
+    title: 'Офис',
+    value: SITE_CONTACTS.phones.office.display,
+    href: `tel:${SITE_CONTACTS.phones.office.tel}`,
+  },
+  {
+    icon: Mail,
+    title: 'Email',
+    value: SITE_CONTACTS.email.display,
+    href: SITE_CONTACTS.email.mailto,
   },
   {
     icon: MapPin,
     title: 'Адрес',
-    value: 'Москва, Россия',
-    href: null,
-  },
-  {
-    icon: Clock,
-    title: 'Режим работы',
-    value: 'Пн-Пт: 9:00 - 18:00',
+    value: [...SITE_CONTACTS.address.lines],
     href: null,
   },
 ];
@@ -62,7 +70,6 @@ export default function ContactsPage() {
   });
 
   const onSubmit = async (data: ContactFormData) => {
-    console.log('Contact form data:', data);
     alert('Сообщение отправлено! Мы свяжемся с вами в ближайшее время.');
     form.reset();
   };
@@ -96,10 +103,28 @@ export default function ContactsPage() {
                             href={contact.href}
                             className="font-medium hover:text-primary transition-colors"
                           >
-                            {contact.value}
+                            {Array.isArray(contact.value) ? (
+                              <span className="flex flex-col">
+                                {contact.value.map((line) => (
+                                  <span key={line}>{line}</span>
+                                ))}
+                              </span>
+                            ) : (
+                              contact.value
+                            )}
                           </a>
                         ) : (
-                          <p className="font-medium">{contact.value}</p>
+                          <p className="font-medium">
+                            {Array.isArray(contact.value) ? (
+                              <span className="flex flex-col">
+                                {contact.value.map((line) => (
+                                  <span key={line}>{line}</span>
+                                ))}
+                              </span>
+                            ) : (
+                              contact.value
+                            )}
+                          </p>
                         )}
                       </div>
                     </CardContent>

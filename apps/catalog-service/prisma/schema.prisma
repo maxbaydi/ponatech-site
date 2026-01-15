@@ -152,9 +152,7 @@ model SupplyRequest {
   email       String
   phone       String
   company     String?
-  productName String
-  quantity    Int
-  description String?  @db.Text
+  description String   @db.Text
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

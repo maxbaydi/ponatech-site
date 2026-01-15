@@ -6,6 +6,7 @@ import { useRef } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Phone, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SITE_CONTACTS } from '@/lib/site-contacts';
 
 export function CtaSection() {
   const ref = useRef(null);
@@ -68,18 +69,20 @@ export function CtaSection() {
             transition={{ duration: 0.5, delay: 0.3 }}
           >
             <a
-              href="tel:+78000000000"
+              href={`tel:${SITE_CONTACTS.phones.telegram.tel}`}
               className="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
             >
               <Phone className="w-5 h-5" />
-              <span>+7 (800) 000-00-00</span>
+              <span>
+                {SITE_CONTACTS.phones.telegram.display} — {SITE_CONTACTS.phones.telegram.title}
+              </span>
             </a>
             <a
-              href="mailto:info@ponatech.com"
+              href={SITE_CONTACTS.email.mailto}
               className="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
             >
               <Mail className="w-5 h-5" />
-              <span>info@ponatech.com</span>
+              <span>{SITE_CONTACTS.email.display}</span>
             </a>
           </motion.div>
         </div>

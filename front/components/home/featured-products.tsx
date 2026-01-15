@@ -7,10 +7,9 @@ import Link from 'next/link';
 import { ArrowRight, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ProductCard } from '@/components/catalog';
 import { useProducts } from '@/lib/hooks/use-products';
-import { formatPrice } from '@/lib/utils';
 
 function ProductCardSkeleton() {
   return (
@@ -33,7 +32,7 @@ export function FeaturedProducts() {
   const displayProducts = productsPage?.data ?? [];
 
   return (
-    <section className="py-16 lg:py-24 bg-muted/30" ref={ref}>
+    <section className="section-py-compact bg-muted/30" ref={ref}>
       <div className="container-custom">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
           <div>
@@ -83,35 +82,7 @@ export function FeaturedProducts() {
                 animate={inView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.5, delay: 0.05 * i }}
               >
-                <Link href={`/catalog/${product.slug}`}>
-                  <Card className="group overflow-hidden card-hover h-full">
-                    <div className="relative h-48 bg-muted flex items-center justify-center">
-                      {product.images?.[0] ? (
-                        <img
-                          src={product.images[0].url}
-                          alt={product.title}
-                          className="object-cover h-full w-full transition-transform duration-300 group-hover:scale-105"
-                        />
-                      ) : (
-                        <Package className="w-16 h-16 text-muted-foreground/30" />
-                      )}
-                      {product.brand && (
-                        <Badge variant="secondary" className="absolute top-3 left-3">
-                          {product.brand.name}
-                        </Badge>
-                      )}
-                    </div>
-                    <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground mb-1">{product.sku}</p>
-                      <h3 className="font-medium text-sm mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                        {product.title}
-                      </h3>
-                      <p className="font-bold text-lg text-primary">
-                        {formatPrice(product.price, product.currency)}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </Link>
+                <ProductCard product={product} />
               </motion.div>
             ))}
           </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,14 +15,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { apiClient } from '@/lib/api/client';
 
+const MIN_PHONE_LENGTH = 10;
+const MIN_DESCRIPTION_LENGTH = 10;
+
 const requestSchema = z.object({
   name: z.string().min(2, 'Введите ваше имя'),
   email: z.string().email('Введите корректный email'),
-  phone: z.string().min(10, 'Введите корректный номер телефона'),
+  phone: z.string().min(MIN_PHONE_LENGTH, 'Введите корректный номер телефона'),
   company: z.string().optional(),
-  productName: z.string().min(2, 'Укажите название товара'),
-  quantity: z.coerce.number().min(1, 'Укажите количество'),
-  description: z.string().optional(),
+  description: z.string().min(MIN_DESCRIPTION_LENGTH, 'Опишите ваш запрос (минимум 10 символов)'),
 });
 
 type RequestFormData = z.infer<typeof requestSchema>;
@@ -54,20 +55,28 @@ function RequestForm() {
   const skuFromUrl = searchParams.get('sku') || '';
   const brandFromUrl = searchParams.get('brand') || '';
 
-  const defaultProductName = productFromUrl
-    ? `${productFromUrl}${skuFromUrl ? ` (${skuFromUrl})` : ''}`
-    : brandFromUrl
-    ? `Оборудование ${brandFromUrl}`
-    : '';
+  const prefilledDescription = useMemo(() => {
+    const product = productFromUrl.trim();
+    const sku = skuFromUrl.trim();
+    const brand = brandFromUrl.trim();
+
+    if (product) {
+      return `Товар: ${product}${sku ? ` (SKU: ${sku})` : ''}\n\nЗапрос:\n`;
+    }
+
+    if (brand) {
+      return `Бренд: ${brand}\n\nЗапрос:\n`;
+    }
+
+    return '';
+  }, [brandFromUrl, productFromUrl, skuFromUrl]);
 
   const initialValues: RequestFormData = {
     name: '',
     email: '',
     phone: '',
     company: '',
-    productName: defaultProductName,
-    quantity: 1,
-    description: '',
+    description: prefilledDescription,
   };
 
   const form = useForm<RequestFormData>({
@@ -98,11 +107,8 @@ function RequestForm() {
       if (fieldErrors?.phone) {
         form.setError('phone', { message: fieldErrors.phone });
       }
-      if (fieldErrors?.productName) {
-        form.setError('productName', { message: fieldErrors.productName });
-      }
-      if (fieldErrors?.quantity) {
-        form.setError('quantity', { message: fieldErrors.quantity });
+      if (fieldErrors?.description) {
+        form.setError('description', { message: fieldErrors.description });
       }
     } finally {
       setIsSubmitting(false);
@@ -182,47 +188,16 @@ function RequestForm() {
               />
             </div>
 
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-              <FormField
-                control={form.control}
-                name="productName"
-                render={({ field }) => (
-                  <FormItem className="sm:flex-1 min-w-0">
-                    <FormLabel>Название товара / SKU *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Например: Siemens 6ES7..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="quantity"
-                render={({ field }) => (
-                  <FormItem className="sm:shrink-0 text-right">
-                    <FormLabel>Количество *</FormLabel>
-                    <FormControl>
-                      <div className="flex justify-end">
-                        <Input type="number" min={1} {...field} className="quantity-input text-right" />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
             <FormField
               control={form.control}
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Дополнительная информация</FormLabel>
+                  <FormLabel>Ваш запрос *</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Укажите дополнительные требования, сроки, особенности доставки..."
-                      className="min-h-[100px]"
+                      placeholder="Впишите список товаров/брендов/SKU и количество, требования, сроки, особенности доставки..."
+                      className="min-h-[160px]"
                       {...field}
                     />
                   </FormControl>

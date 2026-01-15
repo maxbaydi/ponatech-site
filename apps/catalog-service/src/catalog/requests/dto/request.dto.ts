@@ -1,5 +1,10 @@
 import { Transform, Type } from 'class-transformer';
-import { IsEmail, IsInt, IsOptional, IsString, Min, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
 const trimValue = ({ value }: { value: unknown }): unknown => {
   if (typeof value !== 'string') return value;
@@ -34,18 +39,8 @@ export class CreateRequestDto {
 
   @Transform(trimValue)
   @IsString()
-  @MinLength(2)
-  productName!: string;
-
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  quantity!: number;
-
-  @Transform(trimOptionalValue)
-  @IsOptional()
-  @IsString()
-  description?: string;
+  @MinLength(10)
+  description!: string;
 }
 
 export interface RequestResponse {

@@ -27,6 +27,7 @@ const htmlToText = (html?: string | null): string => {
 export function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
   const mainImage = product.images?.find((img) => img.isMain) || product.images?.[0];
   const descriptionText = htmlToText(product.description);
+  const productHref = `/catalog/${product.slug}`;
 
   if (viewMode === 'list') {
     return (
@@ -43,7 +44,7 @@ export function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
           <CardContent className="flex-1 p-4 flex flex-col justify-between">
             <div>
               <p className="text-xs text-muted-foreground mb-1">SKU: {product.sku}</p>
-              <Link href={`/catalog/${product.slug}`}>
+              <Link href={productHref}>
                 <h3 className="font-medium text-base mb-2 group-hover:text-primary transition-colors line-clamp-2">
                   {product.title}
                 </h3>
@@ -60,7 +61,7 @@ export function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
             <div className="flex items-center justify-between mt-4">
               <p className="font-bold text-xl text-primary">{formatPrice(product.price, product.currency)}</p>
               <Button asChild size="sm">
-                <Link href={`/catalog/${product.slug}`}>
+                <Link href={productHref}>
                   <Eye className="mr-2 h-4 w-4" />
                   Подробнее
                 </Link>
@@ -73,34 +74,51 @@ export function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
   }
 
   return (
-    <Link href={`/catalog/${product.slug}`}>
-      <Card className="group overflow-hidden card-hover h-full">
-        <div className="relative">
+    <Card className="group overflow-hidden card-hover h-full flex flex-col">
+      <div className="relative">
+        <Link href={productHref} className="block">
           <ImageCanvas src={mainImage?.url} alt={product.title} />
-          {product.brand && (
-            <Badge variant="secondary" className="absolute top-3 left-3 z-10">
-              {product.brand.name}
-            </Badge>
-          )}
-          {typeof product.stock === 'number' && product.stock === 0 && (
-            <Badge variant="destructive" className="absolute top-3 right-3 z-10">
-              Нет в наличии
-            </Badge>
-          )}
-        </div>
-        <CardContent className="p-4">
+        </Link>
+        {product.brand && (
+          <Badge variant="secondary" className="absolute top-3 left-3 z-10">
+            {product.brand.name}
+          </Badge>
+        )}
+        {typeof product.stock === 'number' && product.stock === 0 && (
+          <Badge variant="destructive" className="absolute top-3 right-3 z-10">
+            Нет в наличии
+          </Badge>
+        )}
+      </div>
+      <CardContent className="p-4 flex flex-col flex-1">
+        <div className="flex-1">
           <p className="text-xs text-muted-foreground mb-1">SKU: {product.sku}</p>
-          <h3 className="font-medium text-sm mb-2 line-clamp-2 group-hover:text-primary transition-colors min-h-[2.5rem]">
-            {product.title}
-          </h3>
+          <Link href={productHref}>
+            <h3 className="font-medium text-sm mb-2 line-clamp-2 group-hover:text-primary transition-colors min-h-10">
+              {product.title}
+            </h3>
+          </Link>
           {product.category && (
             <Badge variant="outline" className="text-xs mb-3">
               {product.category.name}
             </Badge>
           )}
           <p className="font-bold text-lg text-primary">{formatPrice(product.price, product.currency)}</p>
-        </CardContent>
-      </Card>
-    </Link>
+        </div>
+        <div className="mt-4">
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+            className="w-full justify-center transition-colors hover:bg-primary hover:text-primary-foreground"
+          >
+            <Link href={productHref}>
+              <Eye className="mr-2 h-4 w-4" />
+              Подробнее
+            </Link>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
