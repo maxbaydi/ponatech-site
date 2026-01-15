@@ -73,7 +73,7 @@ export function ProductPagination({ currentPage, totalPages }: ProductPagination
 
   return (
     <Pagination>
-      <PaginationContent>
+      <PaginationContent className="flex-wrap justify-center">
         <PaginationItem>
           <PaginationPrevious
             href={createPageUrl(currentPage - 1)}

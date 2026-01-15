@@ -43,10 +43,10 @@ function CatalogContent() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 py-8">
+      <main className="flex-1 py-6 sm:py-8">
         <div className="container-custom">
-          <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">Каталог товаров</h1>
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">Каталог товаров</h1>
             <p className="text-muted-foreground">
               Промышленное оборудование от ведущих мировых производителей
             </p>
@@ -57,9 +57,9 @@ function CatalogContent() {
             <ProductFilters isMobile />
 
             <div className="flex-1">
-              <div className="flex flex-wrap items-center gap-4 mb-6">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-4 mb-6">
                 <ProductSearch />
-                <div className="flex items-center gap-4 ml-auto">
+                <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto sm:ml-auto">
                   <ProductSort />
                   <ViewToggle view={viewMode} onViewChange={setViewMode} />
                 </div>
@@ -70,7 +70,7 @@ function CatalogContent() {
                   key={`loading-${resultsKey}`}
                   className={
                     viewMode === 'grid'
-                      ? 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 smooth-appear'
+                      ? 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 smooth-appear'
                       : 'flex flex-col gap-4 smooth-appear'
                   }
                 >
@@ -93,7 +93,7 @@ function CatalogContent() {
                   <div
                     className={
                       viewMode === 'grid'
-                        ? 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6'
+                        ? 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6'
                         : 'flex flex-col gap-4'
                     }
                   >
@@ -107,8 +107,8 @@ function CatalogContent() {
                   </div>
                   </div>
               ) : (
-                  <div key={`empty-${resultsKey}`} className="text-center py-16 smooth-appear">
-                  <Package className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+                  <div key={`empty-${resultsKey}`} className="text-center py-12 sm:py-16 smooth-appear">
+                  <Package className="w-12 h-12 sm:w-16 sm:h-16 text-muted-foreground/30 mx-auto mb-4" />
                   <h3 className="font-semibold text-lg mb-2">Товары не найдены</h3>
                   <p className="text-muted-foreground">
                     Попробуйте изменить параметры фильтрации или поисковый запрос

@@ -98,7 +98,7 @@ const FLOATING_LOGOS = BRAND_LOGOS.map((logo) => {
 
 export function HeroSection() {
   return (
-    <section className="relative h-[800px] flex items-center overflow-hidden bg-gradient-to-br from-background via-muted/50 to-background">
+    <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-background via-muted/50 to-background py-16 sm:py-20 lg:py-24">
       <div className="absolute inset-0 z-0">
         <Image
           src={heroSectionCollage}
@@ -112,8 +112,8 @@ export function HeroSection() {
       </div>
 
       <div className="absolute inset-0 z-10 overflow-hidden flex items-center justify-center text-center pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 sm:w-80 sm:h-80 lg:w-96 lg:h-96 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 sm:w-80 sm:h-80 lg:w-96 lg:h-96 bg-secondary/5 rounded-full blur-3xl" />
 
         {FLOATING_LOGOS.map((logo) => (
           <div
@@ -135,14 +135,14 @@ export function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-medium mb-6">
               <Globe className="w-4 h-4" />
               Международные поставки из Китая
             </span>
           </motion.div>
 
           <motion.h1
-            className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
@@ -151,7 +151,7 @@ export function HeroSection() {
           </motion.h1>
 
           <motion.p
-            className="text-2xl md:text-3xl font-semibold text-foreground/90 mb-6"
+            className="text-xl sm:text-2xl md:text-3xl font-semibold text-foreground/90 mb-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.15 }}
@@ -160,7 +160,7 @@ export function HeroSection() {
           </motion.p>
 
           <motion.p
-            className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto"
+            className="text-base sm:text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -170,24 +170,24 @@ export function HeroSection() {
           </motion.p>
 
           <motion.div
-            className="flex flex-wrap justify-center gap-4 mb-12"
+            className="flex flex-col sm:flex-row sm:flex-wrap justify-center gap-4 mb-10 sm:mb-12 w-full"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
           >
-            <Button size="xl" asChild>
+            <Button size="xl" asChild className="w-full sm:w-auto">
               <Link href="/catalog">
                 Перейти в каталог
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-            <Button size="xl" variant="outline" asChild>
+            <Button size="xl" variant="outline" asChild className="w-full sm:w-auto">
               <Link href="/request">Оставить заявку</Link>
             </Button>
           </motion.div>
 
           <motion.div
-            className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}

@@ -95,7 +95,7 @@ export default function MediaLibraryPage() {
           <h1 className="text-2xl font-bold">Медиабиблиотека</h1>
           <p className="text-muted-foreground">Управление изображениями и файлами</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <input
             ref={fileInputRef}
             type="file"
@@ -117,8 +117,8 @@ export default function MediaLibraryPage() {
 
       <Card>
         <CardHeader className="pb-4">
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1 max-w-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="relative w-full sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Поиск файлов..."
@@ -131,7 +131,7 @@ export default function MediaLibraryPage() {
               />
             </div>
             {data?.total !== undefined && (
-              <div className="text-sm text-muted-foreground">Всего: {data.total}</div>
+              <div className="text-sm text-muted-foreground sm:ml-auto">Всего: {data.total}</div>
             )}
           </div>
         </CardHeader>
@@ -173,7 +173,7 @@ export default function MediaLibraryPage() {
               {totalPages > 1 && (
                 <div className="mt-6 flex justify-center">
                   <Pagination>
-                    <PaginationContent>
+                    <PaginationContent className="flex-wrap justify-center">
                       <PaginationItem>
                         <PaginationPrevious
                           href="#"

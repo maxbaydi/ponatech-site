@@ -64,10 +64,10 @@ export default function ProfilePage() {
   const roleInfo = ROLE_LABELS[user.role] || { label: user.role, color: 'outline' as const };
 
   return (
-    <div className="py-8">
+    <div className="py-6 sm:py-8">
       <div className="container-custom">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Профиль</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Профиль</h1>
           <p className="text-muted-foreground">Управление аккаунтом и настройки</p>
         </div>
 
@@ -111,9 +111,9 @@ export default function ProfilePage() {
 
           <div className="lg:col-span-2">
             <Tabs defaultValue="security">
-              <TabsList>
-                <TabsTrigger value="security">Безопасность</TabsTrigger>
-                <TabsTrigger value="history">История заявок</TabsTrigger>
+              <TabsList className="flex flex-wrap h-auto">
+                <TabsTrigger value="security" className="w-full sm:w-auto">Безопасность</TabsTrigger>
+                <TabsTrigger value="history" className="w-full sm:w-auto">История заявок</TabsTrigger>
               </TabsList>
 
               <TabsContent value="security" className="mt-6">

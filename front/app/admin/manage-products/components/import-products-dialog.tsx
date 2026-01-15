@@ -127,7 +127,7 @@ export function ImportProductsDialog() {
           Импорт
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-fit min-w-[500px] max-w-[90vw] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-full sm:w-fit sm:min-w-[500px] max-w-[90vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Импорт товаров из CSV</DialogTitle>
         </DialogHeader>

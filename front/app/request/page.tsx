@@ -225,10 +225,10 @@ export default function RequestPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 py-8 lg:py-16">
+      <main className="flex-1 py-6 sm:py-8 lg:py-16">
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">Оставить заявку</h1>
+          <div className="text-center mb-8 sm:mb-12">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">Оставить заявку</h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Заполните форму заявки на поставку оборудования. Наши специалисты свяжутся с вами в 
               течение 24 часов для уточнения деталей и расчёта стоимости.

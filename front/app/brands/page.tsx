@@ -38,16 +38,16 @@ export default function BrandsPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 py-8">
+      <main className="flex-1 py-6 sm:py-8">
         <div className="container-custom">
           <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">Бренды</h1>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">Бренды</h1>
             <p className="text-muted-foreground">
               Мы работаем с {BRANDS.length}+ мировыми производителями промышленного оборудования
             </p>
           </div>
 
-          <div className="relative max-w-md mb-8">
+          <div className="relative w-full sm:max-w-md mb-6 sm:mb-8">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Найти бренд..."
@@ -93,8 +93,8 @@ export default function BrandsPage() {
                               name={brand.name}
                               src={brand.logo}
                               size="md"
-                              className="mx-auto mb-3"
-                              imgClassName="w-20 h-20"
+                              className="mx-auto mb-3 w-12 h-12 sm:w-16 sm:h-16"
+                              imgClassName="w-12 h-12 sm:w-20 sm:h-20"
                             />
                             <h3 className="font-medium text-sm group-hover:text-primary transition-colors line-clamp-1">
                               {brand.name}
@@ -107,8 +107,8 @@ export default function BrandsPage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-16">
-                  <Building2 className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+                <div className="text-center py-12 sm:py-16">
+                  <Building2 className="w-12 h-12 sm:w-16 sm:h-16 text-muted-foreground/30 mx-auto mb-4" />
                   <h3 className="font-semibold text-lg mb-2">Бренды не найдены</h3>
                   <p className="text-muted-foreground">Попробуйте изменить поисковый запрос</p>
                 </div>

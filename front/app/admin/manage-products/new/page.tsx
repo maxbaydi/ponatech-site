@@ -226,11 +226,11 @@ export default function NewProductPage() {
                   )}
                 />
 
-                <div className="flex justify-end gap-4">
-                  <Button variant="outline" type="button" asChild>
+                <div className="flex flex-col sm:flex-row sm:justify-end gap-3 sm:gap-4">
+                  <Button variant="outline" type="button" asChild className="w-full sm:w-auto">
                     <Link href="/admin/manage-products">Отмена</Link>
                   </Button>
-                  <Button type="submit" disabled={createProduct.isPending}>
+                  <Button type="submit" disabled={createProduct.isPending} className="w-full sm:w-auto">
                     {createProduct.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Создать товар
                   </Button>

@@ -62,11 +62,11 @@ export function WhyUsSection() {
   const inView = useInView(ref, { once: true, margin: '-100px' });
 
   return (
-    <section id="why-us" className="py-16 lg:py-24 bg-background" ref={ref}>
+    <section id="why-us" className="py-12 sm:py-16 lg:py-24 bg-background" ref={ref}>
       <div className="container-custom">
-        <div className="text-center mb-12">
+        <div className="text-center mb-8 sm:mb-12">
           <motion.span
-            className="inline-block px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4"
+            className="inline-block px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-medium mb-4"
             initial={{ opacity: 0, y: 20 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.5 }}
@@ -74,7 +74,7 @@ export function WhyUsSection() {
             Почему PONA TECH
           </motion.span>
           <motion.h2
-            className="text-3xl md:text-4xl font-bold mb-4"
+            className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4"
             initial={{ opacity: 0, y: 20 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.5, delay: 0.1 }}
@@ -92,7 +92,7 @@ export function WhyUsSection() {
           </motion.p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {ADVANTAGES.map((advantage, i) => (
             <motion.div
               key={advantage.title}
@@ -101,11 +101,11 @@ export function WhyUsSection() {
               transition={{ duration: 0.5, delay: 0.1 * i }}
             >
               <Card className="h-full card-hover border-border/50">
-                <CardContent className="p-6">
-                  <div className={`w-12 h-12 rounded-xl ${advantage.bgColor} flex items-center justify-center mb-4`}>
-                    <advantage.icon className={`w-6 h-6 ${advantage.color}`} />
+                <CardContent className="p-4 sm:p-6">
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${advantage.bgColor} flex items-center justify-center mb-4`}>
+                    <advantage.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${advantage.color}`} />
                   </div>
-                  <h3 className="font-semibold text-lg mb-2">{advantage.title}</h3>
+                  <h3 className="font-semibold text-base sm:text-lg mb-2">{advantage.title}</h3>
                   <p className="text-muted-foreground text-sm leading-relaxed">{advantage.description}</p>
                 </CardContent>
               </Card>

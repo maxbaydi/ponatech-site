@@ -37,7 +37,7 @@ export function Footer() {
                 alt="Pona Tech"
                 width={160}
                 height={46}
-                className="h-12 w-auto brightness-0 invert"
+                className="h-10 sm:h-12 w-auto brightness-0 invert"
               />
             </Link>
             <p className="text-background/70 text-sm leading-relaxed max-w-sm mb-6">

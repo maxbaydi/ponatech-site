@@ -64,7 +64,7 @@ export function MediaLibraryPicker({ value, onChange, trigger }: MediaLibraryPic
   const defaultTrigger = (
     <button
       type="button"
-      className="relative w-40 h-40 border-2 border-dashed rounded-lg overflow-hidden bg-muted hover:bg-muted/80 transition-colors flex flex-col items-center justify-center gap-2"
+      className="relative w-full max-w-[10rem] sm:max-w-[12rem] aspect-square border-2 border-dashed rounded-lg overflow-hidden bg-muted hover:bg-muted/80 transition-colors flex flex-col items-center justify-center gap-2"
     >
       {value ? (
         <>
@@ -90,7 +90,7 @@ export function MediaLibraryPicker({ value, onChange, trigger }: MediaLibraryPic
     <div className="space-y-2">
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>{trigger ?? defaultTrigger}</DialogTrigger>
-        <DialogContent className="max-w-4xl max-h-[90vh]">
+        <DialogContent className="w-full max-w-4xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Выбор изображения</DialogTitle>
           </DialogHeader>
@@ -128,13 +128,13 @@ export function MediaLibraryPicker({ value, onChange, trigger }: MediaLibraryPic
 
           <ScrollArea className="h-96">
             {isLoading ? (
-              <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
                 {Array.from({ length: 12 }).map((_, i) => (
                   <Skeleton key={i} className="aspect-square rounded-lg" />
                 ))}
               </div>
             ) : files.length > 0 ? (
-              <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
                 {files.map((file) => {
                   const isSelected = selected?.id === file.id;
                   return (

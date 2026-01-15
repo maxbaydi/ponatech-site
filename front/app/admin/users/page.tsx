@@ -104,8 +104,8 @@ export default function UsersPage() {
 
       <Card>
         <CardHeader className="pb-4">
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1 max-w-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="relative w-full sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Поиск по email..."
@@ -220,7 +220,7 @@ export default function UsersPage() {
               </Table>
 
               {data.totalPages > 1 && (
-                <div className="flex items-center justify-between px-4 py-3 border-t">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 border-t">
                   <p className="text-sm text-muted-foreground">
                     Страница {data.page} из {data.totalPages} (всего {data.total})
                   </p>

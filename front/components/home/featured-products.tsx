@@ -32,12 +32,12 @@ export function FeaturedProducts() {
   const displayProducts = productsPage?.data ?? [];
 
   return (
-    <section className="section-py-compact bg-muted/30" ref={ref}>
+    <section className="py-12 sm:py-16 lg:py-20 bg-muted/30" ref={ref}>
       <div className="container-custom">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 sm:mb-10">
           <div>
             <motion.h2
-              className="text-3xl md:text-4xl font-bold mb-2"
+              className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2"
               initial={{ opacity: 0, y: 20 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.5 }}
@@ -58,7 +58,7 @@ export function FeaturedProducts() {
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <Button variant="outline" asChild>
+            <Button variant="outline" asChild className="w-full sm:w-auto">
               <Link href="/catalog">
                 Весь каталог
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -68,13 +68,13 @@ export function FeaturedProducts() {
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {Array.from({ length: 8 }).map((_, i) => (
               <ProductCardSkeleton key={i} />
             ))}
           </div>
         ) : displayProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {displayProducts.map((product, i) => (
               <motion.div
                 key={product.id}
@@ -87,10 +87,10 @@ export function FeaturedProducts() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-12">
-            <Package className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+          <div className="text-center py-10 sm:py-12">
+            <Package className="w-12 h-12 sm:w-16 sm:h-16 text-muted-foreground/30 mx-auto mb-4" />
             <p className="text-muted-foreground">Каталог товаров загружается...</p>
-            <Button variant="outline" asChild className="mt-4">
+            <Button variant="outline" asChild className="mt-4 w-full sm:w-auto">
               <Link href="/catalog">Перейти в каталог</Link>
             </Button>
           </div>

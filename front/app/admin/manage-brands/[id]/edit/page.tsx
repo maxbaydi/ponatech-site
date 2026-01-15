@@ -240,11 +240,11 @@ export default function EditBrandPage() {
                 )}
               />
 
-              <div className="flex justify-end gap-4">
-                <Button variant="outline" type="button" asChild>
+              <div className="flex flex-col sm:flex-row sm:justify-end gap-3 sm:gap-4">
+                <Button variant="outline" type="button" asChild className="w-full sm:w-auto">
                   <Link href="/admin/manage-brands">Отмена</Link>
                 </Button>
-                <Button type="submit" disabled={updateBrand.isPending}>
+                <Button type="submit" disabled={updateBrand.isPending} className="w-full sm:w-auto">
                   {updateBrand.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Сохранить изменения
                 </Button>

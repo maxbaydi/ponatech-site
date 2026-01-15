@@ -42,9 +42,9 @@ export default function BrandPage({ params }: BrandPageProps) {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 py-8">
+      <main className="flex-1 py-6 sm:py-8">
         <div className="container-custom">
-          <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+          <nav className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-muted-foreground mb-6">
             <Link href="/brands" className="hover:text-foreground transition-colors">
               Бренды
             </Link>
@@ -52,17 +52,18 @@ export default function BrandPage({ params }: BrandPageProps) {
             <span className="text-foreground">{brand.name}</span>
           </nav>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mb-10 sm:mb-12">
             <div className="lg:col-span-2">
-              <div className="flex items-start gap-6 mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6 mb-6">
                 <BrandLogo
                   name={brand.name}
                   src={apiBrand?.logoUrl || staticBrand?.logo}
                   size="lg"
-                  className="flex-shrink-0"
+                  className="flex-shrink-0 w-16 h-16 sm:w-24 sm:h-24"
+                  imgClassName="w-10 h-10 sm:w-16 sm:h-16"
                 />
                 <div>
-                  <h1 className="text-3xl md:text-4xl font-bold mb-2">{brand.name}</h1>
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">{brand.name}</h1>
                   <div className="flex flex-wrap items-center gap-3">
                     {(brand.country || staticBrand?.country) && (
                       <Badge variant="secondary" className="flex items-center gap-1">
@@ -108,7 +109,7 @@ export default function BrandPage({ params }: BrandPageProps) {
           <div>
             <h2 className="text-2xl font-bold mb-6">Товары {brand.name}</h2>
             {productsLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <div key={i} className="rounded-xl border border-border overflow-hidden">
                     <Skeleton className="h-48 w-full" />
@@ -122,13 +123,13 @@ export default function BrandPage({ params }: BrandPageProps) {
               </div>
             ) : products.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                   {products.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}
                 </div>
                 <div className="mt-8 text-center">
-                  <Button variant="outline" asChild>
+                  <Button variant="outline" asChild className="w-full sm:w-auto">
                     <Link href={`/catalog?brandSlug=${encodeURIComponent(slug)}`}>
                       Все товары {brand.name}
                       <ExternalLink className="ml-2 h-4 w-4" />
@@ -153,7 +154,7 @@ export default function BrandPage({ params }: BrandPageProps) {
           </div>
 
           <div className="mt-8">
-            <Button variant="ghost" asChild>
+            <Button variant="ghost" asChild className="w-full sm:w-auto">
               <Link href="/brands">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Все бренды

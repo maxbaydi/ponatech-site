@@ -84,7 +84,7 @@ export default function DashboardPage() {
             {latestProducts.length > 0 ? (
               <div className="space-y-4">
                 {latestProducts.map((product) => (
-                  <div key={product.id} className="flex items-center justify-between">
+                  <div key={product.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div>
                       <p className="font-medium text-sm">{product.title}</p>
                       <p className="text-xs text-muted-foreground">{product.sku}</p>
@@ -115,7 +115,7 @@ export default function DashboardPage() {
             {brands && brands.length > 0 ? (
               <div className="space-y-4">
                 {brands.slice(0, 5).map((brand) => (
-                  <div key={brand.id} className="flex items-center justify-between">
+                  <div key={brand.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded bg-muted flex items-center justify-center">
                         <span className="text-xs font-bold">{brand.name.slice(0, 2)}</span>

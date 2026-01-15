@@ -81,10 +81,10 @@ export default function ContactsPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 py-8 lg:py-16">
+      <main className="flex-1 py-6 sm:py-8 lg:py-16">
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">Контакты</h1>
+          <div className="text-center mb-8 sm:mb-12">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">Контакты</h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Свяжитесь с нами для обсуждения вашего проекта. Наши специалисты помогут подобрать 
               оптимальное решение и рассчитают стоимость поставки.

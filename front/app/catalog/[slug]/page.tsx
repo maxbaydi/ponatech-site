@@ -91,7 +91,7 @@ function ImageGallery({ images, title }: { images: ProductImage[]; title: string
                   e.stopPropagation();
                   handlePrev();
                 }}
-                className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background"
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-background"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
@@ -100,7 +100,7 @@ function ImageGallery({ images, title }: { images: ProductImage[]; title: string
                   e.stopPropagation();
                   handleNext();
                 }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-background"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -150,7 +150,7 @@ function ProductPlaceholder({ title }: { title: string }) {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4 }}
     >
-      <Package className="w-24 h-24 text-muted-foreground/20 mb-4" />
+      <Package className="w-16 h-16 sm:w-24 sm:h-24 text-muted-foreground/20 mb-4" />
       <p className="text-muted-foreground/50 text-sm">Изображение недоступно</p>
     </motion.div>
   );
@@ -200,12 +200,12 @@ export default function ProductPage({ params }: ProductPageProps) {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 py-8">
+      <main className="flex-1 py-6 sm:py-8">
         <div className="container-custom">
           {isLoading ? (
             <div className="space-y-8">
               <Skeleton className="h-6 w-64" />
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 pb-5">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12 pb-5">
                 <Skeleton className="aspect-square rounded-2xl" />
                 <div className="space-y-4">
                   <Skeleton className="h-8 w-24" />
@@ -220,7 +220,7 @@ export default function ProductPage({ params }: ProductPageProps) {
           ) : product ? (
             <>
               <motion.nav
-                className="flex items-center gap-2 text-sm text-muted-foreground mb-6"
+                className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-muted-foreground mb-6"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
@@ -251,10 +251,10 @@ export default function ProductPage({ params }: ProductPageProps) {
                     <ChevronRight className="h-4 w-4" />
                   </>
                 )}
-                <span className="text-foreground truncate max-w-[200px]">{product.title}</span>
+                <span className="text-foreground truncate max-w-[160px] sm:max-w-[200px]">{product.title}</span>
               </motion.nav>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 pb-5">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12 pb-5">
                 {product.images && product.images.length > 0 ? (
                   <ImageGallery images={product.images} title={product.title} />
                 ) : (
@@ -291,7 +291,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                     {product.title}
                   </h1>
                   
-                  <p className="text-muted-foreground mb-6 flex items-center gap-4">
+                  <p className="text-muted-foreground mb-6 flex flex-wrap gap-x-4 gap-y-2 text-sm sm:text-base">
                     <span>Артикул: <span className="font-mono">{product.sku}</span></span>
                     {product.brand?.country && (
                       <span className="text-sm">Страна: {product.brand.country}</span>
@@ -335,10 +335,10 @@ export default function ProductPage({ params }: ProductPageProps) {
               </div>
 
               <Tabs defaultValue="specs" className="w-full">
-                <TabsList className="w-full grid grid-cols-3 h-auto p-1">
-                  <TabsTrigger value="specs" className="py-2.5">Характеристики</TabsTrigger>
-                  <TabsTrigger value="delivery" className="py-2.5">Доставка</TabsTrigger>
-                  <TabsTrigger value="warranty" className="py-2.5">Гарантии</TabsTrigger>
+                <TabsList className="w-full grid grid-cols-1 sm:grid-cols-3 gap-2 h-auto p-1">
+                  <TabsTrigger value="specs" className="py-2.5 text-xs sm:text-sm">Характеристики</TabsTrigger>
+                  <TabsTrigger value="delivery" className="py-2.5 text-xs sm:text-sm">Доставка</TabsTrigger>
+                  <TabsTrigger value="warranty" className="py-2.5 text-xs sm:text-sm">Гарантии</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="specs" className="mt-4">
@@ -356,9 +356,9 @@ export default function ProductPage({ params }: ProductPageProps) {
                       <CardContent className="p-4">
                         <dl className="divide-y divide-border/50">
                           {Object.entries(product.specs as Record<string, unknown>).map(([key, value]) => (
-                            <div key={key} className="py-3 flex justify-between gap-4">
+                            <div key={key} className="py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
                               <dt className="text-muted-foreground">{key}</dt>
-                              <dd className="font-medium text-right">{String(value)}</dd>
+                              <dd className="font-medium sm:text-right">{String(value)}</dd>
                             </div>
                           ))}
                         </dl>
@@ -442,7 +442,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                   transition={{ duration: 0.4, delay: 0.3 }}
                 >
                   <h2 className="text-2xl font-bold mb-6">Похожие товары</h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                     {filteredRelated.map((relatedProduct) => (
                       <ProductCard key={relatedProduct.id} product={relatedProduct} />
                     ))}
@@ -456,7 +456,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
               >
-                <Button variant="ghost" asChild>
+                <Button variant="ghost" asChild className="w-full sm:w-auto">
                   <Link href="/catalog">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Вернуться в каталог

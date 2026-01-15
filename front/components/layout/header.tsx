@@ -169,7 +169,7 @@ export function Header() {
                 alt="Pona Tech"
                 width={140}
                 height={40}
-                className="h-10 w-auto"
+                className="h-8 w-auto sm:h-10"
                 priority
               />
             </Link>
@@ -183,13 +183,13 @@ export function Header() {
           </div>
 
           <form
-            className="hidden md:flex flex-1 justify-center"
+            className="hidden md:flex flex-1 min-w-0 justify-center"
             onSubmit={(e) => {
               e.preventDefault();
               runSearch();
             }}
           >
-            <div className="flex h-10 w-full max-w-3xl items-stretch overflow-hidden rounded-md border border-input bg-background shadow-sm focus-within:ring-1 focus-within:ring-ring">
+            <div className="flex h-10 w-full max-w-2xl lg:max-w-3xl items-stretch overflow-hidden rounded-md border border-input bg-background shadow-sm focus-within:ring-1 focus-within:ring-ring">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
@@ -308,7 +308,7 @@ export function Header() {
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-80">
+              <SheetContent side="right" className="w-full sm:w-80">
                 <SheetTitle className="sr-only">Меню навигации</SheetTitle>
                 <div className="flex flex-col gap-6 pt-6">
                   <Button asChild className="w-full">

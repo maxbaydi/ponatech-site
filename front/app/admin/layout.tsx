@@ -149,12 +149,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-0">
+            <SheetContent side="left" className="w-full sm:w-64 p-0">
               <SheetTitle className="sr-only">Меню администратора</SheetTitle>
               <AdminSidebar />
             </SheetContent>
           </Sheet>
-          <span className="ml-4 font-semibold">Админ-панель</span>
+          <span className="ml-4 font-semibold truncate">Админ-панель</span>
         </header>
 
         <main className="flex-1 p-4 lg:p-6 bg-muted/30">{children}</main>

@@ -78,17 +78,17 @@ function BrandsCarouselRow({ category, categoryIndex }: { category: BrandCategor
 
   return (
     <div className="relative overflow-hidden">
-      <div className="container-custom mb-3">
-        <span className="text-sm font-medium text-muted-foreground">{BRAND_CATEGORIES[category]}</span>
+      <div className="container-custom mb-2 sm:mb-3">
+        <span className="text-xs sm:text-sm font-medium text-muted-foreground">{BRAND_CATEGORIES[category]}</span>
       </div>
 
       <div className="relative">
-        <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-muted/30 to-transparent z-10" />
-        <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-muted/30 to-transparent z-10" />
+        <div className="absolute left-0 top-0 bottom-0 w-12 sm:w-16 lg:w-20 bg-gradient-to-r from-muted/30 to-transparent z-10" />
+        <div className="absolute right-0 top-0 bottom-0 w-12 sm:w-16 lg:w-20 bg-gradient-to-l from-muted/30 to-transparent z-10" />
 
         <motion.div
           ref={trackRef}
-          className="flex gap-4 will-change-transform"
+          className="flex gap-3 sm:gap-4 will-change-transform"
           animate={
             loopDistance
               ? {
@@ -109,11 +109,11 @@ function BrandsCarouselRow({ category, categoryIndex }: { category: BrandCategor
               : undefined
           }
         >
-          <div ref={groupRef} className="flex gap-4 shrink-0">
+          <div ref={groupRef} className="flex gap-3 sm:gap-4 shrink-0">
             {categoryBrands.map((brand) => (
               <Link key={brand.slug} href={`/brands/${brand.slug}`} className="flex-shrink-0 group">
-                <div className="flex items-center gap-3 px-5 py-3 bg-background rounded-xl border border-border/50 shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5">
-                  <BrandLogo name={brand.name} src={brand.logo} size="sm" imgClassName="w-10 h-10" />
+                <div className="flex items-center gap-2 sm:gap-3 px-4 py-2 sm:px-5 sm:py-3 bg-background rounded-xl border border-border/50 shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5">
+                  <BrandLogo name={brand.name} src={brand.logo} size="sm" imgClassName="w-8 h-8 sm:w-10 sm:h-10" />
                   <div>
                     <p className="font-medium text-sm group-hover:text-primary transition-colors">
                       {brand.name}
@@ -125,11 +125,11 @@ function BrandsCarouselRow({ category, categoryIndex }: { category: BrandCategor
             ))}
           </div>
 
-          <div className="flex gap-4 shrink-0">
+          <div className="flex gap-3 sm:gap-4 shrink-0">
             {categoryBrands.map((brand) => (
               <Link key={`${brand.slug}-dup`} href={`/brands/${brand.slug}`} className="flex-shrink-0 group">
-                <div className="flex items-center gap-3 px-5 py-3 bg-background rounded-xl border border-border/50 shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5">
-                  <BrandLogo name={brand.name} src={brand.logo} size="sm" imgClassName="w-10 h-10" />
+                <div className="flex items-center gap-2 sm:gap-3 px-4 py-2 sm:px-5 sm:py-3 bg-background rounded-xl border border-border/50 shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5">
+                  <BrandLogo name={brand.name} src={brand.logo} size="sm" imgClassName="w-8 h-8 sm:w-10 sm:h-10" />
                   <div>
                     <p className="font-medium text-sm group-hover:text-primary transition-colors">
                       {brand.name}
@@ -148,14 +148,14 @@ function BrandsCarouselRow({ category, categoryIndex }: { category: BrandCategor
 
 export function BrandsCarousel() {
   return (
-    <section className="py-16 lg:py-24 bg-muted/30">
-      <div className="container-custom mb-10">
+    <section className="py-12 sm:py-16 lg:py-24 bg-muted/30">
+      <div className="container-custom mb-8 sm:mb-10">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">Работаем с лидерами рынка</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">Работаем с лидерами рынка</h2>
             <p className="text-muted-foreground">70+ мировых брендов промышленного оборудования</p>
           </div>
-          <Button variant="outline" asChild>
+          <Button variant="outline" asChild className="w-full sm:w-auto">
             <Link href="/brands">
               Все бренды
               <ArrowRight className="ml-2 h-4 w-4" />

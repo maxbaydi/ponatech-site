@@ -26,7 +26,7 @@ export function ProductSort() {
 
   return (
     <Select value={currentSort} onValueChange={handleSortChange}>
-      <SelectTrigger className="w-[200px]">
+    <SelectTrigger className="w-full sm:w-[200px]">
         <SelectValue placeholder="Сортировка" />
       </SelectTrigger>
       <SelectContent>

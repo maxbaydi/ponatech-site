@@ -87,7 +87,7 @@ export function ExportProductsDialog({ searchQuery, selectedIds }: ExportProduct
           Экспорт
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="w-full max-w-md">
         <DialogHeader>
           <DialogTitle>Экспорт товаров в CSV</DialogTitle>
         </DialogHeader>
@@ -133,7 +133,7 @@ export function ExportProductsDialog({ searchQuery, selectedIds }: ExportProduct
 
           <div className="space-y-2">
             <Label>Колонки</Label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {CSV_COLUMNS.map((col) => (
                 <Label key={col} className="flex items-center gap-2 font-normal">
                   <Checkbox checked={columns.has(col)} onCheckedChange={() => toggleColumn(col)} />

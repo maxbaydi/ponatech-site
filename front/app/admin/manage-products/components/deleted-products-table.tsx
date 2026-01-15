@@ -253,7 +253,7 @@ export function DeletedProductsTable() {
       <Card>
         <CardHeader className="pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="relative flex-1 max-w-sm">
+            <div className="relative w-full sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Поиск в корзине..."
@@ -263,7 +263,7 @@ export function DeletedProductsTable() {
               />
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 w-full">
               <Select
                 value={brandIdFilterValue}
                 onValueChange={(v) =>
@@ -285,7 +285,7 @@ export function DeletedProductsTable() {
             </div>
 
             {selectedCount > 0 && (
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                 <div className="text-sm text-muted-foreground">Выбрано: {selectedCount}</div>
 
                 <DropdownMenu>
@@ -427,7 +427,7 @@ export function DeletedProductsTable() {
 
         {totalPages > 1 && (
           <Pagination className="sm:justify-end">
-            <PaginationContent>
+            <PaginationContent className="flex-wrap justify-center sm:justify-end">
               <PaginationItem>
                 <PaginationPrevious
                   href={buildUrlWithParams({ trashPage: Math.max(DEFAULT_PAGE, page - 1) })}

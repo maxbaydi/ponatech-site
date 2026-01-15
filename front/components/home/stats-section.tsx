@@ -57,14 +57,14 @@ function StatItem({ icon, value, suffix, label, delay }: StatItemProps) {
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.5, delay }}
     >
-      <div className="flex flex-col items-center text-center p-6 rounded-2xl bg-background border border-border/50 shadow-sm transition-all duration-300 group-hover:shadow-lg group-hover:border-primary/30">
-        <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+      <div className="flex flex-col items-center text-center p-4 sm:p-6 rounded-2xl bg-background border border-border/50 shadow-sm transition-all duration-300 group-hover:shadow-lg group-hover:border-primary/30">
+        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
           {icon}
         </div>
-        <div className="text-4xl md:text-5xl font-bold text-foreground mb-2">
+        <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-2">
           <AnimatedNumber value={value} suffix={suffix} inView={inView} />
         </div>
-        <p className="text-muted-foreground text-sm">{label}</p>
+        <p className="text-muted-foreground text-xs sm:text-sm">{label}</p>
       </div>
     </motion.div>
   );
@@ -99,16 +99,16 @@ const STATS = [
 
 export function StatsSection() {
   return (
-    <section className="py-16 lg:py-24 bg-gradient-to-b from-background to-muted/30">
+    <section className="py-12 sm:py-16 lg:py-24 bg-gradient-to-b from-background to-muted/30">
       <div className="container-custom">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Цифры говорят за нас</h2>
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">Цифры говорят за нас</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Многолетний опыт работы с ведущими мировыми производителями и надёжная репутация на рынке
           </p>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {STATS.map((stat, i) => (
             <StatItem key={stat.label} {...stat} delay={i * 0.1} />
           ))}

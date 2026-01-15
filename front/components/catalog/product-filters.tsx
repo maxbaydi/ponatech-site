@@ -256,7 +256,7 @@ export function ProductFilters({ isMobile }: ProductFiltersProps) {
             Фильтры
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-80">
+        <SheetContent side="left" className="w-full sm:w-80">
           <SheetHeader>
             <SheetTitle>Фильтры</SheetTitle>
           </SheetHeader>

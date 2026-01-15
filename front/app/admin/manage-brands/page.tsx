@@ -47,7 +47,7 @@ export default function BrandsPage() {
           <h1 className="text-2xl font-bold">Бренды</h1>
           <p className="text-muted-foreground">Управление брендами производителей</p>
         </div>
-        <Button asChild>
+        <Button asChild className="w-full sm:w-auto">
           <Link href="/admin/manage-brands/new">
             <Plus className="mr-2 h-4 w-4" />
             Добавить бренд
@@ -57,8 +57,8 @@ export default function BrandsPage() {
 
       <Card>
         <CardHeader className="pb-4">
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1 max-w-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="relative w-full sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Поиск брендов..."

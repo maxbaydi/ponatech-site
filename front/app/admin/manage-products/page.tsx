@@ -294,10 +294,10 @@ export default function ProductsPage() {
           <h1 className="text-2xl font-bold">Товары</h1>
           <p className="text-muted-foreground">Управление каталогом товаров</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <ImportProductsDialog />
           <ExportProductsDialog searchQuery={searchQuery} selectedIds={selectedIdsArray} />
-          <Button asChild>
+          <Button asChild className="w-full sm:w-auto">
             <Link href="/admin/manage-products/new">
               <Plus className="mr-2 h-4 w-4" />
               Добавить товар
@@ -307,7 +307,7 @@ export default function ProductsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
-        <TabsList>
+        <TabsList className="flex flex-wrap gap-2">
           <TabsTrigger value="all">
             Все товары
             {productsPage?.total !== undefined && (
@@ -329,7 +329,7 @@ export default function ProductsPage() {
           <Card>
         <CardHeader className="pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="relative flex-1 max-w-sm">
+            <div className="relative w-full sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Поиск товаров..."
@@ -339,7 +339,7 @@ export default function ProductsPage() {
               />
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 w-full">
               <Select
                 value={brandIdFilterValue}
                 onValueChange={(v) => router.replace(buildUrlWithParams({ brandId: v === ALL_BRANDS_VALUE ? undefined : v, page: DEFAULT_PAGE }))}
@@ -378,7 +378,7 @@ export default function ProductsPage() {
             </div>
 
             {selectedCount > 0 && (
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                 <div className="text-sm text-muted-foreground">Выбрано: {selectedCount}</div>
 
                 <Dialog open={bulkStatusOpen} onOpenChange={setBulkStatusOpen}>
@@ -626,7 +626,7 @@ export default function ProductsPage() {
 
         {totalPages > 1 && (
           <Pagination className="sm:justify-end">
-            <PaginationContent>
+            <PaginationContent className="flex-wrap justify-center sm:justify-end">
               <PaginationItem>
                 <PaginationPrevious
                   href={buildUrlWithParams({ page: Math.max(DEFAULT_PAGE, page - 1) })}

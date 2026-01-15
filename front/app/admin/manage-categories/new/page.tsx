@@ -153,11 +153,11 @@ export default function NewCategoryPage() {
                 )}
               />
 
-              <div className="flex justify-end gap-4">
-                <Button variant="outline" type="button" asChild>
+              <div className="flex flex-col sm:flex-row sm:justify-end gap-3 sm:gap-4">
+                <Button variant="outline" type="button" asChild className="w-full sm:w-auto">
                   <Link href="/admin/manage-categories">Отмена</Link>
                 </Button>
-                <Button type="submit" disabled={createCategory.isPending}>
+                <Button type="submit" disabled={createCategory.isPending} className="w-full sm:w-auto">
                   {createCategory.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Создать категорию
                 </Button>
