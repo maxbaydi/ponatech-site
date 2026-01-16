@@ -4,3 +4,4 @@ export * from './stats-section';
 export * from './why-us-section';
 export * from './featured-products';
 export * from './cta-section';
+export * from './categories-section';

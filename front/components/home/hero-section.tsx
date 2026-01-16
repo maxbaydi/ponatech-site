@@ -142,7 +142,7 @@ export function HeroSection() {
           </motion.div>
 
           <motion.h1
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 text-glossy"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
@@ -192,7 +192,7 @@ export function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 text-left">
               <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
                 <Shield className="w-6 h-6 text-primary" />
               </div>
@@ -201,7 +201,7 @@ export function HeroSection() {
                 <p className="text-xs text-muted-foreground">Полный контроль и проверка</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 text-left">
               <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center">
                 <Truck className="w-6 h-6 text-secondary" />
               </div>
@@ -210,7 +210,7 @@ export function HeroSection() {
                 <p className="text-xs text-muted-foreground">Без посредников</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 text-left">
               <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
                 <Globe className="w-6 h-6 text-accent" />
               </div>

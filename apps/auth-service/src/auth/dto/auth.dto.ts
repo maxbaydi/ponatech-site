@@ -27,6 +27,9 @@ export interface AuthUserResponse {
   id: string;
   email: string;
   role: Role;
+  name?: string | null;
+  phone?: string | null;
+  company?: string | null;
 }
 
 export interface AuthTokensResponse {

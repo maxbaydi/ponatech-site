@@ -28,9 +28,10 @@ export class ProductsRepository {
     filters?: Record<string, string | string[] | undefined>,
   ): Promise<PaginatedResponse<ProductResponse>> {
     const where: Prisma.ProductWhereInput = { deletedAt: null };
-    const brandId = this.normalizeFilterValue(filters?.brandId);
-    const brandSlug = this.normalizeFilterValue(filters?.brandSlug);
-    const categoryId = this.normalizeFilterValue(filters?.categoryId);
+    const brandIds = this.normalizeFilterList(filters?.brandId);
+    const brandSlug =
+      brandIds.length > 0 ? undefined : this.normalizeFilterValue(filters?.brandSlug);
+    const categoryIds = this.normalizeFilterList(filters?.categoryId);
     const status = this.normalizeFilterValue(filters?.status);
     const search = this.normalizeFilterValue(filters?.search);
     const minPrice = this.parseNumberFilter(filters?.minPrice);
@@ -40,16 +41,20 @@ export class ProductsRepository {
     const sort = this.normalizeFilterValue(filters?.sort);
     const attributeFilters = this.buildAttributeFilters(filters);
 
-    if (brandId) {
-      where.brandId = brandId;
+    if (brandIds.length === 1) {
+      where.brandId = brandIds[0];
+    } else if (brandIds.length > 1) {
+      where.brandId = { in: brandIds };
     }
 
     if (brandSlug) {
       where.brand = { slug: brandSlug };
     }
 
-    if (categoryId) {
-      where.categoryId = categoryId;
+    if (categoryIds.length === 1) {
+      where.categoryId = categoryIds[0];
+    } else if (categoryIds.length > 1) {
+      where.categoryId = { in: categoryIds };
     }
 
     if (status && Object.values(ProductStatus).includes(status as ProductStatus)) {
@@ -187,14 +192,16 @@ export class ProductsRepository {
     filters?: Record<string, string | string[] | undefined>,
   ): Promise<PaginatedResponse<ProductResponse>> {
     const where: Prisma.ProductWhereInput = { deletedAt: { not: null } };
-    const brandId = this.normalizeFilterValue(filters?.brandId);
+    const brandIds = this.normalizeFilterList(filters?.brandId);
     const search = this.normalizeFilterValue(filters?.search);
     const page = this.parseIntFilter(filters?.page, DEFAULT_PAGE);
     const limit = this.parseIntFilter(filters?.limit, DEFAULT_LIMIT, MAX_LIMIT);
     const sort = this.normalizeFilterValue(filters?.sort);
 
-    if (brandId) {
-      where.brandId = brandId;
+    if (brandIds.length === 1) {
+      where.brandId = brandIds[0];
+    } else if (brandIds.length > 1) {
+      where.brandId = { in: brandIds };
     }
 
     if (search) {
@@ -330,6 +337,17 @@ export class ProductsRepository {
     const raw = Array.isArray(value) ? value[0] : value;
     const trimmed = raw?.trim();
     return trimmed ? trimmed : undefined;
+  }
+
+  private normalizeFilterList(value?: string | string[]): string[] {
+    if (!value) {
+      return [];
+    }
+
+    const rawValues = Array.isArray(value) ? value : [value];
+    const parts = rawValues.flatMap((entry) => entry.split(','));
+    const normalized = parts.map((entry) => entry.trim()).filter((entry) => entry.length > 0);
+    return Array.from(new Set(normalized));
   }
 
   private parseNumberFilter(value?: string | string[]): number | undefined {

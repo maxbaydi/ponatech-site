@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { Package, Building2, Globe2, Users } from 'lucide-react';
+import { Building2, Globe2, Users, Camera } from 'lucide-react';
 import { BRAND_COUNT } from '@/data/brands';
 
 interface StatItemProps {
@@ -45,7 +45,7 @@ function AnimatedNumber({ value, suffix = '', inView }: { value: number; suffix?
   );
 }
 
-function StatItem({ icon, value, suffix, label, delay }: StatItemProps) {
+function StatCard({ icon, value, suffix, label, delay }: StatItemProps) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-100px' });
 
@@ -57,14 +57,45 @@ function StatItem({ icon, value, suffix, label, delay }: StatItemProps) {
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.5, delay }}
     >
-      <div className="flex flex-col items-center text-center p-4 sm:p-6 rounded-2xl bg-background border border-border/50 shadow-sm transition-all duration-300 group-hover:shadow-lg group-hover:border-primary/30">
-        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+      <div className="flex flex-col items-center justify-center text-center w-[150px] h-[150px] p-4 rounded-2xl bg-background border border-border/50 shadow-sm transition-all duration-300 group-hover:shadow-lg group-hover:border-primary/30">
+        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mb-3">
           {icon}
         </div>
-        <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-2">
+        <div className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
           <AnimatedNumber value={value} suffix={suffix} inView={inView} />
         </div>
-        <p className="text-muted-foreground text-xs sm:text-sm">{label}</p>
+        <p className="text-muted-foreground text-sm">{label}</p>
+      </div>
+    </motion.div>
+  );
+}
+
+function InspectionCard({ delay }: { delay: number }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-100px' });
+
+  return (
+    <motion.div
+      ref={ref}
+      className="relative h-full"
+      initial={{ opacity: 0, y: 20 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.5, delay }}
+    >
+      <div className="flex items-start gap-3 h-full p-4 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
+        <div className="shrink-0 w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+          <Camera className="w-4 h-4 text-primary" />
+        </div>
+        <div className="flex flex-col">
+          <h3 className="text-base font-semibold text-foreground mb-2">
+            Фото- и видеоинспекция грузов
+          </h3>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Все наши грузы проходят полную фото- и видеоинспекцию на зарубежных складах перед отправкой.
+            Мы фиксируем состояние, комплектацию и упаковку оборудования, чтобы убедиться в полном соответствии заказу.
+            Такой контроль позволяет избежать рисков и гарантировать надёжность поставок на каждом этапе логистики.
+          </p>
+        </div>
       </div>
     </motion.div>
   );
@@ -72,25 +103,19 @@ function StatItem({ icon, value, suffix, label, delay }: StatItemProps) {
 
 const STATS = [
   {
-    icon: <Building2 className="w-7 h-7 text-primary" />,
+    icon: <Building2 className="w-5 h-5 text-muted-foreground" />,
     value: BRAND_COUNT,
     suffix: '+',
     label: 'Мировых брендов',
   },
   {
-    icon: <Package className="w-7 h-7 text-primary" />,
-    value: 15000,
-    suffix: '+',
-    label: 'Позиций в каталоге',
-  },
-  {
-    icon: <Globe2 className="w-7 h-7 text-primary" />,
+    icon: <Globe2 className="w-5 h-5 text-muted-foreground" />,
     value: 12,
     suffix: '',
     label: 'Стран-поставщиков',
   },
   {
-    icon: <Users className="w-7 h-7 text-primary" />,
+    icon: <Users className="w-5 h-5 text-muted-foreground" />,
     value: 500,
     suffix: '+',
     label: 'Довольных клиентов',
@@ -108,10 +133,11 @@ export function StatsSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-[150px_150px_150px_1fr] gap-3 sm:gap-4">
           {STATS.map((stat, i) => (
-            <StatItem key={stat.label} {...stat} delay={i * 0.1} />
+            <StatCard key={stat.label} {...stat} delay={i * 0.1} />
           ))}
+          <InspectionCard delay={0.3} />
         </div>
       </div>
     </section>

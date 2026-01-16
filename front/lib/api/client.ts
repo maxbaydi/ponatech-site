@@ -2,8 +2,10 @@ import Cookies from 'js-cookie';
 import type {
   AuthResponse,
   AuthUser,
+  AddCartItemRequest,
   BatchOperationResult,
   Brand,
+  CartResponse,
   Category,
   CreateBrandRequest,
   CreateCategoryRequest,
@@ -27,7 +29,9 @@ import type {
   UpdateBrandRequest,
   UpdateCategoryRequest,
   UpdateMediaFileRequest,
+  UpdateProfileRequest,
   UpdateProductRequest,
+  UpdateCartItemRequest,
   UpdateUserRoleRequest,
   UploadFromUrlRequest,
   User,
@@ -290,6 +294,13 @@ class ApiClient {
     return this.request<AuthUser>('/auth/me');
   }
 
+  async updateProfile(data: UpdateProfileRequest): Promise<AuthUser> {
+    return this.request<AuthUser>('/auth/me', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
   async getProducts(filters?: ProductFilters): Promise<PaginatedResponse<Product>> {
     const params = new URLSearchParams();
     if (filters) {
@@ -463,6 +474,36 @@ class ApiClient {
     return this.request<SupplyRequestResponse>('/requests', {
       method: 'POST',
       body: JSON.stringify(data),
+    });
+  }
+
+  async getCart(): Promise<CartResponse> {
+    return this.request<CartResponse>('/cart');
+  }
+
+  async addCartItem(data: AddCartItemRequest): Promise<CartResponse> {
+    return this.request<CartResponse>('/cart/items', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateCartItem(productId: string, data: UpdateCartItemRequest): Promise<CartResponse> {
+    return this.request<CartResponse>(`/cart/items/${productId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async removeCartItem(productId: string): Promise<CartResponse> {
+    return this.request<CartResponse>(`/cart/items/${productId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async clearCart(): Promise<CartResponse> {
+    return this.request<CartResponse>('/cart', {
+      method: 'DELETE',
     });
   }
 

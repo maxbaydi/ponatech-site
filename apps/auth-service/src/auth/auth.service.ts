@@ -1,6 +1,7 @@
 import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { AuthRepository, AuthenticatedUser, UserRecord } from './auth.repository';
 import { AuthTokensResponse, LoginDto, RefreshTokenDto, RegisterDto } from './dto/auth.dto';
+import { UpdateProfileDto } from './dto/profile.dto';
 import { Role } from './role.enum';
 
 @Injectable()
@@ -67,6 +68,16 @@ export class AuthService {
     return user;
   }
 
+  async updateProfile(userId: string, dto: UpdateProfileDto): Promise<UserRecord> {
+    const update = normalizeProfileUpdate(dto);
+
+    if (Object.keys(update).length === 0) {
+      return this.getProfile(userId);
+    }
+
+    return this.executeUserUpdate(() => this.authRepository.updateUserProfile(userId, update));
+  }
+
   async getAllUsers(options?: { page?: number; limit?: number; search?: string }): Promise<{
     users: { id: string; email: string; role: string; isActive: boolean; createdAt: Date }[];
     total: number;
@@ -129,6 +140,9 @@ export class AuthService {
         id: user.id,
         email: user.email,
         role: user.role as Role,
+        name: user.name ?? null,
+        phone: user.phone ?? null,
+        company: user.company ?? null,
       },
     };
   }
@@ -169,4 +183,31 @@ const isNotFoundError = (error: unknown): boolean => {
   }
 
   return 'code' in error && (error as { code?: string }).code === 'P2025';
+};
+
+const normalizeProfileUpdate = (dto: UpdateProfileDto): { name?: string | null; phone?: string | null; company?: string | null } => {
+  const update: { name?: string | null; phone?: string | null; company?: string | null } = {};
+
+  if (dto.name !== undefined) {
+    update.name = normalizeOptionalString(dto.name);
+  }
+
+  if (dto.phone !== undefined) {
+    update.phone = normalizeOptionalString(dto.phone);
+  }
+
+  if (dto.company !== undefined) {
+    update.company = normalizeOptionalString(dto.company);
+  }
+
+  return update;
+};
+
+const normalizeOptionalString = (value: string | null): string | null => {
+  if (value === null) {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length === 0 ? null : trimmed;
 };

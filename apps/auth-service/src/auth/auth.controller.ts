@@ -1,8 +1,9 @@
-import { Body, Controller, Get, HttpCode, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Patch, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
 import type { Request } from 'express';
 import { GrpcMethod } from '@nestjs/microservices';
 import { AuthService } from './auth.service';
 import { AuthTokensResponse, LoginDto, RefreshTokenDto, RegisterDto } from './dto/auth.dto';
+import { UpdateProfileDto } from './dto/profile.dto';
 import { ValidateTokenDto } from './dto/validate-token.dto';
 import { JwtAuthGuard, RequestWithUser } from './guards/jwt-auth.guard';
 import { AUTH_SERVICE_NAME, ValidateTokenResponse } from '../grpc/auth.grpc';
@@ -36,7 +37,9 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  async me(@Req() request: Request): Promise<{ id: string; email: string; role: string }> {
+  async me(
+    @Req() request: Request,
+  ): Promise<{ id: string; email: string; role: string; name?: string | null; phone?: string | null; company?: string | null }> {
     const userId = (request as RequestWithUser).user?.userId;
 
     if (!userId) {
@@ -49,6 +52,33 @@ export class AuthController {
       id: user.id,
       email: user.email,
       role: user.role,
+      name: user.name ?? null,
+      phone: user.phone ?? null,
+      company: user.company ?? null,
+    };
+  }
+
+  @Patch('me')
+  @UseGuards(JwtAuthGuard)
+  async updateProfile(
+    @Req() request: Request,
+    @Body() dto: UpdateProfileDto,
+  ): Promise<{ id: string; email: string; role: string; name?: string | null; phone?: string | null; company?: string | null }> {
+    const userId = (request as RequestWithUser).user?.userId;
+
+    if (!userId) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const user = await this.authService.updateProfile(userId, dto);
+
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      name: user.name ?? null,
+      phone: user.phone ?? null,
+      company: user.company ?? null,
     };
   }
 }

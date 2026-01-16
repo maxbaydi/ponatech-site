@@ -25,6 +25,7 @@ function CatalogContent() {
     brandId: searchParams.get('brandId') || undefined,
     brandSlug: searchParams.get('brandSlug') || undefined,
     categoryId: searchParams.get('categoryId') || undefined,
+    categorySlug: searchParams.get('categorySlug') || undefined,
     search: searchParams.get('search') || undefined,
     minPrice: searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined,
     maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,

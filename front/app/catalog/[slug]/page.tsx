@@ -2,7 +2,7 @@
 
 import { use, useState } from 'react';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Lightbox from 'yet-another-react-lightbox';
 import type { Plugin } from 'yet-another-react-lightbox';
@@ -22,6 +22,7 @@ import {
   Phone,
   ZoomIn,
   ChevronLeft,
+  ShoppingCart,
 } from 'lucide-react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
@@ -37,6 +38,8 @@ import { formatPrice } from '@/lib/utils';
 import type { ProductImage } from '@/lib/api/types';
 import DOMPurify from 'isomorphic-dompurify';
 import { SITE_CONTACTS } from '@/lib/site-contacts';
+import { createCartItemFromProduct, useCartStore } from '@/lib/cart';
+import { useAuth } from '@/lib/auth/auth-context';
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
@@ -181,7 +184,22 @@ const DELIVERY_FEATURES = [
 
 export default function ProductPage({ params }: ProductPageProps) {
   const { slug } = use(params);
+  const router = useRouter();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const { data: product, isLoading, error } = useProductBySlug(slug);
+  const cartItems = useCartStore((state) => state.items);
+  const addItem = useCartStore((state) => state.addItem);
+  const isInCart = product ? cartItems.some((item) => item.id === product.id) : false;
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    if (isAuthLoading) return;
+    if (!isAuthenticated) {
+      router.push(`/login?next=${encodeURIComponent(`/catalog/${slug}`)}`);
+      return;
+    }
+    addItem(createCartItemFromProduct(product));
+  };
 
   const { data: relatedProductsPage } = useProducts({
     categoryId: product?.categoryId ?? undefined,
@@ -291,10 +309,10 @@ export default function ProductPage({ params }: ProductPageProps) {
                     {product.title}
                   </h1>
                   
-                  <p className="text-muted-foreground mb-6 flex flex-wrap gap-x-4 gap-y-2 text-sm sm:text-base">
+                  <p className="text-muted-foreground mb-6 flex flex-wrap items-baseline gap-x-4 gap-y-2 text-sm sm:text-base">
                     <span>Артикул: <span className="font-mono">{product.sku}</span></span>
                     {product.brand?.country && (
-                      <span className="text-sm">Страна: {product.brand.country}</span>
+                      <span>Страна: {product.brand.country}</span>
                     )}
                   </p>
 
@@ -324,7 +342,26 @@ export default function ProductPage({ params }: ProductPageProps) {
                         Запросить цену
                       </Link>
                     </Button>
-                    <Button size="lg" variant="outline" className="h-14 text-base" asChild>
+                    {isInCart ? (
+                      <Button size="lg" variant="outline" className="flex-1 h-14 text-base" asChild>
+                        <Link href="/cart">
+                          <ShoppingCart className="mr-2 h-5 w-5" />
+                          В корзине
+                        </Link>
+                      </Button>
+                    ) : (
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        className="flex-1 h-14 text-base"
+                        type="button"
+                        onClick={handleAddToCart}
+                      >
+                        <ShoppingCart className="mr-2 h-5 w-5" />
+                        В корзину
+                      </Button>
+                    )}
+                    <Button size="lg" variant="outline" className="flex-1 h-14 text-base" asChild>
                       <Link href={`tel:${SITE_CONTACTS.phones.telegram.tel}`}>
                         <Phone className="mr-2 h-5 w-5" />
                         Позвонить

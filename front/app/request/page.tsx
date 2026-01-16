@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,16 +14,39 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { apiClient } from '@/lib/api/client';
+import { useAuth } from '@/lib/auth/auth-context';
+import { buildCartDescription, useCartStore } from '@/lib/cart';
 
 const MIN_PHONE_LENGTH = 10;
 const MIN_DESCRIPTION_LENGTH = 10;
 
+const countPhoneDigits = (value: string): number => value.replace(/\D/g, '').length;
+
 const requestSchema = z.object({
-  name: z.string().min(2, 'Введите ваше имя'),
-  email: z.string().email('Введите корректный email'),
-  phone: z.string().min(MIN_PHONE_LENGTH, 'Введите корректный номер телефона'),
-  company: z.string().optional(),
-  description: z.string().min(MIN_DESCRIPTION_LENGTH, 'Опишите ваш запрос (минимум 10 символов)'),
+  name: z
+    .string()
+    .trim()
+    .min(2, 'Укажите имя, чтобы мы знали, как к вам обращаться'),
+  email: z
+    .string()
+    .trim()
+    .email('Укажите корректный email, чтобы мы могли ответить'),
+  phone: z
+    .string()
+    .trim()
+    .refine(
+      (value) => countPhoneDigits(value) >= MIN_PHONE_LENGTH,
+      'Укажите корректный номер телефона для связи',
+    ),
+  company: z
+    .string()
+    .trim()
+    .refine((value) => value.length === 0 || value.length >= 2, 'Название компании слишком короткое')
+    .optional(),
+  description: z
+    .string()
+    .trim()
+    .min(MIN_DESCRIPTION_LENGTH, 'Опишите запрос, чтобы мы быстрее подготовили предложение'),
 });
 
 type RequestFormData = z.infer<typeof requestSchema>;
@@ -48,6 +71,8 @@ const FEATURES = [
 
 function RequestForm() {
   const searchParams = useSearchParams();
+  const cartItems = useCartStore((state) => state.items);
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState('');
@@ -59,30 +84,74 @@ function RequestForm() {
     const product = productFromUrl.trim();
     const sku = skuFromUrl.trim();
     const brand = brandFromUrl.trim();
+    const cartBlock = buildCartDescription(cartItems);
+    const blocks: string[] = [];
+
+    if (cartBlock) {
+      blocks.push(cartBlock);
+    }
 
     if (product) {
-      return `Товар: ${product}${sku ? ` (SKU: ${sku})` : ''}\n\nЗапрос:\n`;
+      blocks.push(`Товар: ${product}${sku ? ` (SKU: ${sku})` : ''}`);
+    } else if (brand) {
+      blocks.push(`Бренд: ${brand}`);
     }
 
-    if (brand) {
-      return `Бренд: ${brand}\n\nЗапрос:\n`;
+    if (blocks.length === 0) {
+      return '';
     }
 
-    return '';
-  }, [brandFromUrl, productFromUrl, skuFromUrl]);
+    return `${blocks.join('\n\n')}\n\nЗапрос:\n`;
+  }, [brandFromUrl, cartItems, productFromUrl, skuFromUrl]);
 
-  const initialValues: RequestFormData = {
-    name: '',
-    email: '',
-    phone: '',
-    company: '',
-    description: prefilledDescription,
-  };
+  const initialValues: RequestFormData = useMemo(
+    () => ({
+      name: user?.name ?? '',
+      email: user?.email ?? '',
+      phone: user?.phone ?? '',
+      company: user?.company ?? '',
+      description: prefilledDescription,
+    }),
+    [prefilledDescription, user?.company, user?.email, user?.name, user?.phone],
+  );
 
   const form = useForm<RequestFormData>({
     resolver: zodResolver(requestSchema),
     defaultValues: initialValues,
   });
+
+  const isDescriptionDirty = form.formState.dirtyFields.description;
+
+  useEffect(() => {
+    if (!isDescriptionDirty) {
+      form.setValue('description', prefilledDescription, { shouldDirty: false });
+    }
+  }, [prefilledDescription, form, isDescriptionDirty]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fields: Array<keyof RequestFormData> = ['name', 'email', 'phone', 'company'];
+    fields.forEach((field) => {
+      if (form.formState.dirtyFields[field]) {
+        return;
+      }
+
+      const currentValue = form.getValues(field);
+      const nextValue =
+        field === 'name'
+          ? user.name ?? ''
+          : field === 'email'
+            ? user.email ?? ''
+            : field === 'phone'
+              ? user.phone ?? ''
+              : user.company ?? '';
+
+      if (!currentValue && nextValue) {
+        form.setValue(field, nextValue, { shouldDirty: false });
+      }
+    });
+  }, [form, user]);
 
   const onSubmit = async (data: RequestFormData) => {
     setIsSubmitting(true);
@@ -90,11 +159,12 @@ function RequestForm() {
     setSubmitSuccess('');
     try {
       await apiClient.createSupplyRequest(data);
-      setSubmitSuccess('Заявка успешно отправлена! Мы свяжемся с вами в ближайшее время.');
+      setSubmitSuccess('Спасибо! Заявка получена. Мы свяжемся с вами в течение 24 часов.');
       form.reset(initialValues);
     } catch (err: unknown) {
       const apiErr = err as { message?: string; fieldErrors?: Record<string, string> } | null;
-      const message = apiErr?.message || 'Не удалось отправить заявку. Попробуйте ещё раз.';
+      const message =
+        apiErr?.message || 'Не получилось отправить заявку. Попробуйте ещё раз или напишите нам.';
       setSubmitError(message);
 
       const fieldErrors = apiErr?.fieldErrors;
@@ -107,12 +177,20 @@ function RequestForm() {
       if (fieldErrors?.phone) {
         form.setError('phone', { message: fieldErrors.phone });
       }
+      if (fieldErrors?.company) {
+        form.setError('company', { message: fieldErrors.company });
+      }
       if (fieldErrors?.description) {
         form.setError('description', { message: fieldErrors.description });
       }
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const onInvalid = () => {
+    setSubmitSuccess('');
+    setSubmitError('Похоже, форма заполнена не полностью. Проверьте поля, отмеченные красным.');
   };
 
   return (
@@ -129,7 +207,7 @@ function RequestForm() {
           <div className="mb-4 rounded-lg bg-secondary/10 p-3 text-sm text-secondary">{submitSuccess}</div>
         )}
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}

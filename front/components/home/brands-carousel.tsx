@@ -164,10 +164,12 @@ export function BrandsCarousel() {
         </div>
       </div>
 
-      <div className="space-y-8">
-        {CATEGORIES_TO_SHOW.map((category, categoryIndex) => (
-          <BrandsCarouselRow key={category} category={category} categoryIndex={categoryIndex} />
-        ))}
+      <div className="container-custom">
+        <div className="space-y-8">
+          {CATEGORIES_TO_SHOW.map((category, categoryIndex) => (
+            <BrandsCarouselRow key={category} category={category} categoryIndex={categoryIndex} />
+          ))}
+        </div>
       </div>
     </section>
   );

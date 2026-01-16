@@ -60,6 +60,9 @@ export interface AuthUser {
   id: string;
   email: string;
   role: UserRole;
+  name?: string | null;
+  phone?: string | null;
+  company?: string | null;
 }
 
 export interface User extends AuthUser {
@@ -76,6 +79,12 @@ export interface LoginRequest {
 export interface RegisterRequest {
   email: string;
   password: string;
+}
+
+export interface UpdateProfileRequest {
+  name?: string | null;
+  phone?: string | null;
+  company?: string | null;
 }
 
 export interface AuthResponse {
@@ -98,6 +107,7 @@ export interface ProductFilters {
   brandId?: string;
   brandSlug?: string;
   categoryId?: string;
+  categorySlug?: string;
   status?: ProductStatus;
   search?: string;
   minPrice?: number;
@@ -224,6 +234,31 @@ export interface RequestFormData {
 export interface SupplyRequestResponse {
   id: string;
   createdAt: string;
+}
+
+export interface CartItem {
+  id: string;
+  slug: string;
+  sku: string;
+  title: string;
+  price: string;
+  currency: string;
+  quantity: number;
+  brandName?: string | null;
+  categoryId?: string | null;
+}
+
+export interface CartResponse {
+  items: CartItem[];
+}
+
+export interface AddCartItemRequest {
+  productId: string;
+  quantity?: number;
+}
+
+export interface UpdateCartItemRequest {
+  quantity: number;
 }
 
 export interface UsersResponse {

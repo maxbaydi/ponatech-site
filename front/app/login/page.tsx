@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -23,6 +23,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -42,7 +43,8 @@ export default function LoginPage() {
     setError('');
     try {
       await login({ email: data.email, password: data.password });
-      router.push('/profile');
+      const nextPath = resolveNextPath(searchParams.get('next'));
+      router.push(nextPath ?? '/profile');
     } catch (err: unknown) {
       const apiErr = err as { message?: string; fieldErrors?: Record<string, string> } | null;
       const message = apiErr?.message || 'Не удалось выполнить вход. Попробуйте ещё раз.';
@@ -154,3 +156,10 @@ export default function LoginPage() {
     </div>
   );
 }
+
+const resolveNextPath = (next: string | null): string | null => {
+  if (!next) return null;
+  if (!next.startsWith('/')) return null;
+  if (next.startsWith('//')) return null;
+  return next;
+};

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutGrid, Menu, Search, User, ChevronDown } from 'lucide-react';
+import { LayoutGrid, Menu, Search, User, ChevronDown, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
@@ -22,6 +22,7 @@ import { BRANDS } from '@/data/brands';
 import { BrandLogo } from '@/components/brands/brand-logo';
 import { cn } from '@/lib/utils';
 import { SITE_CONTACTS } from '@/lib/site-contacts';
+import { getCartItemsCount, useCartStore } from '@/lib/cart';
 
 const NAV_ITEMS = [
   { label: 'Бренды', href: '/brands' },
@@ -86,6 +87,8 @@ export function Header() {
   const { data: apiBrands } = useBrands();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
+  const cartCount = useCartStore((state) => getCartItemsCount(state.items));
+  const cartBadge = cartCount > 99 ? '99+' : `${cartCount}`;
 
   const brandOptions = useMemo<HeaderBrandOption[]>(() => {
     const map = new Map<string, HeaderBrandOption>();
@@ -201,7 +204,7 @@ export function Header() {
                     <ChevronDown className="h-4 w-4" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="header-brand-dropdown overflow-auto p-2 scrollbar-themed">
+                <DropdownMenuContent align="start" collisionPadding={16} className="header-brand-dropdown overflow-auto p-2 scrollbar-themed">
                   <DropdownMenuItem
                     onSelect={(e) => {
                       e.preventDefault();
@@ -212,7 +215,7 @@ export function Header() {
                     Все бренды
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-1">
+                  <div className="header-brand-grid">
                     {brandOptions.map((brand) => (
                       <DropdownMenuItem
                         key={brand.slug}
@@ -298,6 +301,17 @@ export function Header() {
               </div>
             )}
 
+            <Button variant="ghost" size="icon" asChild className="relative">
+              <Link href="/cart" aria-label="Корзина">
+                <ShoppingCart className="h-5 w-5" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-white text-[10px] font-semibold flex items-center justify-center">
+                    {cartBadge}
+                  </span>
+                )}
+              </Link>
+            </Button>
+
             <Button variant="secondary" asChild className="hidden md:flex">
               <Link href={REQUEST_PATH}>Оставить заявку</Link>
             </Button>
@@ -337,6 +351,17 @@ export function Header() {
                     linkClassName="px-4 py-3 text-base font-medium rounded-md transition-colors hover:bg-muted"
                     onNavigate={() => setIsMobileMenuOpen(false)}
                   />
+
+                  <Button
+                    variant="outline"
+                    asChild
+                    className="w-full"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Link href="/cart">
+                      {cartCount > 0 ? `Корзина (${cartBadge})` : 'Корзина'}
+                    </Link>
+                  </Button>
 
                   <div className="flex flex-col gap-2 pt-4 border-t">
                     {isAuthenticated ? (

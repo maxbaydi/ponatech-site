@@ -208,6 +208,16 @@ export class AuthRepository {
     });
   }
 
+  async updateUserProfile(
+    userId: string,
+    data: { name?: string | null; phone?: string | null; company?: string | null },
+  ): Promise<UserRecord> {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data,
+    });
+  }
+
   async deactivateUser(userId: string): Promise<UserRecord> {
     return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const user = await tx.user.update({

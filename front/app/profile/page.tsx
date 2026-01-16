@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User, Mail, Shield, Key, Loader2 } from 'lucide-react';
+import { User, Mail, Shield, Key, Loader2, Phone, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -20,6 +20,28 @@ const ROLE_LABELS: Record<string, { label: string; color: 'default' | 'secondary
   SUPER_ADMIN: { label: 'Супер-администратор', color: 'destructive' },
 };
 
+const MIN_PHONE_LENGTH = 10;
+
+const countPhoneDigits = (value: string): number => value.replace(/\D/g, '').length;
+
+const profileSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .refine((value) => value.length === 0 || value.length >= 2, 'Укажите имя, чтобы мы знали, как к вам обращаться'),
+  phone: z
+    .string()
+    .trim()
+    .refine(
+      (value) => value.length === 0 || countPhoneDigits(value) >= MIN_PHONE_LENGTH,
+      'Укажите корректный номер телефона для связи',
+    ),
+  company: z
+    .string()
+    .trim()
+    .refine((value) => value.length === 0 || value.length >= 2, 'Название компании слишком короткое'),
+});
+
 const passwordSchema = z
   .object({
     currentPassword: z.string().min(6, 'Введите текущий пароль'),
@@ -32,10 +54,25 @@ const passwordSchema = z
   });
 
 type PasswordFormData = z.infer<typeof passwordSchema>;
+type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [isProfileSaving, setIsProfileSaving] = useState(false);
+  const [profileError, setProfileError] = useState('');
+  const [profileSuccess, setProfileSuccess] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+
+  const profileForm = useForm<ProfileFormData>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      name: user?.name ?? '',
+      phone: user?.phone ?? '',
+      company: user?.company ?? '',
+    },
+  });
 
   const passwordForm = useForm<PasswordFormData>({
     resolver: zodResolver(passwordSchema),
@@ -46,22 +83,82 @@ export default function ProfilePage() {
     },
   });
 
+  useEffect(() => {
+    if (!user) return;
+    profileForm.reset({
+      name: user.name ?? '',
+      phone: user.phone ?? '',
+      company: user.company ?? '',
+    });
+  }, [profileForm, user]);
+
+  const onProfileSubmit = async (data: ProfileFormData) => {
+    setIsProfileSaving(true);
+    setProfileError('');
+    setProfileSuccess('');
+    try {
+      const payload = {
+        name: data.name.trim() ? data.name.trim() : null,
+        phone: data.phone.trim() ? data.phone.trim() : null,
+        company: data.company.trim() ? data.company.trim() : null,
+      };
+      await updateProfile(payload);
+      profileForm.reset({
+        name: payload.name ?? '',
+        phone: payload.phone ?? '',
+        company: payload.company ?? '',
+      });
+      setProfileSuccess('Готово! Данные сохранены и будут подставляться в заявку.');
+    } catch (err: unknown) {
+      const apiErr = err as { message?: string; fieldErrors?: Record<string, string> } | null;
+      const message = apiErr?.message || 'Не удалось обновить профиль. Попробуйте ещё раз.';
+      setProfileError(message);
+      setProfileSuccess('');
+
+      const fieldErrors = apiErr?.fieldErrors;
+      if (fieldErrors?.name) {
+        profileForm.setError('name', { message: fieldErrors.name });
+      }
+      if (fieldErrors?.phone) {
+        profileForm.setError('phone', { message: fieldErrors.phone });
+      }
+      if (fieldErrors?.company) {
+        profileForm.setError('company', { message: fieldErrors.company });
+      }
+    } finally {
+      setIsProfileSaving(false);
+    }
+  };
+
+  const onProfileInvalid = () => {
+    setProfileSuccess('');
+    setProfileError('Похоже, есть ошибки в форме. Проверьте поля, отмеченные красным.');
+  };
+
   const onPasswordSubmit = async (data: PasswordFormData) => {
     setIsLoading(true);
+    setPasswordError('');
+    setPasswordSuccess('');
     try {
       console.log('Password change:', data);
-      alert('Пароль успешно изменён');
+      setPasswordSuccess('Пароль успешно изменён.');
       passwordForm.reset();
     } catch {
-      alert('Ошибка при смене пароля');
+      setPasswordError('Не удалось изменить пароль. Попробуйте ещё раз.');
     } finally {
       setIsLoading(false);
     }
   };
 
+  const onPasswordInvalid = () => {
+    setPasswordSuccess('');
+    setPasswordError('Проверьте поля пароля — есть ошибки.');
+  };
+
   if (!user) return null;
 
   const roleInfo = ROLE_LABELS[user.role] || { label: user.role, color: 'outline' as const };
+  const displayName = user.name?.trim() || user.email.split('@')[0];
 
   return (
     <div className="py-6 sm:py-8">
@@ -79,7 +176,7 @@ export default function ProfilePage() {
                   <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                     <User className="w-12 h-12 text-primary" />
                   </div>
-                  <h2 className="font-semibold text-lg mb-1">{user.email.split('@')[0]}</h2>
+                  <h2 className="font-semibold text-lg mb-1">{displayName}</h2>
                   <p className="text-sm text-muted-foreground mb-3">{user.email}</p>
                   <Badge variant={roleInfo.color}>{roleInfo.label}</Badge>
                 </div>
@@ -105,16 +202,107 @@ export default function ProfilePage() {
                     <p className="text-sm">{roleInfo.label}</p>
                   </div>
                 </div>
+                {user.phone && (
+                  <div className="flex items-center gap-3">
+                    <Phone className="w-4 h-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Телефон</p>
+                      <p className="text-sm">{user.phone}</p>
+                    </div>
+                  </div>
+                )}
+                {user.company && (
+                  <div className="flex items-center gap-3">
+                    <Building2 className="w-4 h-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Компания</p>
+                      <p className="text-sm">{user.company}</p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
 
           <div className="lg:col-span-2">
-            <Tabs defaultValue="security">
-              <TabsList className="flex flex-wrap h-auto">
+            <Tabs defaultValue="profile">
+              <TabsList className="flex flex-wrap h-auto justify-start">
+                <TabsTrigger value="profile" className="w-full sm:w-auto">Профиль</TabsTrigger>
                 <TabsTrigger value="security" className="w-full sm:w-auto">Безопасность</TabsTrigger>
                 <TabsTrigger value="history" className="w-full sm:w-auto">История заявок</TabsTrigger>
               </TabsList>
+
+              <TabsContent value="profile" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Данные профиля</CardTitle>
+                    <CardDescription>
+                      Заполните контактные данные — они автоматически подставятся в форму запроса.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {profileError && (
+                      <div className="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+                        {profileError}
+                      </div>
+                    )}
+                    {profileSuccess && (
+                      <div className="mb-4 rounded-lg bg-secondary/10 p-3 text-sm text-secondary">
+                        {profileSuccess}
+                      </div>
+                    )}
+                    <Form {...profileForm}>
+                      <form onSubmit={profileForm.handleSubmit(onProfileSubmit, onProfileInvalid)} className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <FormField
+                            control={profileForm.control}
+                            name="name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Имя</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Иван Иванов" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={profileForm.control}
+                            name="phone"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Телефон</FormLabel>
+                                <FormControl>
+                                  <Input type="tel" placeholder="+7 (___) ___-__-__" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <FormField
+                          control={profileForm.control}
+                          name="company"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Компания</FormLabel>
+                              <FormControl>
+                                <Input placeholder="ООО Ромашка" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button type="submit" disabled={isProfileSaving}>
+                          {isProfileSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          Сохранить изменения
+                        </Button>
+                      </form>
+                    </Form>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
               <TabsContent value="security" className="mt-6">
                 <Card>
@@ -128,8 +316,18 @@ export default function ProfilePage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
+                    {passwordError && (
+                      <div className="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+                        {passwordError}
+                      </div>
+                    )}
+                    {passwordSuccess && (
+                      <div className="mb-4 rounded-lg bg-secondary/10 p-3 text-sm text-secondary">
+                        {passwordSuccess}
+                      </div>
+                    )}
                     <Form {...passwordForm}>
-                      <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
+                      <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit, onPasswordInvalid)} className="space-y-4">
                         <FormField
                           control={passwordForm.control}
                           name="currentPassword"

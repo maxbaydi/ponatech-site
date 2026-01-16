@@ -53,7 +53,7 @@ const deriveFieldErrors = (messages: string[]): ApiFieldErrors | undefined => {
     const lower = msg.toLowerCase();
 
     if (lower.includes('email')) {
-      errors.email = 'Введите корректный email';
+      errors.email = 'Проверьте email — кажется, он указан с ошибкой';
       continue;
     }
 
@@ -67,17 +67,22 @@ const deriveFieldErrors = (messages: string[]): ApiFieldErrors | undefined => {
     }
 
     if (lower.startsWith('name ')) {
-      errors.name = 'Введите ваше имя';
+      errors.name = 'Укажите имя';
       continue;
     }
 
     if (lower.startsWith('phone ')) {
-      errors.phone = 'Введите корректный номер телефона';
+      errors.phone = 'Проверьте номер телефона';
+      continue;
+    }
+
+    if (lower.startsWith('company ')) {
+      errors.company = 'Название компании слишком короткое';
       continue;
     }
 
     if (lower.startsWith('description ') || lower.includes('description')) {
-      errors.description = 'Опишите ваш запрос (минимум 10 символов)';
+      errors.description = 'Добавьте больше деталей (минимум 10 символов)';
       continue;
     }
   }

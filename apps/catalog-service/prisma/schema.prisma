@@ -55,11 +55,15 @@ model Category {
 model User {
   id            String         @id @default(uuid())
   email         String         @unique
+  name          String?
+  phone         String?
+  company       String?
   passwordHash  String
   role          UserRole       @default(CUSTOMER)
   isActive      Boolean        @default(true)
   tokenVersion  Int            @default(0)
   refreshTokens RefreshToken[]
+  cart          Cart?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -77,6 +81,32 @@ model RefreshToken {
 
   @@index([userId])
   @@map("refresh_tokens")
+}
+
+model Cart {
+  id        String     @id @default(uuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        String   @id @default(uuid())
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId])
+  @@index([productId])
+  @@map("cart_items")
 }
 
 model Product {
@@ -99,6 +129,7 @@ model Product {
   categoryId  String?
   category    Category?     @relation(fields: [categoryId], references: [id])
   images      ProductImage[]
+  cartItems   CartItem[]
 
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt

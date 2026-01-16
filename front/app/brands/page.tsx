@@ -1,22 +1,26 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Search, Building2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BrandLogo } from '@/components/brands/brand-logo';
+import { TopBrandsGrid } from '@/components/brands/top-brands-grid';
 import { BRANDS, BRAND_CATEGORIES, type BrandCategory, getBrandsByCategory } from '@/data/brands';
+import { cn } from '@/lib/utils';
+
+const ALPHABET = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '#'] as const;
 
 export default function BrandsPage() {
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<BrandCategory | 'all'>('all');
+  const [activeLetter, setActiveLetter] = useState<string | null>(null);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -28,12 +32,44 @@ export default function BrandsPage() {
     };
   }, [searchInput]);
 
-  const filteredBrands =
-    activeCategory === 'all'
-      ? BRANDS.filter((b) => b.name.toLowerCase().includes(searchQuery.toLowerCase()))
-      : getBrandsByCategory(activeCategory).filter((b) =>
-          b.name.toLowerCase().includes(searchQuery.toLowerCase())
-        );
+  const baseBrands = activeCategory === 'all' ? BRANDS : getBrandsByCategory(activeCategory);
+
+  const filteredBrands = useMemo(() => {
+    let result = [...baseBrands];
+    
+    if (searchQuery) {
+      result = result.filter((b) => b.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    }
+    
+    if (activeLetter) {
+      if (activeLetter === '#') {
+        result = result.filter((b) => /^[0-9]/.test(b.name));
+      } else {
+        result = result.filter((b) => b.name.toUpperCase().startsWith(activeLetter));
+      }
+    }
+    
+    return result.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+  }, [baseBrands, searchQuery, activeLetter]);
+
+  const availableLetters = useMemo(() => {
+    const letters = new Set<string>();
+    baseBrands.forEach((b) => {
+      const firstChar = b.name[0].toUpperCase();
+      if (/[0-9]/.test(firstChar)) {
+        letters.add('#');
+      } else {
+        letters.add(firstChar);
+      }
+    });
+    return letters;
+  }, [baseBrands]);
+
+  const handleLetterClick = (letter: string) => {
+    setActiveLetter(activeLetter === letter ? null : letter);
+    setSearchInput('');
+    setSearchQuery('');
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -47,17 +83,47 @@ export default function BrandsPage() {
             </p>
           </div>
 
-          <div className="relative w-full sm:max-w-md mb-6 sm:mb-8">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Найти бренд..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="pl-10"
-            />
+          <TopBrandsGrid />
+
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6 sm:mb-8">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Поиск по бренду"
+                value={searchInput}
+                onChange={(e) => {
+                  setSearchInput(e.target.value);
+                  setActiveLetter(null);
+                }}
+                className="pl-10 h-9"
+              />
+            </div>
+            <div className="flex items-center gap-0.5 sm:gap-1 flex-wrap">
+              {ALPHABET.map((letter) => {
+                const isAvailable = availableLetters.has(letter);
+                const isActive = activeLetter === letter;
+                return (
+                  <button
+                    key={letter}
+                    onClick={() => isAvailable && handleLetterClick(letter)}
+                    disabled={!isAvailable}
+                    className={cn(
+                      'w-6 h-7 sm:w-7 sm:h-8 text-xs sm:text-sm font-medium rounded transition-colors',
+                      isActive
+                        ? 'bg-primary text-white'
+                        : isAvailable
+                          ? 'text-foreground hover:bg-muted'
+                          : 'text-muted-foreground/40 cursor-not-allowed'
+                    )}
+                  >
+                    {letter}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          <Tabs value={activeCategory} onValueChange={(v) => setActiveCategory(v as BrandCategory | 'all')}>
+          <Tabs value={activeCategory} onValueChange={(v) => { setActiveCategory(v as BrandCategory | 'all'); setActiveLetter(null); }}>
             <TabsList className="flex-wrap h-auto gap-2 bg-transparent p-0 mb-8">
               <TabsTrigger
                 value="all"

@@ -478,7 +478,7 @@ const common_1 = __webpack_require__(1);
 const config_1 = __webpack_require__(2);
 const common_2 = __webpack_require__(6);
 const auth_module_1 = __webpack_require__(19);
-const env_validation_1 = __webpack_require__(37);
+const env_validation_1 = __webpack_require__(38);
 const envFilePath = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
 let AppModule = class AppModule {
 };
@@ -516,12 +516,12 @@ const core_1 = __webpack_require__(3);
 const common_2 = __webpack_require__(6);
 const prisma_module_1 = __webpack_require__(20);
 const auth_controller_1 = __webpack_require__(23);
-const admin_controller_1 = __webpack_require__(31);
+const admin_controller_1 = __webpack_require__(33);
 const auth_service_1 = __webpack_require__(24);
 const auth_repository_1 = __webpack_require__(25);
-const jwt_auth_guard_1 = __webpack_require__(30);
-const rate_limit_guard_1 = __webpack_require__(36);
-const roles_guard_1 = __webpack_require__(35);
+const jwt_auth_guard_1 = __webpack_require__(32);
+const rate_limit_guard_1 = __webpack_require__(37);
+const roles_guard_1 = __webpack_require__(36);
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -621,15 +621,16 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthGrpcController = exports.AuthController = void 0;
 const common_1 = __webpack_require__(1);
 const microservices_1 = __webpack_require__(4);
 const auth_service_1 = __webpack_require__(24);
 const auth_dto_1 = __webpack_require__(27);
-const validate_token_dto_1 = __webpack_require__(29);
-const jwt_auth_guard_1 = __webpack_require__(30);
+const profile_dto_1 = __webpack_require__(29);
+const validate_token_dto_1 = __webpack_require__(31);
+const jwt_auth_guard_1 = __webpack_require__(32);
 const auth_grpc_1 = __webpack_require__(17);
 let AuthController = class AuthController {
     authService;
@@ -658,6 +659,24 @@ let AuthController = class AuthController {
             id: user.id,
             email: user.email,
             role: user.role,
+            name: user.name ?? null,
+            phone: user.phone ?? null,
+            company: user.company ?? null,
+        };
+    }
+    async updateProfile(request, dto) {
+        const userId = request.user?.userId;
+        if (!userId) {
+            throw new common_1.UnauthorizedException('User not found');
+        }
+        const user = await this.authService.updateProfile(userId, dto);
+        return {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            name: user.name ?? null,
+            phone: user.phone ?? null,
+            company: user.company ?? null,
         };
     }
 };
@@ -701,6 +720,15 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", typeof (_k = typeof Promise !== "undefined" && Promise) === "function" ? _k : Object)
 ], AuthController.prototype, "me", null);
+__decorate([
+    (0, common_1.Patch)('me'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, typeof (_l = typeof profile_dto_1.UpdateProfileDto !== "undefined" && profile_dto_1.UpdateProfileDto) === "function" ? _l : Object]),
+    __metadata("design:returntype", typeof (_m = typeof Promise !== "undefined" && Promise) === "function" ? _m : Object)
+], AuthController.prototype, "updateProfile", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [typeof (_a = typeof auth_service_1.AuthService !== "undefined" && auth_service_1.AuthService) === "function" ? _a : Object])
@@ -730,12 +758,12 @@ exports.AuthGrpcController = AuthGrpcController;
 __decorate([
     (0, microservices_1.GrpcMethod)(auth_grpc_1.AUTH_SERVICE_NAME, 'ValidateToken'),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_m = typeof validate_token_dto_1.ValidateTokenDto !== "undefined" && validate_token_dto_1.ValidateTokenDto) === "function" ? _m : Object]),
-    __metadata("design:returntype", typeof (_o = typeof Promise !== "undefined" && Promise) === "function" ? _o : Object)
+    __metadata("design:paramtypes", [typeof (_p = typeof validate_token_dto_1.ValidateTokenDto !== "undefined" && validate_token_dto_1.ValidateTokenDto) === "function" ? _p : Object]),
+    __metadata("design:returntype", typeof (_q = typeof Promise !== "undefined" && Promise) === "function" ? _q : Object)
 ], AuthGrpcController.prototype, "validateToken", null);
 exports.AuthGrpcController = AuthGrpcController = __decorate([
     (0, common_1.Controller)(),
-    __metadata("design:paramtypes", [typeof (_l = typeof auth_service_1.AuthService !== "undefined" && auth_service_1.AuthService) === "function" ? _l : Object])
+    __metadata("design:paramtypes", [typeof (_o = typeof auth_service_1.AuthService !== "undefined" && auth_service_1.AuthService) === "function" ? _o : Object])
 ], AuthGrpcController);
 
 
@@ -808,6 +836,13 @@ let AuthService = class AuthService {
         }
         return user;
     }
+    async updateProfile(userId, dto) {
+        const update = normalizeProfileUpdate(dto);
+        if (Object.keys(update).length === 0) {
+            return this.getProfile(userId);
+        }
+        return this.executeUserUpdate(() => this.authRepository.updateUserProfile(userId, update));
+    }
     async getAllUsers(options) {
         const page = options?.page ?? 1;
         const limit = options?.limit ?? 20;
@@ -849,6 +884,9 @@ let AuthService = class AuthService {
                 id: user.id,
                 email: user.email,
                 role: user.role,
+                name: user.name ?? null,
+                phone: user.phone ?? null,
+                company: user.company ?? null,
             },
         };
     }
@@ -888,6 +926,26 @@ const isNotFoundError = (error) => {
         return false;
     }
     return 'code' in error && error.code === 'P2025';
+};
+const normalizeProfileUpdate = (dto) => {
+    const update = {};
+    if (dto.name !== undefined) {
+        update.name = normalizeOptionalString(dto.name);
+    }
+    if (dto.phone !== undefined) {
+        update.phone = normalizeOptionalString(dto.phone);
+    }
+    if (dto.company !== undefined) {
+        update.company = normalizeOptionalString(dto.company);
+    }
+    return update;
+};
+const normalizeOptionalString = (value) => {
+    if (value === null) {
+        return null;
+    }
+    const trimmed = value.trim();
+    return trimmed.length === 0 ? null : trimmed;
 };
 
 
@@ -1050,6 +1108,12 @@ let AuthRepository = class AuthRepository {
                 data: { revokedAt: new Date() },
             });
             return user;
+        });
+    }
+    async updateUserProfile(userId, data) {
+        return this.prisma.user.update({
+            where: { id: userId },
+            data,
         });
     }
     async deactivateUser(userId) {
@@ -1301,6 +1365,66 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UpdateProfileDto = void 0;
+const class_transformer_1 = __webpack_require__(30);
+const class_validator_1 = __webpack_require__(28);
+const emptyToNull = ({ value }) => {
+    if (typeof value !== 'string') {
+        return value;
+    }
+    const trimmed = value.trim();
+    return trimmed.length === 0 ? null : trimmed;
+};
+class UpdateProfileDto {
+    name;
+    phone;
+    company;
+}
+exports.UpdateProfileDto = UpdateProfileDto;
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Transform)(emptyToNull),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(2),
+    __metadata("design:type", Object)
+], UpdateProfileDto.prototype, "name", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Transform)(emptyToNull),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(10),
+    __metadata("design:type", Object)
+], UpdateProfileDto.prototype, "phone", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Transform)(emptyToNull),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(2),
+    __metadata("design:type", Object)
+], UpdateProfileDto.prototype, "company", void 0);
+
+
+/***/ }),
+/* 30 */
+/***/ ((module) => {
+
+module.exports = require("class-transformer");
+
+/***/ }),
+/* 31 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ValidateTokenDto = void 0;
 const class_validator_1 = __webpack_require__(28);
 class ValidateTokenDto {
@@ -1314,7 +1438,7 @@ __decorate([
 
 
 /***/ }),
-/* 30 */
+/* 32 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1360,7 +1484,7 @@ exports.JwtAuthGuard = JwtAuthGuard = __decorate([
 
 
 /***/ }),
-/* 31 */
+/* 33 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1381,10 +1505,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthAdminController = void 0;
 const common_1 = __webpack_require__(1);
 const auth_service_1 = __webpack_require__(24);
-const admin_dto_1 = __webpack_require__(32);
-const jwt_auth_guard_1 = __webpack_require__(30);
-const roles_decorator_1 = __webpack_require__(34);
-const roles_guard_1 = __webpack_require__(35);
+const admin_dto_1 = __webpack_require__(34);
+const jwt_auth_guard_1 = __webpack_require__(32);
+const roles_decorator_1 = __webpack_require__(35);
+const roles_guard_1 = __webpack_require__(36);
 const role_enum_1 = __webpack_require__(26);
 let AuthAdminController = class AuthAdminController {
     authService;
@@ -1450,7 +1574,7 @@ exports.AuthAdminController = AuthAdminController = __decorate([
 
 
 /***/ }),
-/* 32 */
+/* 34 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1467,7 +1591,7 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetUsersQueryDto = exports.UpdateUserRoleDto = void 0;
 const class_validator_1 = __webpack_require__(28);
-const class_transformer_1 = __webpack_require__(33);
+const class_transformer_1 = __webpack_require__(30);
 const role_enum_1 = __webpack_require__(26);
 class UpdateUserRoleDto {
     role;
@@ -1505,13 +1629,7 @@ __decorate([
 
 
 /***/ }),
-/* 33 */
-/***/ ((module) => {
-
-module.exports = require("class-transformer");
-
-/***/ }),
-/* 34 */
+/* 35 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -1524,7 +1642,7 @@ exports.Roles = Roles;
 
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1542,7 +1660,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RolesGuard = void 0;
 const common_1 = __webpack_require__(1);
 const core_1 = __webpack_require__(3);
-const roles_decorator_1 = __webpack_require__(34);
+const roles_decorator_1 = __webpack_require__(35);
 let RolesGuard = class RolesGuard {
     reflector;
     constructor(reflector) {
@@ -1575,7 +1693,7 @@ exports.RolesGuard = RolesGuard = __decorate([
 
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1653,7 +1771,7 @@ const buildRateLimitKey = (request) => {
 
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1692,7 +1810,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.authValidationSchema = void 0;
-const Joi = __importStar(__webpack_require__(38));
+const Joi = __importStar(__webpack_require__(39));
 exports.authValidationSchema = Joi.object({
     NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
     DATABASE_URL: Joi.string().required(),
@@ -1709,7 +1827,7 @@ exports.authValidationSchema = Joi.object({
 
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ ((module) => {
 
 module.exports = require("joi");

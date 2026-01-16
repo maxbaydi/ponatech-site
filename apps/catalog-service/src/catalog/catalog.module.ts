@@ -13,6 +13,9 @@ import { MediaModule } from './media/media.module';
 import { ProductsController } from './products/products.controller';
 import { ProductsRepository } from './products/products.repository';
 import { ProductsService } from './products/products.service';
+import { CartController } from './cart/cart.controller';
+import { CartRepository } from './cart/cart.repository';
+import { CartService } from './cart/cart.service';
 import { RequestsController } from './requests/requests.controller';
 import { RequestsRepository } from './requests/requests.repository';
 import { RequestsService } from './requests/requests.service';
@@ -25,6 +28,7 @@ import { RequestsService } from './requests/requests.service';
     ProductsController,
     CatalogGrpcController,
     RequestsController,
+    CartController,
   ],
   providers: [
     BrandsRepository,
@@ -35,6 +39,8 @@ import { RequestsService } from './requests/requests.service';
     ProductsService,
     RequestsRepository,
     RequestsService,
+    CartRepository,
+    CartService,
     JwtAuthGuard,
     RolesGuard,
   ],

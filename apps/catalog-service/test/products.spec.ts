@@ -173,8 +173,8 @@ describe('ProductsController (integration)', () => {
 
     const response = await request(app.getHttpServer()).get('/products?color=red').expect(200);
 
-    expect(response.body).toHaveLength(1);
-    expect(response.body[0].attributes).toEqual({ color: 'red' });
+    expect(response.body.data).toHaveLength(1);
+    expect(response.body.data[0].attributes).toEqual({ color: 'red' });
   });
 
   it('DELETE /products/:id performs soft delete', async () => {
@@ -412,20 +412,20 @@ describe('ProductsController (integration)', () => {
     const byBrand = await request(app.getHttpServer())
       .get(`/products?brandId=${brandA.id}`)
       .expect(200);
-    expect(byBrand.body).toHaveLength(1);
-    expect(byBrand.body[0].brandId).toBe(brandA.id);
+    expect(byBrand.body.data).toHaveLength(1);
+    expect(byBrand.body.data[0].brandId).toBe(brandA.id);
 
     const byCategory = await request(app.getHttpServer())
       .get(`/products?categoryId=${categoryB.id}`)
       .expect(200);
-    expect(byCategory.body).toHaveLength(1);
-    expect(byCategory.body[0].categoryId).toBe(categoryB.id);
+    expect(byCategory.body.data).toHaveLength(1);
+    expect(byCategory.body.data[0].categoryId).toBe(categoryB.id);
 
     const byStatus = await request(app.getHttpServer())
       .get(`/products?status=PUBLISHED`)
       .expect(200);
-    expect(byStatus.body).toHaveLength(1);
-    expect(byStatus.body[0].status).toBe('PUBLISHED');
+    expect(byStatus.body.data).toHaveLength(1);
+    expect(byStatus.body.data[0].status).toBe('PUBLISHED');
   });
 });
 
