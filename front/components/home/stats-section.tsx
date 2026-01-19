@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import Image from 'next/image';
 import { motion, useInView } from 'framer-motion';
 import { Building2, Globe2, Users, Camera } from 'lucide-react';
 import { BRAND_COUNT } from '@/data/brands';
+import numberSectionBg from '@/assets/number-section-bg.png';
 
 interface StatItemProps {
   icon: React.ReactNode;
@@ -57,14 +59,14 @@ function StatCard({ icon, value, suffix, label, delay }: StatItemProps) {
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.5, delay }}
     >
-      <div className="flex flex-col items-center justify-center text-center w-[150px] h-[150px] p-4 rounded-2xl bg-background border border-border/50 shadow-sm transition-all duration-300 group-hover:shadow-lg group-hover:border-primary/30">
-        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mb-3">
+      <div className="flex flex-col items-center justify-center text-center w-[150px] h-[150px] p-4 rounded-2xl bg-primary shadow-sm transition-all duration-300 group-hover:shadow-lg">
+        <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mb-3">
           {icon}
         </div>
-        <div className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+        <div className="text-2xl sm:text-3xl font-bold text-white mb-2">
           <AnimatedNumber value={value} suffix={suffix} inView={inView} />
         </div>
-        <p className="text-muted-foreground text-sm">{label}</p>
+        <p className="text-white/80 text-sm">{label}</p>
       </div>
     </motion.div>
   );
@@ -82,15 +84,15 @@ function InspectionCard({ delay }: { delay: number }) {
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.5, delay }}
     >
-      <div className="flex items-start gap-3 h-full p-4 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
-        <div className="shrink-0 w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
-          <Camera className="w-4 h-4 text-primary" />
-        </div>
+      <div className="flex items-start gap-3 h-full p-4 rounded-2xl bg-primary shadow-sm">
         <div className="flex flex-col">
-          <h3 className="text-base font-semibold text-foreground mb-2">
+          <h3 className="text-base font-semibold text-white flex items-center gap-2 mb-2">
+            <div className="shrink-0 w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+              <Camera className="w-4 h-4 text-white" />
+            </div>
             Фото- и видеоинспекция грузов
           </h3>
-          <p className="text-xs text-muted-foreground leading-relaxed">
+          <p className="text-xs text-white/80 leading-relaxed">
             Все наши грузы проходят полную фото- и видеоинспекцию на зарубежных складах перед отправкой.
             Мы фиксируем состояние, комплектацию и упаковку оборудования, чтобы убедиться в полном соответствии заказу.
             Такой контроль позволяет избежать рисков и гарантировать надёжность поставок на каждом этапе логистики.
@@ -103,19 +105,19 @@ function InspectionCard({ delay }: { delay: number }) {
 
 const STATS = [
   {
-    icon: <Building2 className="w-5 h-5 text-muted-foreground" />,
+    icon: <Building2 className="w-5 h-5 text-white" />,
     value: BRAND_COUNT,
     suffix: '+',
     label: 'Мировых брендов',
   },
   {
-    icon: <Globe2 className="w-5 h-5 text-muted-foreground" />,
+    icon: <Globe2 className="w-5 h-5 text-white" />,
     value: 12,
     suffix: '',
     label: 'Стран-поставщиков',
   },
   {
-    icon: <Users className="w-5 h-5 text-muted-foreground" />,
+    icon: <Users className="w-5 h-5 text-white" />,
     value: 500,
     suffix: '+',
     label: 'Довольных клиентов',
@@ -124,11 +126,22 @@ const STATS = [
 
 export function StatsSection() {
   return (
-    <section className="py-12 sm:py-16 lg:py-24 bg-gradient-to-b from-background to-muted/30">
-      <div className="container-custom">
+    <section className="relative py-12 sm:py-16 lg:py-24">
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        <Image
+          src={numberSectionBg}
+          alt="Background"
+          fill
+          className="object-cover scale-110"
+          placeholder="blur"
+        />
+        <div className="absolute inset-0 bg-background/90" />
+      </div>
+
+      <div className="container-custom relative z-10">
         <div className="text-center mb-8 sm:mb-12">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">Цифры говорят за нас</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-primary">Цифры говорят за нас</h2>
+          <p className="text-primary/80 max-w-2xl mx-auto">
             Многолетний опыт работы с ведущими мировыми производителями и надёжная репутация на рынке
           </p>
         </div>

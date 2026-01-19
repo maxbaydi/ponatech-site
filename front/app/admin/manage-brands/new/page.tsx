@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -29,6 +30,7 @@ type BrandFormData = z.infer<typeof brandSchema>;
 export default function NewBrandPage() {
   const router = useRouter();
   const createBrand = useCreateBrand();
+  const isSlugManuallyEdited = useRef(false);
 
   const form = useForm<BrandFormData>({
     resolver: zodResolver(brandSchema),
@@ -56,9 +58,14 @@ export default function NewBrandPage() {
 
   const handleNameChange = (value: string) => {
     form.setValue('name', value);
-    if (!form.getValues('slug')) {
+    if (!isSlugManuallyEdited.current) {
       form.setValue('slug', slugify(value));
     }
+  };
+
+  const handleSlugChange = (value: string) => {
+    isSlugManuallyEdited.current = true;
+    form.setValue('slug', value);
   };
 
   return (
@@ -106,7 +113,11 @@ export default function NewBrandPage() {
                     <FormItem>
                       <FormLabel>Slug *</FormLabel>
                       <FormControl>
-                        <Input placeholder="brand-slug" {...field} />
+                        <Input
+                          placeholder="brand-slug"
+                          {...field}
+                          onChange={(e) => handleSlugChange(e.target.value)}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

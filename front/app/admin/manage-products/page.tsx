@@ -39,7 +39,18 @@ import {
 import { useBrands } from '@/lib/hooks/use-brands';
 import { useCategories } from '@/lib/hooks/use-categories';
 import { formatPrice } from '@/lib/utils';
-import type { Product, ProductStatus } from '@/lib/api/types';
+import type { Product, ProductStatus, Category } from '@/lib/api/types';
+
+function flattenCategoriesForSelect(categories: Category[], prefix = ''): { id: string; name: string }[] {
+  const result: { id: string; name: string }[] = [];
+  for (const cat of categories) {
+    result.push({ id: cat.id, name: prefix ? `${prefix} → ${cat.name}` : cat.name });
+    if (cat.children && cat.children.length > 0) {
+      result.push(...flattenCategoriesForSelect(cat.children, prefix ? `${prefix} → ${cat.name}` : cat.name));
+    }
+  }
+  return result;
+}
 import {
   Pagination,
   PaginationContent,
@@ -130,6 +141,10 @@ export default function ProductsPage() {
   const totalPages = productsPage?.totalPages ?? 0;
   const { data: brands } = useBrands();
   const { data: categories } = useCategories();
+  const flatCategories = useMemo(() => {
+    if (!categories) return [];
+    return flattenCategoriesForSelect(categories);
+  }, [categories]);
   const deleteProduct = useDeleteProduct();
   const deleteProductsBatch = useDeleteProductsBatch();
   const updateProductsStatusBatch = useUpdateProductsStatusBatch();
@@ -368,7 +383,7 @@ export default function ProductsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={ALL_CATEGORIES_VALUE}>Все категории</SelectItem>
-                  {categories?.map((category) => (
+                  {flatCategories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
                     </SelectItem>
@@ -459,7 +474,7 @@ export default function ProductsPage() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value={NO_CATEGORY_VALUE}>Без категории</SelectItem>
-                          {categories?.map((category) => (
+                          {flatCategories.map((category) => (
                             <SelectItem key={category.id} value={category.id}>
                               {category.name}
                             </SelectItem>

@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState } from 'react';
+import { use, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { notFound, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -23,6 +23,7 @@ import {
   ZoomIn,
   ChevronLeft,
   ShoppingCart,
+  Check,
 } from 'lucide-react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
@@ -34,8 +35,24 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductCard } from '@/components/catalog';
 import { useProductBySlug, useProducts } from '@/lib/hooks/use-products';
+import { useCategories } from '@/lib/hooks/use-categories';
 import { formatPrice } from '@/lib/utils';
-import type { ProductImage } from '@/lib/api/types';
+import type { ProductImage, Category } from '@/lib/api/types';
+
+function findCategoryPath(categories: Category[], targetId: string): Category[] {
+  for (const cat of categories) {
+    if (cat.id === targetId) {
+      return [cat];
+    }
+    if (cat.children && cat.children.length > 0) {
+      const childPath = findCategoryPath(cat.children, targetId);
+      if (childPath.length > 0) {
+        return [cat, ...childPath];
+      }
+    }
+  }
+  return [];
+}
 import DOMPurify from 'isomorphic-dompurify';
 import { SITE_CONTACTS } from '@/lib/site-contacts';
 import { createCartItemFromProduct, useCartStore } from '@/lib/cart';
@@ -188,9 +205,16 @@ export default function ProductPage({ params }: ProductPageProps) {
   const router = useRouter();
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const { data: product, isLoading, error } = useProductBySlug(slug);
+  const { data: allCategories } = useCategories();
   const cartItems = useCartStore((state) => state.items);
   const addItem = useCartStore((state) => state.addItem);
+  const removeItem = useCartStore((state) => state.removeItem);
   const isInCart = product ? cartItems.some((item) => item.id === product.id) : false;
+
+  const categoryPath = useMemo(() => {
+    if (!product?.categoryId || !allCategories) return [];
+    return findCategoryPath(allCategories, product.categoryId);
+  }, [product?.categoryId, allCategories]);
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -200,6 +224,11 @@ export default function ProductPage({ params }: ProductPageProps) {
       return;
     }
     addItem(createCartItemFromProduct(product));
+  };
+
+  const handleRemoveFromCart = () => {
+    if (!product) return;
+    removeItem(product.id);
   };
 
   const { data: relatedProductsPage } = useProducts({
@@ -248,17 +277,17 @@ export default function ProductPage({ params }: ProductPageProps) {
                   Каталог
                 </Link>
                 <ChevronRight className="h-4 w-4" />
-                {product.category && (
-                  <>
+                {categoryPath.map((cat) => (
+                  <span key={cat.id} className="contents">
                     <Link
-                      href={`/catalog?categoryId=${product.categoryId}`}
+                      href={`/catalog?categoryId=${cat.id}`}
                       className="hover:text-foreground transition-colors"
                     >
-                      {product.category.name}
+                      {cat.name}
                     </Link>
                     <ChevronRight className="h-4 w-4" />
-                  </>
-                )}
+                  </span>
+                ))}
                 {product.brand && (
                   <>
                     <Link
@@ -344,11 +373,15 @@ export default function ProductPage({ params }: ProductPageProps) {
                       </Link>
                     </Button>
                     {isInCart ? (
-                      <Button size="lg" variant="outline" className="flex-1 h-14 text-base" asChild>
-                        <Link href="/cart">
-                          <ShoppingCart className="mr-2 h-5 w-5" />
-                          В корзине
-                        </Link>
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        className="flex-1 h-14 text-base border-primary text-primary hover:bg-primary hover:text-white"
+                        type="button"
+                        onClick={handleRemoveFromCart}
+                      >
+                        <Check className="mr-2 h-5 w-5" />
+                        В корзине
                       </Button>
                     ) : (
                       <Button

@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,18 @@ import { useProduct, useUpdateProduct } from '@/lib/hooks/use-products';
 import { useBrands } from '@/lib/hooks/use-brands';
 import { useCategories } from '@/lib/hooks/use-categories';
 import { getMainProductImage } from '@/lib/products';
-import type { MediaFile } from '@/lib/api/types';
+import type { MediaFile, Category } from '@/lib/api/types';
+
+function flattenCategoriesForSelect(categories: Category[], prefix = ''): { id: string; name: string }[] {
+  const result: { id: string; name: string }[] = [];
+  for (const cat of categories) {
+    result.push({ id: cat.id, name: prefix ? `${prefix} → ${cat.name}` : cat.name });
+    if (cat.children && cat.children.length > 0) {
+      result.push(...flattenCategoriesForSelect(cat.children, prefix ? `${prefix} → ${cat.name}` : cat.name));
+    }
+  }
+  return result;
+}
 
 const productSchema = z.object({
   title: z.string().min(2, 'Введите название товара'),
@@ -58,6 +69,11 @@ export default function EditProductPage() {
   const initialMainImageId = useRef<string | null>(null);
   const [trackStock, setTrackStock] = useState(false);
   const [mainImage, setMainImage] = useState<MediaFile | null>(null);
+
+  const flatCategories = useMemo(() => {
+    if (!categories) return [];
+    return flattenCategoriesForSelect(categories);
+  }, [categories]);
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -413,7 +429,7 @@ export default function EditProductPage() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {categories?.map((category) => (
+                            {flatCategories.map((category) => (
                               <SelectItem key={category.id} value={category.id}>
                                 {category.name}
                               </SelectItem>

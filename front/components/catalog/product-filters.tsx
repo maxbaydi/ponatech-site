@@ -2,7 +2,7 @@
 
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { X, SlidersHorizontal } from 'lucide-react';
+import { X, SlidersHorizontal, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +13,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { useBrands } from '@/lib/hooks/use-brands';
 import { useCategories } from '@/lib/hooks/use-categories';
 import { Skeleton } from '@/components/ui/skeleton';
+import type { Category } from '@/lib/api/types';
 
 interface ProductFiltersProps {
   isMobile?: boolean;
@@ -22,6 +23,21 @@ type FilterItem = {
   id: string;
   name: string;
 };
+
+type CategoryFilterItem = FilterItem & {
+  level: number;
+};
+
+function flattenCategoriesForFilter(categories: Category[], level = 0): CategoryFilterItem[] {
+  const result: CategoryFilterItem[] = [];
+  for (const cat of categories) {
+    result.push({ id: cat.id, name: cat.name, level });
+    if (cat.children && cat.children.length > 0) {
+      result.push(...flattenCategoriesForFilter(cat.children, level + 1));
+    }
+  }
+  return result;
+}
 
 const CATALOG_PATH = '/catalog';
 const FILTER_VALUE_SEPARATOR = ',';
@@ -153,6 +169,54 @@ function FilterList({ items, selectedIds, onToggle, idPrefix, emptyMessage, isLo
   );
 }
 
+interface CategoryFilterListProps {
+  items: CategoryFilterItem[];
+  selectedIds: Set<string>;
+  onToggle: (id: string) => void;
+  emptyMessage: string;
+  isLoading: boolean;
+}
+
+function CategoryFilterList({ items, selectedIds, onToggle, emptyMessage, isLoading }: CategoryFilterListProps) {
+  return (
+    <ScrollArea className="h-48">
+      {isLoading ? (
+        <FilterSkeletonList />
+      ) : items.length > 0 ? (
+        <div className="space-y-2 pr-4">
+          {items.map((item) => {
+            const checkboxId = `${CATEGORY_CHECKBOX_ID_PREFIX}${item.id}`;
+            return (
+              <div key={item.id} className="flex items-center space-x-2">
+                {item.level > 0 && (
+                  <span 
+                    className="text-muted-foreground flex items-center"
+                    style={{ marginLeft: `${(item.level - 1) * 12}px` }}
+                  >
+                    <ChevronRight className="w-3 h-3" />
+                  </span>
+                )}
+                <Checkbox
+                  id={checkboxId}
+                  checked={selectedIds.has(item.id)}
+                  onCheckedChange={() => onToggle(item.id)}
+                />
+                <label htmlFor={checkboxId} className="text-sm cursor-pointer flex-1 truncate">
+                  {item.name}
+                </label>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="pr-4">
+          <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+        </div>
+      )}
+    </ScrollArea>
+  );
+}
+
 function FilterContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -183,10 +247,28 @@ function FilterContent() {
     return orderSelectedFirst(baseList, selectedBrandSet);
   }, [brands, brandQuery, selectedBrandSet]);
 
-  const orderedCategories = useMemo(() => {
+  const flatCategories = useMemo(() => {
     if (!categories) return [];
-    return orderSelectedFirst(categories, selectedCategorySet);
-  }, [categories, selectedCategorySet]);
+    return flattenCategoriesForFilter(categories);
+  }, [categories]);
+
+  const orderedCategories = useMemo(() => {
+    if (flatCategories.length === 0) return [];
+    if (selectedCategorySet.size === 0) return flatCategories;
+    
+    const selected: CategoryFilterItem[] = [];
+    const unselected: CategoryFilterItem[] = [];
+    
+    flatCategories.forEach((item) => {
+      if (selectedCategorySet.has(item.id)) {
+        selected.push(item);
+      } else {
+        unselected.push(item);
+      }
+    });
+    
+    return selected.length > 0 ? [...selected, ...unselected] : flatCategories;
+  }, [flatCategories, selectedCategorySet]);
 
   const clearPriceDebounce = useCallback(() => {
     if (!priceDebounceRef.current) return;
@@ -361,11 +443,10 @@ function FilterContent() {
       <Separator />
 
       <FilterSection label={CATEGORIES_LABEL}>
-        <FilterList
+        <CategoryFilterList
           items={orderedCategories}
           selectedIds={selectedCategorySet}
           onToggle={toggleCategory}
-          idPrefix={CATEGORY_CHECKBOX_ID_PREFIX}
           emptyMessage={CATEGORY_EMPTY_MESSAGE}
           isLoading={categoriesLoading}
         />

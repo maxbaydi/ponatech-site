@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCategory, useCategories, useUpdateCategory } from '@/lib/hooks/use-categories';
+import type { Category } from '@/lib/api/types';
+
+function flattenCategoriesForSelect(categories: Category[], prefix = ''): { id: string; name: string }[] {
+  const result: { id: string; name: string }[] = [];
+  for (const cat of categories) {
+    result.push({ id: cat.id, name: prefix ? `${prefix} → ${cat.name}` : cat.name });
+    if (cat.children && cat.children.length > 0) {
+      result.push(...flattenCategoriesForSelect(cat.children, prefix ? `${prefix} → ${cat.name}` : cat.name));
+    }
+  }
+  return result;
+}
 
 const NONE_VALUE = '__none__';
 
@@ -85,7 +97,10 @@ export default function EditCategoryPage() {
 
   const isLoading = categoryLoading || categoriesLoading;
 
-  const availableParentCategories = categories?.filter((c) => c.id !== categoryId);
+  const availableParentCategories = useMemo(() => {
+    if (!categories) return [];
+    return flattenCategoriesForSelect(categories).filter((c) => c.id !== categoryId);
+  }, [categories, categoryId]);
 
   if (isLoading) {
     return (
@@ -188,6 +203,7 @@ export default function EditCategoryPage() {
                   <FormItem>
                     <FormLabel>Родительская категория</FormLabel>
                     <Select
+                      key={`parent-${field.value}`}
                       onValueChange={field.onChange}
                       value={field.value || NONE_VALUE}
                     >
@@ -198,7 +214,7 @@ export default function EditCategoryPage() {
                       </FormControl>
                       <SelectContent>
                         <SelectItem value={NONE_VALUE}>Нет (корневая категория)</SelectItem>
-                        {availableParentCategories?.map((cat) => (
+                        {availableParentCategories.map((cat) => (
                           <SelectItem key={cat.id} value={cat.id}>
                             {cat.name}
                           </SelectItem>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,6 +15,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useCreateCategory, useCategories } from '@/lib/hooks/use-categories';
 import { slugify } from '@/lib/utils';
+import type { Category } from '@/lib/api/types';
+
+function flattenCategoriesForSelect(categories: Category[], prefix = ''): { id: string; name: string }[] {
+  const result: { id: string; name: string }[] = [];
+  for (const cat of categories) {
+    result.push({ id: cat.id, name: prefix ? `${prefix} → ${cat.name}` : cat.name });
+    if (cat.children && cat.children.length > 0) {
+      result.push(...flattenCategoriesForSelect(cat.children, prefix ? `${prefix} → ${cat.name}` : cat.name));
+    }
+  }
+  return result;
+}
 
 const ROOT_CATEGORY_VALUE = '__ROOT_CATEGORY__';
 
@@ -30,6 +43,12 @@ export default function NewCategoryPage() {
   const router = useRouter();
   const createCategory = useCreateCategory();
   const { data: categories } = useCategories();
+  const isSlugManuallyEdited = useRef(false);
+
+  const flatCategories = useMemo(() => {
+    if (!categories) return [];
+    return flattenCategoriesForSelect(categories);
+  }, [categories]);
 
   const form = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema),
@@ -55,9 +74,14 @@ export default function NewCategoryPage() {
 
   const handleNameChange = (value: string) => {
     form.setValue('name', value);
-    if (!form.getValues('slug')) {
+    if (!isSlugManuallyEdited.current) {
       form.setValue('slug', slugify(value));
     }
+  };
+
+  const handleSlugChange = (value: string) => {
+    isSlugManuallyEdited.current = true;
+    form.setValue('slug', value);
   };
 
   return (
@@ -105,7 +129,11 @@ export default function NewCategoryPage() {
                     <FormItem>
                       <FormLabel>Slug *</FormLabel>
                       <FormControl>
-                        <Input placeholder="category-slug" {...field} />
+                        <Input
+                          placeholder="category-slug"
+                          {...field}
+                          onChange={(e) => handleSlugChange(e.target.value)}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -127,7 +155,7 @@ export default function NewCategoryPage() {
                       </FormControl>
                       <SelectContent>
                         <SelectItem value={ROOT_CATEGORY_VALUE}>Нет (корневая категория)</SelectItem>
-                        {categories?.map((category) => (
+                        {flatCategories.map((category) => (
                           <SelectItem key={category.id} value={category.id}>
                             {category.name}
                           </SelectItem>

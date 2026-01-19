@@ -209,7 +209,7 @@ export function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
           <DetailsButton
             href={productHref}
             variant="outline"
-            className="flex-1 justify-center transition-colors hover:bg-primary hover:text-primary-foreground"
+            className="flex-1 justify-center transition-colors hover:bg-primary hover:text-white"
           />
           <CartActionButton product={product} />
         </div>

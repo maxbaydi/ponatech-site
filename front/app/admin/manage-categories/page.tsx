@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { Plus, Search, MoreHorizontal, Pencil, Trash2, FolderTree } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Pencil, Trash2, FolderTree, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -22,13 +22,39 @@ import {
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCategories, useDeleteCategory } from '@/lib/hooks/use-categories';
+import type { Category } from '@/lib/api/types';
+
+interface CategoryWithLevel extends Category {
+  level: number;
+  parentName?: string;
+}
+
+function flattenCategories(categories: Category[], level = 0, parentName?: string): CategoryWithLevel[] {
+  const result: CategoryWithLevel[] = [];
+
+  for (const category of categories) {
+    result.push({ ...category, level, parentName });
+
+    if (category.children && category.children.length > 0) {
+      const childItems = flattenCategories(category.children, level + 1, category.name);
+      result.push(...childItems);
+    }
+  }
+
+  return result;
+}
 
 export default function CategoriesPage() {
   const [search, setSearch] = useState('');
   const { data: categories, isLoading } = useCategories();
   const deleteCategory = useDeleteCategory();
 
-  const filteredCategories = categories?.filter((c) =>
+  const hierarchicalCategories = useMemo(() => {
+    if (!categories) return [];
+    return flattenCategories(categories);
+  }, [categories]);
+
+  const filteredCategories = hierarchicalCategories.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -80,7 +106,7 @@ export default function CategoriesPage() {
                 <TableRow>
                   <TableHead>Категория</TableHead>
                   <TableHead>Slug</TableHead>
-                  <TableHead>Описание</TableHead>
+                  <TableHead>Родительская</TableHead>
                   <TableHead className="w-[70px]"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -89,15 +115,23 @@ export default function CategoriesPage() {
                   <TableRow key={category.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
+                        {category.level > 0 && (
+                          <div 
+                            className="flex items-center text-muted-foreground"
+                            style={{ marginLeft: `${(category.level - 1) * 20}px` }}
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </div>
+                        )}
+                        <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0">
                           <FolderTree className="w-5 h-5 text-muted-foreground" />
                         </div>
                         <div className="font-medium">{category.name}</div>
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{category.slug}</TableCell>
-                    <TableCell className="text-muted-foreground max-w-xs truncate">
-                      {category.description || '-'}
+                    <TableCell className="text-muted-foreground">
+                      {category.parentName || '-'}
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>

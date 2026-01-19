@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,7 +20,18 @@ import { useCreateProduct } from '@/lib/hooks/use-products';
 import { useBrands } from '@/lib/hooks/use-brands';
 import { useCategories } from '@/lib/hooks/use-categories';
 import { slugify } from '@/lib/utils';
-import type { MediaFile } from '@/lib/api/types';
+import type { MediaFile, Category } from '@/lib/api/types';
+
+function flattenCategoriesForSelect(categories: Category[], prefix = ''): { id: string; name: string }[] {
+  const result: { id: string; name: string }[] = [];
+  for (const cat of categories) {
+    result.push({ id: cat.id, name: prefix ? `${prefix} → ${cat.name}` : cat.name });
+    if (cat.children && cat.children.length > 0) {
+      result.push(...flattenCategoriesForSelect(cat.children, prefix ? `${prefix} → ${cat.name}` : cat.name));
+    }
+  }
+  return result;
+}
 
 const productSchema = z.object({
   title: z.string().min(2, 'Введите название товара'),
@@ -51,6 +62,12 @@ export default function NewProductPage() {
   const { data: categories } = useCategories();
   const [trackStock, setTrackStock] = useState(false);
   const [mainImage, setMainImage] = useState<MediaFile | null>(null);
+  const isSlugManuallyEdited = useRef(false);
+
+  const flatCategories = useMemo(() => {
+    if (!categories) return [];
+    return flattenCategoriesForSelect(categories);
+  }, [categories]);
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -89,9 +106,14 @@ export default function NewProductPage() {
 
   const handleTitleChange = (value: string) => {
     form.setValue('title', value);
-    if (!form.getValues('slug')) {
+    if (!isSlugManuallyEdited.current) {
       form.setValue('slug', slugify(value));
     }
+  };
+
+  const handleSlugChange = (value: string) => {
+    isSlugManuallyEdited.current = true;
+    form.setValue('slug', value);
   };
 
   return (
@@ -140,7 +162,11 @@ export default function NewProductPage() {
                       <FormItem>
                         <FormLabel>Slug *</FormLabel>
                         <FormControl>
-                          <Input placeholder="slug-tovara" {...field} />
+                          <Input
+                            placeholder="slug-tovara"
+                            {...field}
+                            onChange={(e) => handleSlugChange(e.target.value)}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -302,7 +328,7 @@ export default function NewProductPage() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {categories?.map((category) => (
+                            {flatCategories.map((category) => (
                               <SelectItem key={category.id} value={category.id}>
                                 {category.name}
                               </SelectItem>
