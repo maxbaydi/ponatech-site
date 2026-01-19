@@ -177,7 +177,7 @@ export function Header() {
               />
             </Link>
 
-            <Button asChild className="hidden sm:inline-flex">
+            <Button asChild size="lg" className="hidden sm:inline-flex">
               <Link href={CATALOG_PATH}>
                 <LayoutGrid />
                 Каталог
@@ -192,16 +192,16 @@ export function Header() {
               runSearch();
             }}
           >
-            <div className="flex h-10 w-full max-w-2xl lg:max-w-3xl items-stretch overflow-hidden rounded-md border border-input bg-background shadow-sm focus-within:ring-1 focus-within:ring-ring">
+            <div className="flex h-10 w-full max-w-2xl lg:max-w-3xl items-center rounded-xl border-2 border-primary bg-background px-1 gap-1">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="flex h-full items-center gap-2 border-r border-border bg-muted px-4 text-sm font-medium text-foreground/80 hover:text-foreground focus-ring rounded-none rounded-l-md"
+                    className="flex h-8 items-center gap-2 rounded-lg bg-[#eff3f6] px-3 text-sm font-medium text-foreground hover:bg-[#e4e9f0] transition-colors focus:outline-none shrink-0"
                   >
                     <span className="hidden lg:inline">Бренды</span>
                     <span className="lg:hidden">Бренд</span>
-                    <ChevronDown className="h-4 w-4" />
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" collisionPadding={16} className="header-brand-dropdown overflow-auto p-2 scrollbar-themed">
@@ -240,21 +240,21 @@ export function Header() {
               </DropdownMenu>
 
               <Input
-                placeholder="Искать товары..."
+                placeholder="Искать на PonaTech..."
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
                 className={cn(
-                  'h-10 flex-1 border-0 rounded-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0'
+                  'h-full flex-1 border-0 rounded-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0'
                 )}
               />
 
               <Button
                 type="submit"
                 size="icon"
-                className="h-10 w-12 rounded-none rounded-r-md shrink-0"
+                className="h-8 w-12 rounded-lg bg-primary hover:bg-primary-dark text-white shrink-0"
                 aria-label="Поиск"
               >
-                <Search className="h-5 w-5" />
+                <Search className="h-6 w-6" />
               </Button>
             </div>
           </form>
@@ -339,7 +339,7 @@ export function Header() {
                     }}
                   >
                     <Input
-                      placeholder="Искать товары..."
+                      placeholder="Искать на PonaTech..."
                       className="h-10"
                       value={searchValue}
                       onChange={(e) => setSearchValue(e.target.value)}

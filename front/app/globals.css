@@ -48,7 +48,7 @@
   --size-section-padding-compact: 50px;
   --size-hero-content-max-w: 900px;
   
-  --font-sans: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: var(--font-onest), 'Onest', arial, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
   
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -168,15 +168,14 @@
 
 @layer utilities {
   .animate-text-shimmer {
-    background: linear-gradient(
-      115deg,
-      #ffffff 10%,
-      #60a5fa 35%,
-      #0066FF 50%,
-      #60a5fa 65%,
-      #ffffff 90%
+    background: radial-gradient(
+      circle,
+      #0066FF 0%,
+      #60a5fa 20%,
+      #ffffff 50%,
+      #ffffff 100%
     );
-    background-size: 200% auto;
+    background-size: 200% 200%;
     color: transparent;
     -webkit-background-clip: text;
     background-clip: text;

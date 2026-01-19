@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Onest } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/providers';
 
-const inter = Inter({
+const onest = Onest({
   subsets: ['latin', 'cyrillic'],
+  weight: ['400', '500', '600', '700'],
   display: 'swap',
-  variable: '--font-inter',
+  variable: '--font-onest',
+  fallback: ['arial', 'sans-serif'],
 });
 
 export const metadata: Metadata = {
@@ -40,7 +42,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans`}>
+      <body className={`${onest.variable} font-sans`}>
         <Providers>{children}</Providers>
       </body>
     </html>
