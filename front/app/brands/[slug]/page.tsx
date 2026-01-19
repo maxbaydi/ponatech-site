@@ -128,14 +128,16 @@ export default function BrandPage({ params }: BrandPageProps) {
                     <ProductCard key={product.id} product={product} />
                   ))}
                 </div>
-                <div className="mt-8 text-center">
-                  <Button variant="outline" asChild className="w-full sm:w-auto">
-                    <Link href={`/catalog?brandSlug=${encodeURIComponent(slug)}`}>
-                      Все товары {brand.name}
-                      <ExternalLink className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                </div>
+                {apiBrand?.id && (
+                  <div className="mt-8 text-center">
+                    <Button variant="outline" asChild className="w-full sm:w-auto">
+                      <Link href={`/catalog?brandId=${apiBrand.id}`}>
+                        Все товары {brand.name}
+                        <ExternalLink className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </div>
+                )}
               </>
             ) : (
               <Card>
