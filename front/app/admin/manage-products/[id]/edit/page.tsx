@@ -20,6 +20,7 @@ import { SpecsEditor, specsItemsToRecord, specsRecordToItems } from '@/component
 import { useProduct, useUpdateProduct } from '@/lib/hooks/use-products';
 import { useBrands } from '@/lib/hooks/use-brands';
 import { useCategories } from '@/lib/hooks/use-categories';
+import { getMainProductImage } from '@/lib/products';
 import type { MediaFile } from '@/lib/api/types';
 
 const productSchema = z.object({
@@ -96,7 +97,7 @@ export default function EditProductPage() {
         : 'DRAFT';
       const hasStock = typeof product.stock === 'number';
       
-      const productMainImage = product.images?.find((img) => img.isMain) || product.images?.[0];
+      const productMainImage = getMainProductImage(product.images);
       if (productMainImage) {
         initialMainImageId.current = productMainImage.mediaFileId ?? null;
         setMainImage({

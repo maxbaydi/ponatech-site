@@ -1,8 +1,9 @@
 'use client';
 
 import { useMemo } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Minus, Plus, Send, ShoppingCart, Trash2 } from 'lucide-react';
+import { ArrowRight, Minus, Package, Plus, Send, ShoppingCart, Trash2 } from 'lucide-react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
@@ -11,8 +12,21 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ProductCard } from '@/components/catalog';
 import { getCartItemsCount, useCartStore } from '@/lib/cart';
+import { useCartRecommendations } from '@/lib/hooks/use-cart-recommendations';
 import { useProducts } from '@/lib/hooks/use-products';
 import { formatPrice } from '@/lib/utils';
+import type { Product, ProductStatus } from '@/lib/api/types';
+
+const RECOMMENDATIONS_LIMIT = 4;
+const POPULAR_PRODUCTS_LIMIT = 12;
+const PRODUCT_GRID_CLASSNAME = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6';
+const PRODUCT_STATUS_PUBLISHED: ProductStatus = 'PUBLISHED';
+const RECOMMENDATION_SKELETONS = Array.from({ length: RECOMMENDATIONS_LIMIT });
+const CART_ITEM_IMAGE_SIZE = 48;
+const CART_ITEM_IMAGE_SIZES = `${CART_ITEM_IMAGE_SIZE}px`;
+const CART_ITEM_IMAGE_WRAPPER_CLASS = 'h-12 w-12 rounded-md border border-border bg-background flex items-center justify-center overflow-hidden';
+const CART_ITEM_IMAGE_CLASS = 'h-12 w-12 object-contain';
+const CART_ITEM_IMAGE_ICON_CLASS = 'h-5 w-5 text-muted-foreground';
 
 function ProductCardSkeleton() {
   return (
@@ -27,31 +41,90 @@ function ProductCardSkeleton() {
   );
 }
 
+function ProductsGrid({ products }: { products: Product[] }) {
+  return (
+    <div className={PRODUCT_GRID_CLASSNAME}>
+      {products.map((product) => (
+        <ProductCard key={product.id} product={product} />
+      ))}
+    </div>
+  );
+}
+
+function ProductsGridSkeleton() {
+  return (
+    <div className={PRODUCT_GRID_CLASSNAME}>
+      {RECOMMENDATION_SKELETONS.map((_, index) => (
+        <ProductCardSkeleton key={index} />
+      ))}
+    </div>
+  );
+}
+
+function CatalogLinkButton() {
+  return (
+    <Button variant="outline" asChild size="sm">
+      <Link href="/catalog">
+        Весь каталог
+        <ArrowRight className="ml-2 h-4 w-4" />
+      </Link>
+    </Button>
+  );
+}
+
 export default function CartPage() {
   const items = useCartStore((state) => state.items);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const removeItem = useCartStore((state) => state.removeItem);
   const clear = useCartStore((state) => state.clear);
 
-  const cartItemIds = useMemo(() => new Set(items.map((item) => item.id)), [items]);
-  const primaryCategoryId = useMemo(() => {
-    const categoryIds = items.map((item) => item.categoryId).filter(Boolean);
-    return categoryIds[0];
-  }, [items]);
+  const hasItems = items.length > 0;
+  const cartItemIds = useMemo(() => new Set(items.map((item) => String(item.id))), [items]);
+  const hasCategoryInCart = useMemo(() => items.some((item) => Boolean(item.categoryId)), [items]);
 
-  const { data: productsPage, isLoading: isProductsLoading } = useProducts({ limit: 4, status: 'PUBLISHED' });
+  const { data: productsPage, isLoading: isProductsLoading } = useProducts({
+    limit: POPULAR_PRODUCTS_LIMIT,
+    status: PRODUCT_STATUS_PUBLISHED,
+  });
   const popularProducts = productsPage?.data ?? [];
 
-  const { data: similarProductsPage, isLoading: isSimilarLoading } = useProducts({
-    categoryId: primaryCategoryId,
-    limit: 8,
-    status: 'PUBLISHED',
-  });
+  const { data: recommendationsData, isLoading: isRecommendationsLoading } = useCartRecommendations(
+    { limit: RECOMMENDATIONS_LIMIT },
+    { enabled: hasItems },
+  );
 
-  const similarProducts = useMemo(() => {
-    const products = similarProductsPage?.data ?? [];
-    return products.filter((p) => !cartItemIds.has(p.id)).slice(0, 4);
-  }, [similarProductsPage, cartItemIds]);
+  const recommendations = useMemo(() => {
+    const products = recommendationsData?.items ?? [];
+    return products.filter((product) => !cartItemIds.has(String(product.id)));
+  }, [recommendationsData, cartItemIds]);
+
+  const filteredPopularProducts = useMemo(
+    () => popularProducts.filter((product) => !cartItemIds.has(String(product.id))),
+    [popularProducts, cartItemIds],
+  );
+
+  const popularProductsPreview = useMemo(
+    () => filteredPopularProducts.slice(0, RECOMMENDATIONS_LIMIT),
+    [filteredPopularProducts],
+  );
+
+  const recommendedProducts = useMemo(() => {
+    if (!hasItems) {
+      return popularProductsPreview;
+    }
+    if (recommendations.length >= RECOMMENDATIONS_LIMIT) {
+      return recommendations.slice(0, RECOMMENDATIONS_LIMIT);
+    }
+    const existingIds = new Set(recommendations.map((product) => String(product.id)));
+    const fill = filteredPopularProducts
+      .filter((product) => !existingIds.has(String(product.id)))
+      .slice(0, RECOMMENDATIONS_LIMIT - recommendations.length);
+    return [...recommendations, ...fill];
+  }, [filteredPopularProducts, hasItems, popularProductsPreview, recommendations]);
+
+  const isRecommendationLoading = hasItems
+    ? isRecommendationsLoading || (recommendations.length === 0 && isProductsLoading)
+    : isProductsLoading;
 
   const totalItems = useMemo(() => getCartItemsCount(items), [items]);
   const totals = useMemo(() => {
@@ -104,26 +177,13 @@ export default function CartPage() {
                     <h2 className="text-xl sm:text-2xl font-bold mb-1">Популярные товары</h2>
                     <p className="text-sm text-muted-foreground">Возможно, вас заинтересуют эти позиции</p>
                   </div>
-                  <Button variant="outline" asChild size="sm">
-                    <Link href="/catalog">
-                      Весь каталог
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
+                  <CatalogLinkButton />
                 </div>
 
                 {isProductsLoading ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                    {Array.from({ length: 4 }).map((_, i) => (
-                      <ProductCardSkeleton key={i} />
-                    ))}
-                  </div>
-                ) : popularProducts.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                    {popularProducts.map((product) => (
-                      <ProductCard key={product.id} product={product} />
-                    ))}
-                  </div>
+                  <ProductsGridSkeleton />
+                ) : popularProductsPreview.length > 0 ? (
+                  <ProductsGrid products={popularProductsPreview} />
                 ) : null}
               </section>
             </>
@@ -150,16 +210,33 @@ export default function CartPage() {
                         {items.map((item) => (
                           <TableRow key={item.id}>
                             <TableCell>
-                              <div className="min-w-0">
-                                <Link
-                                  href={`/catalog/${item.slug}`}
-                                  className="font-medium hover:text-primary transition-colors line-clamp-2"
-                                >
-                                  {item.title}
-                                </Link>
-                                {item.brandName && (
-                                  <p className="text-xs text-muted-foreground mt-1">Бренд: {item.brandName}</p>
-                                )}
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className={CART_ITEM_IMAGE_WRAPPER_CLASS}>
+                                  {item.imageUrl ? (
+                                    <Image
+                                      src={item.imageUrl}
+                                      alt={item.imageAlt ?? item.title}
+                                      width={CART_ITEM_IMAGE_SIZE}
+                                      height={CART_ITEM_IMAGE_SIZE}
+                                      sizes={CART_ITEM_IMAGE_SIZES}
+                                      className={CART_ITEM_IMAGE_CLASS}
+                                      unoptimized
+                                    />
+                                  ) : (
+                                    <Package className={CART_ITEM_IMAGE_ICON_CLASS} />
+                                  )}
+                                </div>
+                                <div className="min-w-0">
+                                  <Link
+                                    href={`/catalog/${item.slug}`}
+                                    className="font-medium hover:text-primary transition-colors line-clamp-2"
+                                  >
+                                    {item.title}
+                                  </Link>
+                                  {item.brandName && (
+                                    <p className="text-xs text-muted-foreground mt-1">Бренд: {item.brandName}</p>
+                                  )}
+                                </div>
                               </div>
                             </TableCell>
                             <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">
@@ -240,32 +317,19 @@ export default function CartPage() {
                 <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
                   <div>
                     <h2 className="text-xl sm:text-2xl font-bold mb-1">
-                      {primaryCategoryId ? 'Похожие товары' : 'Вам может понравиться'}
+                      {hasCategoryInCart ? 'Похожие товары' : 'Вам может понравиться'}
                     </h2>
                     <p className="text-sm text-muted-foreground">
-                      {primaryCategoryId ? 'Товары из той же категории' : 'Популярные позиции из каталога'}
+                      {hasCategoryInCart ? 'Товары из той же категории' : 'Популярные позиции из каталога'}
                     </p>
                   </div>
-                  <Button variant="outline" asChild size="sm">
-                    <Link href="/catalog">
-                      Весь каталог
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
+                  <CatalogLinkButton />
                 </div>
 
-                {(primaryCategoryId ? isSimilarLoading : isProductsLoading) ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                    {Array.from({ length: 4 }).map((_, i) => (
-                      <ProductCardSkeleton key={i} />
-                    ))}
-                  </div>
-                ) : (primaryCategoryId ? similarProducts : popularProducts.filter((p) => !cartItemIds.has(p.id)).slice(0, 4)).length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                    {(primaryCategoryId ? similarProducts : popularProducts.filter((p) => !cartItemIds.has(p.id)).slice(0, 4)).map((product) => (
-                      <ProductCard key={product.id} product={product} />
-                    ))}
-                  </div>
+                {isRecommendationLoading ? (
+                  <ProductsGridSkeleton />
+                ) : recommendedProducts.length > 0 ? (
+                  <ProductsGrid products={recommendedProducts} />
                 ) : null}
               </section>
             </>

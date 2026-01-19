@@ -1,4 +1,5 @@
 import { IsInt, IsOptional, IsString, Min } from 'class-validator';
+import type { ProductResponse } from '../../products/dto/product.dto';
 
 export class AddCartItemDto {
   @IsString()
@@ -26,8 +27,14 @@ export interface CartItemResponse {
   quantity: number;
   brandName?: string | null;
   categoryId?: string | null;
+  imageUrl?: string | null;
+  imageAlt?: string | null;
 }
 
 export interface CartResponse {
   items: CartItemResponse[];
+}
+
+export interface CartRecommendationsResponse {
+  items: ProductResponse[];
 }

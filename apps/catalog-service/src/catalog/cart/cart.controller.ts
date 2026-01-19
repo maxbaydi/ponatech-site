@@ -1,8 +1,20 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard, type RequestWithUser } from '../auth/jwt-auth.guard';
 import { CartService } from './cart.service';
-import { AddCartItemDto, CartResponse, UpdateCartItemDto } from './dto/cart.dto';
+import { AddCartItemDto, CartRecommendationsResponse, CartResponse, UpdateCartItemDto } from './dto/cart.dto';
 
 @ApiTags('cart')
 @Controller('cart')
@@ -13,6 +25,14 @@ export class CartController {
   @Get()
   async getCart(@Req() req: RequestWithUser): Promise<CartResponse> {
     return this.cartService.getCart(this.resolveUserId(req));
+  }
+
+  @Get('recommendations')
+  async getRecommendations(
+    @Req() req: RequestWithUser,
+    @Query('limit') limit?: string,
+  ): Promise<CartRecommendationsResponse> {
+    return this.cartService.getRecommendations(this.resolveUserId(req), limit);
   }
 
   @Post('items')

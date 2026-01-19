@@ -1,11 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { Eye } from 'lucide-react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { Eye, Minus, Plus, ShoppingCart } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button, type ButtonProps } from '@/components/ui/button';
 import { ImageCanvas } from '@/components/ui/image-canvas';
+import { createCartItemFromProduct, useCartStore } from '@/lib/cart';
+import { useAuth } from '@/lib/auth/auth-context';
+import { buildLoginRedirectUrl } from '@/lib/auth/login-redirect';
+import { getMainProductImage } from '@/lib/products';
 import { formatPrice } from '@/lib/utils';
 import type { Product } from '@/lib/api/types';
 
@@ -13,6 +18,13 @@ interface ProductCardProps {
   product: Product;
   viewMode?: 'grid' | 'list';
 }
+
+const DETAILS_LABEL = 'Подробнее';
+const ADD_TO_CART_LABEL = 'Добавить в корзину';
+const REMOVE_FROM_CART_LABEL = 'Удалить из корзины';
+const DETAILS_BUTTON_SIZE: ButtonProps['size'] = 'sm';
+const CART_BUTTON_SIZE: ButtonProps['size'] = 'sm';
+const CART_BUTTON_CLASS = 'shrink-0 gap-1 px-2';
 
 const htmlToText = (html?: string | null): string => {
   if (!html) return '';
@@ -24,8 +36,98 @@ const htmlToText = (html?: string | null): string => {
   }
 };
 
+type DetailsButtonProps = {
+  href: string;
+  size?: ButtonProps['size'];
+  variant?: ButtonProps['variant'];
+  className?: string;
+};
+
+function DetailsLinkContent() {
+  return (
+    <>
+      <Eye className="mr-2 h-4 w-4" />
+      {DETAILS_LABEL}
+    </>
+  );
+}
+
+function DetailsButton({ href, size = DETAILS_BUTTON_SIZE, variant, className }: DetailsButtonProps) {
+  return (
+    <Button asChild size={size} variant={variant} className={className}>
+      <Link href={href}>
+        <DetailsLinkContent />
+      </Link>
+    </Button>
+  );
+}
+
+type CartActionButtonProps = {
+  product: Product;
+  size?: ButtonProps['size'];
+};
+
+const CART_ACTIONS = {
+  add: {
+    label: ADD_TO_CART_LABEL,
+    variant: 'outline',
+    Icon: Plus,
+  },
+  remove: {
+    label: REMOVE_FROM_CART_LABEL,
+    variant: 'destructive',
+    Icon: Minus,
+  },
+} as const satisfies Record<
+  'add' | 'remove',
+  { label: string; variant: ButtonProps['variant']; Icon: typeof Plus }
+>;
+
+function CartActionButton({ product, size = CART_BUTTON_SIZE }: CartActionButtonProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const addItem = useCartStore((state) => state.addItem);
+  const removeItem = useCartStore((state) => state.removeItem);
+  const isCartLoading = useCartStore((state) => state.isLoading);
+  const isInCart = useCartStore((state) => state.items.some((item) => item.id === product.id));
+  const action = isInCart ? 'remove' : 'add';
+  const { Icon, label, variant } = CART_ACTIONS[action];
+
+  const handleCartAction = () => {
+    if (isAuthLoading) return;
+    if (!isAuthenticated) {
+      const currentSearch = searchParams.toString();
+      const nextHref = currentSearch ? `${pathname}?${currentSearch}` : pathname;
+      router.push(buildLoginRedirectUrl(nextHref));
+      return;
+    }
+    if (isInCart) {
+      removeItem(product.id);
+      return;
+    }
+    addItem(createCartItemFromProduct(product));
+  };
+
+  return (
+    <Button
+      type="button"
+      size={size}
+      variant={variant}
+      className={CART_BUTTON_CLASS}
+      aria-label={label}
+      onClick={handleCartAction}
+      disabled={isCartLoading || isAuthLoading}
+    >
+      <ShoppingCart />
+      <Icon />
+    </Button>
+  );
+}
+
 export function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
-  const mainImage = product.images?.find((img) => img.isMain) || product.images?.[0];
+  const mainImage = getMainProductImage(product.images);
   const descriptionText = htmlToText(product.description);
   const productHref = `/catalog/${product.slug}`;
 
@@ -58,14 +160,12 @@ export function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
                 </Badge>
               )}
             </div>
-            <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center justify-between mt-4 gap-3">
               <p className="font-bold text-xl text-primary">{formatPrice(product.price, product.currency)}</p>
-              <Button asChild size="sm">
-                <Link href={productHref}>
-                  <Eye className="mr-2 h-4 w-4" />
-                  Подробнее
-                </Link>
-              </Button>
+              <div className="flex items-center gap-2">
+                <DetailsButton href={productHref} />
+                <CartActionButton product={product} />
+              </div>
             </div>
           </CardContent>
         </div>
@@ -105,18 +205,13 @@ export function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
           )}
           <p className="font-bold text-lg text-primary">{formatPrice(product.price, product.currency)}</p>
         </div>
-        <div className="mt-4">
-          <Button
-            asChild
-            size="sm"
+        <div className="mt-4 flex items-center gap-2">
+          <DetailsButton
+            href={productHref}
             variant="outline"
-            className="w-full justify-center transition-colors hover:bg-primary hover:text-primary-foreground"
-          >
-            <Link href={productHref}>
-              <Eye className="mr-2 h-4 w-4" />
-              Подробнее
-            </Link>
-          </Button>
+            className="flex-1 justify-center transition-colors hover:bg-primary hover:text-primary-foreground"
+          />
+          <CartActionButton product={product} />
         </div>
       </CardContent>
     </Card>

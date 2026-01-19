@@ -9,6 +9,11 @@ export type CartWithItems = Prisma.CartGetPayload<{
         product: {
           include: {
             brand: true;
+            images: {
+              orderBy: {
+                order: Prisma.SortOrder;
+              };
+            };
           };
         };
       };
@@ -29,6 +34,11 @@ export class CartRepository {
             product: {
               include: {
                 brand: true,
+                images: {
+                  orderBy: {
+                    order: 'asc',
+                  },
+                },
               },
             },
           },

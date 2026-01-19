@@ -246,10 +246,20 @@ export interface CartItem {
   quantity: number;
   brandName?: string | null;
   categoryId?: string | null;
+  imageUrl?: string | null;
+  imageAlt?: string | null;
 }
 
 export interface CartResponse {
   items: CartItem[];
+}
+
+export interface CartRecommendationsResponse {
+  items: Product[];
+}
+
+export interface CartRecommendationsParams {
+  limit?: number;
 }
 
 export interface AddCartItemRequest {

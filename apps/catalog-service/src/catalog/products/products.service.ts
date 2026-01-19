@@ -19,6 +19,7 @@ import {
 } from './dto/product.dto';
 import { ExportProductsCsvDto, ImportProductsCsvDto, ImportProductsCsvResult, PRODUCT_CSV_COLUMNS } from './dto/products-csv.dto';
 import { slugify } from '../utils/slugify';
+import { getMainProductImage } from './product-image.utils';
 
 const CSV_REQUIRED_COLUMNS = ['name', 'article', 'price', 'brand'] as const;
 const DEFAULT_PRODUCT_CURRENCY = 'RUB';
@@ -192,7 +193,7 @@ export class ProductsService {
     });
 
     const rows = products.map((product) => {
-      const mainImage = product.images.find((img) => img.isMain) ?? product.images[0];
+      const mainImage = getMainProductImage(product.images);
       const values: Record<string, string> = {};
 
       for (const column of columns) {

@@ -6,6 +6,8 @@ import type {
   BatchOperationResult,
   Brand,
   CartResponse,
+  CartRecommendationsParams,
+  CartRecommendationsResponse,
   Category,
   CreateBrandRequest,
   CreateCategoryRequest,
@@ -479,6 +481,15 @@ class ApiClient {
 
   async getCart(): Promise<CartResponse> {
     return this.request<CartResponse>('/cart');
+  }
+
+  async getCartRecommendations(params?: CartRecommendationsParams): Promise<CartRecommendationsResponse> {
+    const query = new URLSearchParams();
+    if (params?.limit) {
+      query.set('limit', String(params.limit));
+    }
+    const queryString = query.toString();
+    return this.request<CartRecommendationsResponse>(`/cart/recommendations${queryString ? `?${queryString}` : ''}`);
   }
 
   async addCartItem(data: AddCartItemRequest): Promise<CartResponse> {

@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { apiClient } from '@/lib/api/client';
 import { isApiError } from '@/lib/api/errors';
 import type { CartItem, CartResponse, Product } from '@/lib/api/types';
+import { getMainProductImage } from '@/lib/products';
 
 type CartState = {
   items: CartItem[];
@@ -113,17 +114,23 @@ export const useCartStore = create<CartState>((set) => ({
   reset: () => set({ items: [], isLoading: false, isReady: false, error: null }),
 }));
 
-export const createCartItemFromProduct = (product: Product): CartItem => ({
-  id: product.id,
-  slug: product.slug,
-  sku: product.sku,
-  title: product.title,
-  price: product.price,
-  currency: product.currency,
-  quantity: 1,
-  brandName: product.brand?.name ?? undefined,
-  categoryId: product.categoryId ?? undefined,
-});
+export const createCartItemFromProduct = (product: Product): CartItem => {
+  const mainImage = getMainProductImage(product.images);
+
+  return {
+    id: product.id,
+    slug: product.slug,
+    sku: product.sku,
+    title: product.title,
+    price: product.price,
+    currency: product.currency,
+    quantity: 1,
+    brandName: product.brand?.name ?? undefined,
+    categoryId: product.categoryId ?? undefined,
+    imageUrl: mainImage?.url ?? null,
+    imageAlt: mainImage?.alt ?? null,
+  };
+};
 
 export const getCartItemsCount = (items: CartItem[]): number =>
   items.reduce((total, item) => total + item.quantity, 0);

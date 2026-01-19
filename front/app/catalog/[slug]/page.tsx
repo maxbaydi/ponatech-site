@@ -40,6 +40,7 @@ import DOMPurify from 'isomorphic-dompurify';
 import { SITE_CONTACTS } from '@/lib/site-contacts';
 import { createCartItemFromProduct, useCartStore } from '@/lib/cart';
 import { useAuth } from '@/lib/auth/auth-context';
+import { buildLoginRedirectUrl } from '@/lib/auth/login-redirect';
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
@@ -195,7 +196,7 @@ export default function ProductPage({ params }: ProductPageProps) {
     if (!product) return;
     if (isAuthLoading) return;
     if (!isAuthenticated) {
-      router.push(`/login?next=${encodeURIComponent(`/catalog/${slug}`)}`);
+      router.push(buildLoginRedirectUrl(`/catalog/${slug}`));
       return;
     }
     addItem(createCartItemFromProduct(product));
