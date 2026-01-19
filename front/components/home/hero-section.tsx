@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Globe, Shield, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useEffect, useState } from 'react';
 import heroSectionCollage from '@/assets/herosection-1.jpg';
 import abbLogo from '@/assets/ABB.png';
 import ciscoLogo from '@/assets/cisco.png';
@@ -12,8 +13,73 @@ import omronLogo from '@/assets/omron.png';
 import sickLogo from '@/assets/sick.png';
 import siemensLogo from '@/assets/siemens.png';
 import wagoLogo from '@/assets/wago.png';
+import yaskawaLogo from '@/assets/yaskawa.png';
+
+const LOGOS = [
+  { id: 'omron', src: omronLogo, alt: 'Omron', opacity: 'opacity-70' },
+  { id: 'cisco', src: ciscoLogo, alt: 'Cisco', opacity: 'opacity-70' },
+  { id: 'sick', src: sickLogo, alt: 'SICK', opacity: 'opacity-60' },
+  { id: 'abb', src: abbLogo, alt: 'ABB', opacity: 'opacity-70' },
+  { id: 'wago', src: wagoLogo, alt: 'WAGO', opacity: 'opacity-70' },
+  { id: 'siemens', src: siemensLogo, alt: 'Siemens', opacity: 'opacity-70' },
+  { id: 'yaskawa', src: yaskawaLogo, alt: 'Yaskawa', opacity: 'opacity-70' },
+];
+
+const LogoContainer = ({ 
+  logo,
+  index, 
+  visible,
+  className, 
+  imageClassName 
+}: { 
+  logo: typeof LOGOS[number],
+  index: number, 
+  visible: boolean,
+  className: string, 
+  imageClassName?: string 
+}) => {
+  return (
+    <motion.div
+      className={className}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: visible ? 1 : 0 }}
+      transition={{ duration: 0.5, delay: visible ? index * 0.1 : (6 - index) * 0.1 }}
+    >
+      <Image
+        src={logo.src}
+        alt={logo.alt}
+        className={`${imageClassName || 'h-8 w-auto'} brightness-0 invert ${logo.opacity}`}
+      />
+    </motion.div>
+  );
+};
 
 export function HeroSection() {
+  const [logoOrder, setLogoOrder] = useState([0, 1, 2, 3, 4, 5, 6]);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        setLogoOrder((prev) => {
+          // Shuffle the array to swap positions
+          const newOrder = [...prev];
+          for (let i = newOrder.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [newOrder[i], newOrder[j]] = [newOrder[j], newOrder[i]];
+          }
+          return newOrder;
+        });
+        setVisible(true);
+      }, 1000); // Wait for fade out
+    }, 5000); // 5 seconds interval
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const getLogo = (index: number) => LOGOS[logoOrder[index]];
+
   return (
     <section className="relative w-full min-h-[600px] lg:min-h-[700px] flex items-center justify-center overflow-hidden bg-slate-900 py-12 md:py-24">
       {/* Background with Overlay */}
@@ -33,39 +99,29 @@ export function HeroSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center h-full">
           {/* Left Column */}
           <div className="flex flex-col gap-8 relative">
-            {/* Top Logos (Omron) */}
+            {/* Slot 0: Top Logos (Omron spot) */}
             <div className="flex items-center gap-8 mb-2">
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <Image
-                  src={omronLogo}
-                  alt="Omron"
-                  className="h-8 w-auto brightness-0 invert opacity-70"
-                />
-              </motion.div>
+              <LogoContainer 
+                logo={getLogo(0)}
+                index={0} 
+                visible={visible}
+                className="" 
+              />
             </div>
 
-            {/* Cisco Logo (Moved to center-ish) */}
-             <motion.div
-                className="absolute top-0 right-0 lg:-right-20"
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-              >
-                <Image
-                  src={ciscoLogo}
-                  alt="Cisco"
-                  className="h-6 w-auto brightness-0 invert opacity-70"
-                />
-              </motion.div>
+            {/* Slot 1: Cisco Logo (Moved to center-ish) */}
+            <LogoContainer 
+              logo={getLogo(1)}
+              index={1} 
+              visible={visible}
+              className="absolute top-0 right-0 lg:-right-20" 
+              imageClassName="h-6 w-auto"
+            />
 
             {/* Main Title */}
             <div>
               <motion.h1
-                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight text-white mb-2"
+                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight mb-2 animate-text-shimmer"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
@@ -110,82 +166,29 @@ export function HeroSection() {
               </Button>
             </motion.div>
 
-            {/* Bottom Logo (Sick) - Moved right */}
-            <motion.div
-              className="mt-8 ml-24"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-            >
-              <Image
-                src={sickLogo}
-                alt="SICK"
-                className="h-8 w-auto brightness-0 invert opacity-60"
-              />
-            </motion.div>
+            {/* Slot 2: Bottom Logo (Sick spot) - Moved right */}
+            <LogoContainer 
+              logo={getLogo(2)}
+              index={2} 
+              visible={visible}
+              className="mt-8 ml-24" 
+            />
           </div>
 
           {/* Right Column */}
           <div className="flex flex-col h-full relative min-h-[400px] lg:min-h-full">
-            {/* Top Right Logo (ABB) */}
-            <motion.div
-              className="absolute top-0 right-0"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <Image
-                src={abbLogo}
-                alt="ABB"
-                className="h-10 w-auto brightness-0 invert opacity-70"
-              />
-            </motion.div>
-
-            {/* Description Text */}
-            <motion.div
-              className="mt-16 lg:mt-24 ml-auto max-w-md text-right"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              <p className="text-white/80 text-lg leading-relaxed">
-                PONA TECH обеспечивает прямые закупки и международные поставки
-                промышленной автоматизации, ИТ-инфраструктуры и комплектующих с
-                контролем качества и оптимальными сроками.
-              </p>
-            </motion.div>
-
-            {/* Wago Logo (Moved to center-ish) */}
-             <motion.div
-              className="absolute left-0 top-1/2 -translate-y-1/2 hidden lg:block"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-            >
-              <Image
-                src={wagoLogo}
-                alt="WAGO"
-                className="h-8 w-auto brightness-0 invert opacity-70"
-              />
-            </motion.div>
-
-            {/* Middle Right Logo (Siemens) - Moved and resized */}
-            <motion.div
-              className="flex justify-end mt-12 mb-8 lg:mt-0 lg:mb-0 lg:absolute lg:bottom-12 lg:left-0"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-            >
-              <Image
-                src={siemensLogo}
-                alt="Siemens"
-                className="h-8 lg:h-12 w-auto brightness-0 invert opacity-70"
-              />
-            </motion.div>
+            {/* Slot 3: Top Right Logo (ABB spot) */}
+            <LogoContainer 
+              logo={getLogo(3)}
+              index={3} 
+              visible={visible}
+              className="absolute top-0 right-0" 
+              imageClassName="h-10 w-auto"
+            />
 
             {/* Features List */}
             <motion.div
-              className="ml-auto flex flex-col gap-6 mt-auto"
+              className="ml-auto flex flex-col gap-6 mt-16 lg:mt-24"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}
@@ -215,6 +218,32 @@ export function HeroSection() {
                 </div>
               </div>
             </motion.div>
+            
+            {/* Slot 6: Yaskawa spot - Under Features List */}
+            <LogoContainer 
+               logo={getLogo(6)}
+               index={6} 
+               visible={visible}
+               className="ml-auto mt-8 hidden lg:block"
+               imageClassName="h-12 w-auto"
+             />
+
+            {/* Slot 4: Wago Logo (Moved to center-ish) */}
+             <LogoContainer 
+               logo={getLogo(4)}
+               index={4} 
+               visible={visible}
+               className="absolute left-0 top-1/2 -translate-y-1/2 hidden lg:block"
+             />
+
+            {/* Slot 5: Middle Right Logo (Siemens spot) - Moved and resized */}
+            <LogoContainer 
+              logo={getLogo(5)}
+              index={5} 
+              visible={visible}
+              className="flex justify-end mt-12 mb-8 lg:mt-0 lg:mb-0 lg:absolute lg:bottom-12 lg:left-0" 
+              imageClassName="h-8 lg:h-12 w-auto"
+            />
           </div>
         </div>
       </div>

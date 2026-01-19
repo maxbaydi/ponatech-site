@@ -157,7 +157,32 @@
   }
 }
 
+@keyframes text-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
 @layer utilities {
+  .animate-text-shimmer {
+    background: linear-gradient(
+      115deg,
+      #ffffff 10%,
+      #60a5fa 35%,
+      #0066FF 50%,
+      #60a5fa 65%,
+      #ffffff 90%
+    );
+    background-size: 200% auto;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: text-shimmer 6s ease-in-out infinite alternate;
+  }
+
   .container-custom {
     @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
   }
