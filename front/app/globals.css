@@ -308,6 +308,10 @@
     @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
   }
 
+  .logo-primary {
+    filter: brightness(0) saturate(100%) invert(26%) sepia(98%) saturate(2878%) hue-rotate(213deg) brightness(101%) contrast(106%);
+  }
+
   .rich-text {
     @apply text-foreground;
   }

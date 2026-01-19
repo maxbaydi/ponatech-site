@@ -148,7 +148,7 @@ export function HeroSection() {
             >
               <Button
                 size="xl"
-                className="bg-gradient-to-r from-[#3399ff] to-[#0066FF] hover:from-[#0066FF] hover:to-[#0052CC] text-white rounded-md px-8 h-14 text-lg shadow-lg shadow-blue-500/25 transition-all duration-300 border-0"
+                className="bg-gradient-to-r from-[#3399ff] to-[#0066FF] hover:from-[#0066FF] hover:to-[#0052CC] text-white px-8 h-14 text-lg shadow-lg shadow-blue-500/25 transition-all duration-300 border-0"
                 asChild
               >
                 <Link href="/catalog">
@@ -159,7 +159,7 @@ export function HeroSection() {
               <Button
                 size="xl"
                 variant="outline"
-                className="bg-white text-black border-white hover:bg-gray-100 rounded-md px-8 h-14 text-lg"
+                className="bg-white text-black border-white hover:bg-gray-100 px-8 h-14 text-lg"
                 asChild
               >
                 <Link href="/request">Оставить заявку</Link>

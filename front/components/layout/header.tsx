@@ -162,24 +162,24 @@ export function Header() {
         </div>
       </div>
 
-      <header className="w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="w-full border-b border-border bg-background">
         <div className="container-custom">
-          <div className="flex h-16 items-center gap-3">
-          <div className="flex items-center gap-3">
+          <div className="flex h-20 items-center gap-4">
+          <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center">
               <Image
                 src="/assets/ponatech-logo-rectangular.PNG"
                 alt="Pona Tech"
-                width={140}
-                height={40}
-                className="h-8 w-auto sm:h-10"
+                width={160}
+                height={48}
+                className="h-10 w-auto sm:h-12 logo-primary"
                 priority
               />
             </Link>
 
-            <Button asChild size="lg" className="hidden sm:inline-flex">
+            <Button asChild size="lg" className="hidden sm:inline-flex h-12 px-6 text-base">
               <Link href={CATALOG_PATH}>
-                <LayoutGrid />
+                <LayoutGrid className="h-5 w-5" />
                 Каталог
               </Link>
             </Button>
@@ -192,12 +192,12 @@ export function Header() {
               runSearch();
             }}
           >
-            <div className="flex h-10 w-full max-w-2xl lg:max-w-3xl items-center rounded-xl border-2 border-primary bg-background px-1 gap-1">
+            <div className="flex h-12 w-full max-w-2xl lg:max-w-3xl items-center rounded-xl border-2 border-primary bg-background px-1.5 gap-1">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="flex h-8 items-center gap-2 rounded-lg bg-[#eff3f6] px-3 text-sm font-medium text-foreground hover:bg-[#e4e9f0] transition-colors focus:outline-none shrink-0"
+                    className="-mx-[3px] flex h-10 items-center gap-2 rounded-lg bg-[#eff3f6] px-4 text-sm font-medium text-foreground hover:bg-[#e4e9f0] transition-colors focus:outline-none shrink-0"
                   >
                     <span className="hidden lg:inline">Бренды</span>
                     <span className="lg:hidden">Бренд</span>
@@ -251,10 +251,10 @@ export function Header() {
               <Button
                 type="submit"
                 size="icon"
-                className="h-8 w-12 rounded-lg bg-primary hover:bg-primary-dark text-white shrink-0"
+                className="-mx-[3px] h-10 w-14 rounded-lg bg-primary hover:bg-primary-dark text-white shrink-0"
                 aria-label="Поиск"
               >
-                <Search className="h-6 w-6" />
+                <Search className="h-5 w-5" />
               </Button>
             </div>
           </form>
@@ -292,10 +292,10 @@ export function Header() {
               </DropdownMenu>
             ) : (
               <div className="hidden sm:flex items-center gap-2">
-                <Button variant="ghost" asChild>
+                <Button variant="ghost" asChild className="h-12">
                   <Link href="/login">Войти</Link>
                 </Button>
-                <Button asChild>
+                <Button asChild className="h-12">
                   <Link href="/register">Регистрация</Link>
                 </Button>
               </div>
@@ -312,7 +312,7 @@ export function Header() {
               </Link>
             </Button>
 
-            <Button variant="secondary" asChild className="hidden md:flex">
+            <Button variant="secondary" asChild className="hidden md:flex h-12">
               <Link href={REQUEST_PATH}>Оставить заявку</Link>
             </Button>
 
