@@ -17,6 +17,7 @@ out/
 # IDE/Editor
 .idea/
 .vscode/
+.cursor/
 *.swp
 *.swo
 *.sublime-workspace
