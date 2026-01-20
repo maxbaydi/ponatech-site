@@ -87,13 +87,15 @@ class ApiClient {
   }
 
   setTokens(accessToken: string, refreshToken: string): void {
-    Cookies.set(ACCESS_TOKEN_KEY, accessToken, { expires: 1 });
-    Cookies.set(REFRESH_TOKEN_KEY, refreshToken, { expires: 7 });
+    const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:';
+    const cookieOptions = { path: '/', secure: isSecure, sameSite: 'lax' as const };
+    Cookies.set(ACCESS_TOKEN_KEY, accessToken, { ...cookieOptions, expires: 1 });
+    Cookies.set(REFRESH_TOKEN_KEY, refreshToken, { ...cookieOptions, expires: 7 });
   }
 
   clearTokens(): void {
-    Cookies.remove(ACCESS_TOKEN_KEY);
-    Cookies.remove(REFRESH_TOKEN_KEY);
+    Cookies.remove(ACCESS_TOKEN_KEY, { path: '/' });
+    Cookies.remove(REFRESH_TOKEN_KEY, { path: '/' });
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}, isRetry = false): Promise<T> {
@@ -152,7 +154,7 @@ class ApiClient {
     return payload as T;
   }
 
-  private async requestForm<T>(endpoint: string, formData: FormData): Promise<T> {
+  private async requestForm<T>(endpoint: string, formData: FormData, isRetry = false): Promise<T> {
     const baseUrl = endpoint.startsWith('/auth/') ? this.authBaseUrl : this.catalogBaseUrl;
     const url = `${baseUrl}${endpoint}`;
     const accessToken = this.getAccessToken();
@@ -179,11 +181,16 @@ class ApiClient {
       });
     }
 
-    if (response.status === 401) {
+    if (response.status === 401 && !isRetry) {
       const refreshed = await this.refreshAccessToken();
       if (refreshed) {
-        return this.requestForm<T>(endpoint, formData);
+        return this.requestForm<T>(endpoint, formData, true);
       }
+      this.clearTokens();
+      throw toApiError({ status: 401, endpoint, payload: await safeParseResponseBody(response) });
+    }
+
+    if (response.status === 401) {
       this.clearTokens();
       throw toApiError({ status: 401, endpoint, payload: await safeParseResponseBody(response) });
     }
@@ -197,7 +204,7 @@ class ApiClient {
     return payload as T;
   }
 
-  private async requestBlob(endpoint: string, options: RequestInit = {}): Promise<Blob> {
+  private async requestBlob(endpoint: string, options: RequestInit = {}, isRetry = false): Promise<Blob> {
     const baseUrl = endpoint.startsWith('/auth/') ? this.authBaseUrl : this.catalogBaseUrl;
     const url = `${baseUrl}${endpoint}`;
     const accessToken = this.getAccessToken();
@@ -226,11 +233,16 @@ class ApiClient {
       });
     }
 
-    if (response.status === 401) {
+    if (response.status === 401 && !isRetry) {
       const refreshed = await this.refreshAccessToken();
       if (refreshed) {
-        return this.requestBlob(endpoint, options);
+        return this.requestBlob(endpoint, options, true);
       }
+      this.clearTokens();
+      throw toApiError({ status: 401, endpoint, payload: await safeParseResponseBody(response) });
+    }
+
+    if (response.status === 401) {
       this.clearTokens();
       throw toApiError({ status: 401, endpoint, payload: await safeParseResponseBody(response) });
     }
