@@ -76,6 +76,7 @@ jobs:
         run: |
           ssh -i ~/.ssh/key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
             cd /opt
+            echo '${{ secrets.CR_PAT }}' | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
             export IMAGE_TAG=${{ github.sha }}
             docker compose pull
             docker compose up -d

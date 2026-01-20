@@ -22,5 +22,6 @@ COPY --from=builder /usr/src/app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /usr/src/app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /usr/src/app/dist ./dist
 COPY --from=builder /usr/src/app/proto ./proto
+COPY --from=builder /usr/src/app/apps/catalog-service/prisma ./prisma
 
 CMD ["node", "dist/apps/catalog-service/main.js"]
