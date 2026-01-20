@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, MoreHorizontal, Trash2, RotateCcw, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -94,6 +94,7 @@ const getPaginationRange = (current: number, total: number): Array<number | 'ell
 };
 
 export function DeletedProductsTable() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const displayCurrency = useDisplayCurrency();
 
