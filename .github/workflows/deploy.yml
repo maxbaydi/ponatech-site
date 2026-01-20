@@ -1,85 +1,86 @@
-name: Deploy to Production
+name: Build and Deploy
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 env:
-  DEPLOY_PATH: /opt/app
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    permissions:
+      contents: read
+      packages: write
 
-      - name: Setup SSH Key
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push auth-service
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/auth-service/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_PREFIX }}/ponatech-auth:${{ github.sha }},${{ env.IMAGE_PREFIX }}/ponatech-auth:latest
+
+      - name: Build and push catalog-service
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/catalog-service/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_PREFIX }}/ponatech-catalog:${{ github.sha }},${{ env.IMAGE_PREFIX }}/ponatech-catalog:latest
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./front
+          file: front/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_PREFIX }}/ponatech-frontend:${{ github.sha }},${{ env.IMAGE_PREFIX }}/ponatech-frontend:latest
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_AUTH_API_URL=${{ secrets.NEXT_PUBLIC_AUTH_API_URL }}
+            NEXT_PUBLIC_CATALOG_API_URL=${{ secrets.NEXT_PUBLIC_CATALOG_API_URL }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/key
+          chmod 600 ~/.ssh/key
           ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy to VPS
+      - name: Copy compose file
         run: |
-          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
-            set -e
-            
-            # Создаём директорию если не существует
-            mkdir -p ${{ env.DEPLOY_PATH }}
-            cd ${{ env.DEPLOY_PATH }}
-            
-            # Первичный клон или обновление
-            if [ ! -d ".git" ]; then
-              echo "📦 Первичное клонирование репозитория..."
-              cd /opt
-              rm -rf app
-              git clone ${{ secrets.REPO_URL }} app
-              cd app
-            else
-              echo "🔄 Обновление репозитория..."
-              git fetch origin
-              git reset --hard origin/main
-              git clean -fd
-            fi
-            
-            # Копируем .env если есть
-            if [ -f "/opt/.env.production" ]; then
-              cp /opt/.env.production .env
-            fi
-            
-            # Останавливаем контейнеры
-            echo "🛑 Останавливаем контейнеры..."
-            docker compose -f docker-compose.prod.yml down --remove-orphans || true
-            
-            # Собираем и запускаем
-            echo "🔨 Сборка образов..."
-            docker compose -f docker-compose.prod.yml build --no-cache
-            
-            # Запускаем сервисы
-            echo "🚀 Запуск сервисов..."
-            docker compose -f docker-compose.prod.yml up -d
-            
-            # Ждём готовности БД
-            echo "⏳ Ожидание готовности PostgreSQL..."
-            sleep 10
-            
-            # Запускаем миграции
-            echo "📊 Запуск миграций..."
-            docker compose -f docker-compose.prod.yml exec -T catalog-service npx prisma migrate deploy || true
-            
-            # Проверяем статус
-            echo "✅ Статус контейнеров:"
-            docker compose -f docker-compose.prod.yml ps
-            
-            echo "🎉 Деплой завершён!"
-          ENDSSH
+          scp -i ~/.ssh/key -P ${{ secrets.SSH_PORT }} docker-compose.prod.yml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/docker-compose.yaml
 
-      - name: Health Check
+      - name: Deploy
         run: |
-          sleep 30
-          curl -f https://${{ secrets.DOMAIN }}/api/catalog/health || echo "Health check pending..."
+          ssh -i ~/.ssh/key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
+            cd /opt
+            echo '${{ secrets.CR_PAT }}' | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+            export IMAGE_TAG=${{ github.sha }}
+            docker compose pull
+            docker compose up -d
+            sleep 15
+            docker compose exec -T catalog-service npx prisma migrate deploy || true
+            docker image prune -f
+          "
