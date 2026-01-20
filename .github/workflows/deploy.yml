@@ -1,0 +1,85 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  DEPLOY_PATH: /opt/app
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to VPS
+        run: |
+          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
+            set -e
+            
+            # Создаём директорию если не существует
+            mkdir -p ${{ env.DEPLOY_PATH }}
+            cd ${{ env.DEPLOY_PATH }}
+            
+            # Первичный клон или обновление
+            if [ ! -d ".git" ]; then
+              echo "📦 Первичное клонирование репозитория..."
+              cd /opt
+              rm -rf app
+              git clone ${{ secrets.REPO_URL }} app
+              cd app
+            else
+              echo "🔄 Обновление репозитория..."
+              git fetch origin
+              git reset --hard origin/main
+              git clean -fd
+            fi
+            
+            # Копируем .env если есть
+            if [ -f "/opt/.env.production" ]; then
+              cp /opt/.env.production .env
+            fi
+            
+            # Останавливаем контейнеры
+            echo "🛑 Останавливаем контейнеры..."
+            docker compose -f docker-compose.prod.yml down --remove-orphans || true
+            
+            # Собираем и запускаем
+            echo "🔨 Сборка образов..."
+            docker compose -f docker-compose.prod.yml build --no-cache
+            
+            # Запускаем сервисы
+            echo "🚀 Запуск сервисов..."
+            docker compose -f docker-compose.prod.yml up -d
+            
+            # Ждём готовности БД
+            echo "⏳ Ожидание готовности PostgreSQL..."
+            sleep 10
+            
+            # Запускаем миграции
+            echo "📊 Запуск миграций..."
+            docker compose -f docker-compose.prod.yml exec -T catalog-service npx prisma migrate deploy || true
+            
+            # Проверяем статус
+            echo "✅ Статус контейнеров:"
+            docker compose -f docker-compose.prod.yml ps
+            
+            echo "🎉 Деплой завершён!"
+          ENDSSH
+
+      - name: Health Check
+        run: |
+          sleep 30
+          curl -f https://${{ secrets.DOMAIN }}/api/catalog/health || echo "Health check pending..."

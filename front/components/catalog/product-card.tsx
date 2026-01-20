@@ -10,7 +10,7 @@ import { ImageCanvas } from '@/components/ui/image-canvas';
 import { createCartItemFromProduct, useCartStore } from '@/lib/cart';
 import { useAuth } from '@/lib/auth/auth-context';
 import { buildLoginRedirectUrl } from '@/lib/auth/login-redirect';
-import { getMainProductImage } from '@/lib/products';
+import { resolveProductImage } from '@/lib/products';
 import { formatPrice } from '@/lib/utils';
 import type { Product } from '@/lib/api/types';
 
@@ -127,7 +127,7 @@ function CartActionButton({ product, size = CART_BUTTON_SIZE }: CartActionButton
 }
 
 export function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
-  const mainImage = getMainProductImage(product.images);
+  const productImage = resolveProductImage(product);
   const descriptionText = htmlToText(product.description);
   const productHref = `/catalog/${product.slug}`;
 
@@ -136,7 +136,7 @@ export function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
       <Card className="group overflow-hidden card-hover">
         <div className="flex flex-col sm:flex-row">
           <div className="relative w-full sm:w-64 flex-shrink-0">
-            <ImageCanvas src={mainImage?.url} alt={product.title} />
+            <ImageCanvas src={productImage.src} alt={productImage.alt} />
             {product.brand && (
               <Badge variant="secondary" className="absolute top-3 left-3 z-10">
                 {product.brand.name}
@@ -177,7 +177,7 @@ export function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
     <Card className="group overflow-hidden card-hover h-full flex flex-col">
       <div className="relative">
         <Link href={productHref} className="block">
-          <ImageCanvas src={mainImage?.url} alt={product.title} />
+          <ImageCanvas src={productImage.src} alt={productImage.alt} />
         </Link>
         {product.brand && (
           <Badge variant="secondary" className="absolute top-3 left-3 z-10">

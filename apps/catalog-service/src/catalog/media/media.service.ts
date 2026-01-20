@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Readable } from 'stream';
 import { MinioService } from '../../minio/minio.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import { MediaRepository } from './media.repository';
 import {
   MediaFileResponse,
@@ -22,6 +23,7 @@ export class MediaService {
   constructor(
     private readonly minioService: MinioService,
     private readonly mediaRepository: MediaRepository,
+    private readonly prisma: PrismaService,
   ) {}
 
   async findAll(query: MediaFilesQueryDto): Promise<PaginatedMediaFilesResponse> {
@@ -121,7 +123,11 @@ export class MediaService {
   async delete(id: string): Promise<void> {
     const file = await this.findOne(id);
     await this.minioService.delete(file.filename);
-    await this.mediaRepository.delete(id);
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.productImage.deleteMany({ where: { mediaFileId: id } });
+      await tx.mediaFile.delete({ where: { id } });
+    });
   }
 
   async deleteBatch(ids: string[]): Promise<BatchOperationResult> {
@@ -151,7 +157,10 @@ export class MediaService {
       };
     }
 
-    const result = await this.mediaRepository.deleteBatch(deletedIds);
+    const result = await this.prisma.$transaction(async (tx) => {
+      await tx.productImage.deleteMany({ where: { mediaFileId: { in: deletedIds } } });
+      return tx.mediaFile.deleteMany({ where: { id: { in: deletedIds } } });
+    });
 
     return {
       count: result.count,

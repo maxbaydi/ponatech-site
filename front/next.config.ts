@@ -12,6 +12,7 @@ const resolvedCatalogApiUrl = process.env.NEXT_PUBLIC_CATALOG_API_URL ?? resolve
 const resolvedAuthApiUrl = process.env.NEXT_PUBLIC_AUTH_API_URL ?? DEFAULT_AUTH_API_URL;
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   turbopack: {
     root: path.join(__dirname, '..'),
   },
@@ -25,6 +26,11 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: '**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'minio',
+        port: '9000',
       },
     ],
   },

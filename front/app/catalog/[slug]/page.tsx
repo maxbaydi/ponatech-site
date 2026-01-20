@@ -36,6 +36,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductCard } from '@/components/catalog';
 import { useProductBySlug, useProducts } from '@/lib/hooks/use-products';
 import { useCategories } from '@/lib/hooks/use-categories';
+import { resolveProductImage } from '@/lib/products';
 import { formatPrice } from '@/lib/utils';
 import type { ProductImage, Category } from '@/lib/api/types';
 
@@ -163,7 +164,15 @@ function ImageGallery({ images, title }: { images: ProductImage[]; title: string
   );
 }
 
-function ProductPlaceholder({ title }: { title: string }) {
+function ProductPlaceholder({
+  title,
+  logoSrc,
+  logoAlt,
+}: {
+  title: string;
+  logoSrc?: string | null;
+  logoAlt?: string;
+}) {
   return (
     <motion.div
       className="aspect-square bg-gradient-to-br from-muted to-muted/50 rounded-2xl flex flex-col items-center justify-center"
@@ -171,7 +180,15 @@ function ProductPlaceholder({ title }: { title: string }) {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4 }}
     >
-      <Package className="w-16 h-16 sm:w-24 sm:h-24 text-muted-foreground/20 mb-4" />
+      {logoSrc ? (
+        <img
+          src={logoSrc}
+          alt={logoAlt ?? title}
+          className="w-24 h-24 sm:w-32 sm:h-32 object-contain mb-4"
+        />
+      ) : (
+        <Package className="w-16 h-16 sm:w-24 sm:h-24 text-muted-foreground/20 mb-4" />
+      )}
       <p className="text-muted-foreground/50 text-sm">Изображение недоступно</p>
     </motion.div>
   );
@@ -240,6 +257,7 @@ export default function ProductPage({ params }: ProductPageProps) {
   const filteredRelated = relatedProductsPage?.data.filter((p) => p.id !== product?.id).slice(0, 4);
   const hasCharacteristics = Boolean(product?.characteristics?.trim());
   const hasSpecs = Boolean(product?.specs && Object.keys(product.specs).length > 0);
+  const placeholderImage = product ? resolveProductImage(product) : null;
 
   if (error) {
     notFound();
@@ -306,7 +324,11 @@ export default function ProductPage({ params }: ProductPageProps) {
                 {product.images && product.images.length > 0 ? (
                   <ImageGallery images={product.images} title={product.title} />
                 ) : (
-                  <ProductPlaceholder title={product.title} />
+                  <ProductPlaceholder
+                    title={product.title}
+                    logoSrc={placeholderImage?.src}
+                    logoAlt={placeholderImage?.alt}
+                  />
                 )}
 
                 <motion.div
