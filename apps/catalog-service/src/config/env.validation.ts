@@ -17,5 +17,6 @@ export const catalogValidationSchema = Joi.object({
   MINIO_PUBLIC_ENDPOINT: Joi.string().default(Joi.ref('MINIO_ENDPOINT')),
   MINIO_PUBLIC_PORT: Joi.number().port().default(Joi.ref('MINIO_PORT')),
   MINIO_PUBLIC_USE_SSL: Joi.boolean().default(Joi.ref('MINIO_USE_SSL')),
+  MINIO_PUBLIC_PATH_PREFIX: Joi.string().allow('').default(''),
   MINIO_PUBLIC_READ: Joi.boolean().default(true),
 });

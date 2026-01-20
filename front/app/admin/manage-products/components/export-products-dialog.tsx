@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -33,6 +34,8 @@ const CSV_COLUMNS: ProductCsvColumn[] = [
 ];
 
 const ALL_BRANDS_VALUE = '__ALL_BRANDS__';
+const EXPORT_DIALOG_DESCRIPTION =
+  'Выберите колонки и диапазон выгрузки. Можно экспортировать весь каталог или только выделенные позиции.';
 
 interface ExportProductsDialogProps {
   searchQuery?: string;
@@ -93,6 +96,7 @@ export function ExportProductsDialog({ searchQuery, selectedIds }: ExportProduct
       <DialogContent className="w-full max-w-md">
         <DialogHeader>
           <DialogTitle>Экспорт товаров в CSV</DialogTitle>
+          <DialogDescription>{EXPORT_DIALOG_DESCRIPTION}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">

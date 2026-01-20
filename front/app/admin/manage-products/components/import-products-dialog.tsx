@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -45,6 +46,8 @@ const CSV_COLUMNS: ProductCsvColumn[] = [
 
 const CSV_REQUIRED_COLUMNS: ProductCsvColumn[] = ['name', 'article', 'price', 'brand'];
 const DEFAULT_IMPORT_STATUS: ProductStatus = 'PUBLISHED';
+const IMPORT_DIALOG_DESCRIPTION =
+  'Загрузите CSV-файл с товарами. Поля name, article, price и brand обязательны для импорта.';
 
 export function ImportProductsDialog() {
   const importCsv = useImportProductsCsv();
@@ -133,6 +136,7 @@ export function ImportProductsDialog() {
       <DialogContent className="w-full sm:w-fit sm:min-w-[500px] max-w-[90vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Импорт товаров из CSV</DialogTitle>
+          <DialogDescription>{IMPORT_DIALOG_DESCRIPTION}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">

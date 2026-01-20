@@ -14,6 +14,7 @@ import {
   CreateProductDto,
   PaginatedResponse,
   ProductIdsDto,
+  ProductImageResponse,
   ProductResponse,
   UpdateProductDto,
 } from './dto/product.dto';
@@ -47,7 +48,8 @@ export class ProductsService {
   async findAll(
     filters?: Record<string, string | string[] | undefined>,
   ): Promise<PaginatedResponse<ProductResponse>> {
-    return this.productsRepository.findAll(filters);
+    const result = await this.productsRepository.findAll(filters);
+    return this.normalizePaginatedResponse(result);
   }
 
   async findOne(id: string): Promise<ProductResponse> {
@@ -57,7 +59,7 @@ export class ProductsService {
       throw new NotFoundException('Product not found');
     }
 
-    return product;
+    return this.normalizeProductResponse(product);
   }
 
   async findBySlug(slug: string): Promise<ProductResponse> {
@@ -67,7 +69,7 @@ export class ProductsService {
       throw new NotFoundException('Product not found');
     }
 
-    return product;
+    return this.normalizeProductResponse(product);
   }
 
   async create(dto: CreateProductDto): Promise<ProductResponse> {
@@ -109,11 +111,13 @@ export class ProductsService {
   async findAllDeleted(
     filters?: Record<string, string | string[] | undefined>,
   ): Promise<PaginatedResponse<ProductResponse>> {
-    return this.productsRepository.findAllDeleted(filters);
+    const result = await this.productsRepository.findAllDeleted(filters);
+    return this.normalizePaginatedResponse(result);
   }
 
   async restore(id: string): Promise<ProductResponse> {
-    return this.productsRepository.restoreOne(id);
+    const restored = await this.productsRepository.restoreOne(id);
+    return this.normalizeProductResponse(restored);
   }
 
   async restoreMany(dto: ProductIdsDto): Promise<BatchOperationResult> {
@@ -126,6 +130,36 @@ export class ProductsService {
 
   async hardDeleteMany(dto: ProductIdsDto): Promise<BatchOperationResult> {
     return this.productsRepository.hardDeleteMany(dto.ids);
+  }
+
+  private normalizePaginatedResponse(
+    response: PaginatedResponse<ProductResponse>,
+  ): PaginatedResponse<ProductResponse> {
+    return {
+      ...response,
+      data: response.data.map((product) => this.normalizeProductResponse(product)),
+    };
+  }
+
+  private normalizeProductResponse(product: ProductResponse): ProductResponse {
+    return {
+      ...product,
+      images: this.normalizeProductImages(product.images),
+    };
+  }
+
+  private normalizeProductImages(
+    images?: ProductImageResponse[],
+  ): ProductImageResponse[] | undefined {
+    if (!images) return images;
+    return images.map((image) => this.normalizeProductImage(image));
+  }
+
+  private normalizeProductImage(image: ProductImageResponse): ProductImageResponse {
+    return {
+      ...image,
+      url: this.mediaService.normalizePublicUrl(image.url),
+    };
   }
 
   async importCsv(buffer: Buffer, opts?: ImportProductsCsvDto): Promise<ImportProductsCsvResult> {

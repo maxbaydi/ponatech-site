@@ -12,6 +12,25 @@ import {
 import { Upload } from '@aws-sdk/lib-storage';
 import { Readable } from 'stream';
 
+const DEFAULT_HTTP_PORT = 80;
+const DEFAULT_HTTPS_PORT = 443;
+const DEFAULT_PUBLIC_PATH_PREFIX = '';
+const PATH_SEPARATOR = '/';
+const URL_SCHEME_SEPARATOR = '://';
+
+const normalizePathPrefix = (value?: string): string => {
+  if (!value) return DEFAULT_PUBLIC_PATH_PREFIX;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed === PATH_SEPARATOR) return DEFAULT_PUBLIC_PATH_PREFIX;
+  const withLeading = trimmed.startsWith(PATH_SEPARATOR) ? trimmed : `${PATH_SEPARATOR}${trimmed}`;
+  return withLeading.endsWith(PATH_SEPARATOR) ? withLeading.slice(0, -1) : withLeading;
+};
+
+const resolvePortSegment = (port: number, useSSL: boolean): string => {
+  const defaultPort = useSSL ? DEFAULT_HTTPS_PORT : DEFAULT_HTTP_PORT;
+  return port === defaultPort ? '' : `:${port}`;
+};
+
 export interface UploadResult {
   key: string;
   url: string;
@@ -28,6 +47,7 @@ export class MinioService implements OnModuleInit {
   private publicEndpoint: string;
   private publicPort: number;
   private publicUseSSL: boolean;
+  private publicPathPrefix: string;
   private publicRead: boolean;
 
   constructor(private readonly config: ConfigService) {
@@ -38,6 +58,9 @@ export class MinioService implements OnModuleInit {
     this.publicEndpoint = this.config.get<string>('MINIO_PUBLIC_ENDPOINT', this.endpoint);
     this.publicPort = this.config.get<number>('MINIO_PUBLIC_PORT', this.port);
     this.publicUseSSL = this.config.get<boolean>('MINIO_PUBLIC_USE_SSL', this.useSSL);
+    this.publicPathPrefix = normalizePathPrefix(
+      this.config.get<string>('MINIO_PUBLIC_PATH_PREFIX', DEFAULT_PUBLIC_PATH_PREFIX),
+    );
     this.publicRead = this.config.get<boolean>('MINIO_PUBLIC_READ', true);
 
     const protocol = this.useSSL ? 'https' : 'http';
@@ -166,8 +189,33 @@ export class MinioService implements OnModuleInit {
   }
 
   getPublicUrl(key: string): string {
+    const baseUrl = this.getPublicBaseUrl();
+    return `${baseUrl}${PATH_SEPARATOR}${this.bucket}${PATH_SEPARATOR}${key}`;
+  }
+
+  normalizePublicUrl(url: string): string {
+    const key = this.extractKeyFromUrl(url);
+    if (!key) return url;
+    return this.getPublicUrl(key);
+  }
+
+  private getPublicBaseUrl(): string {
     const protocol = this.publicUseSSL ? 'https' : 'http';
-    return `${protocol}://${this.publicEndpoint}:${this.publicPort}/${this.bucket}/${key}`;
+    const portSegment = resolvePortSegment(this.publicPort, this.publicUseSSL);
+    return `${protocol}${URL_SCHEME_SEPARATOR}${this.publicEndpoint}${portSegment}${this.publicPathPrefix}`;
+  }
+
+  private extractKeyFromUrl(url: string): string | null {
+    try {
+      const parsed = new URL(url);
+      const pathParts = parsed.pathname.split(PATH_SEPARATOR).filter(Boolean);
+      if (pathParts.length < 2 || pathParts[0] !== this.bucket) {
+        return null;
+      }
+      return pathParts.slice(1).join(PATH_SEPARATOR);
+    } catch {
+      return null;
+    }
   }
 
   private generateKey(filename: string): string {

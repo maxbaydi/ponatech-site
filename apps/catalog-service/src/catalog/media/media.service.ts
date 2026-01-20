@@ -26,8 +26,13 @@ export class MediaService {
     private readonly prisma: PrismaService,
   ) {}
 
+  normalizePublicUrl(url: string): string {
+    return this.minioService.normalizePublicUrl(url);
+  }
+
   async findAll(query: MediaFilesQueryDto): Promise<PaginatedMediaFilesResponse> {
-    return this.mediaRepository.findAll(query);
+    const result = await this.mediaRepository.findAll(query);
+    return this.normalizeMediaFilesResponse(result);
   }
 
   async findOne(id: string): Promise<MediaFileResponse> {
@@ -35,7 +40,7 @@ export class MediaService {
     if (!file) {
       throw new NotFoundException('Media file not found');
     }
-    return file;
+    return this.normalizeMediaFile(file);
   }
 
   async upload(
@@ -52,7 +57,7 @@ export class MediaService {
 
     const dimensions = await this.getImageDimensions(file.buffer);
 
-    return this.mediaRepository.create({
+    const created = await this.mediaRepository.create({
       filename: result.key,
       originalName: file.originalname,
       mimeType: file.mimetype,
@@ -62,12 +67,13 @@ export class MediaService {
       height: dimensions?.height,
       alt,
     });
+    return this.normalizeMediaFile(created);
   }
 
   async uploadFromUrl(url: string, alt?: string): Promise<MediaFileResponse> {
     const existingFile = await this.mediaRepository.findByUrl(url);
     if (existingFile) {
-      return existingFile;
+      return this.normalizeMediaFile(existingFile);
     }
 
     try {
@@ -97,7 +103,7 @@ export class MediaService {
       const result = await this.minioService.upload(buffer, filename, mimeType);
       const dimensions = await this.getImageDimensions(buffer);
 
-      return this.mediaRepository.create({
+      const created = await this.mediaRepository.create({
         filename: result.key,
         originalName: filename,
         mimeType,
@@ -107,6 +113,7 @@ export class MediaService {
         height: dimensions?.height,
         alt,
       });
+      return this.normalizeMediaFile(created);
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
@@ -117,7 +124,8 @@ export class MediaService {
 
   async update(id: string, dto: UpdateMediaFileDto): Promise<MediaFileResponse> {
     await this.findOne(id);
-    return this.mediaRepository.update(id, dto);
+    const updated = await this.mediaRepository.update(id, dto);
+    return this.normalizeMediaFile(updated);
   }
 
   async delete(id: string): Promise<void> {
@@ -178,7 +186,13 @@ export class MediaService {
       files: ids.flatMap((id) => {
         const file = filesById.get(id);
         return file
-          ? [{ id: file.id, url: file.url, filename: file.originalName }]
+          ? [
+              {
+                id: file.id,
+                url: this.normalizePublicUrl(file.url),
+                filename: file.originalName,
+              },
+            ]
           : [];
       }),
       missingIds: missingIds.length > 0 ? missingIds : undefined,
@@ -264,6 +278,20 @@ export class MediaService {
       buffer[10] === 0x42 &&
       buffer[11] === 0x50
     );
+  }
+
+  private normalizeMediaFilesResponse(response: PaginatedMediaFilesResponse): PaginatedMediaFilesResponse {
+    return {
+      ...response,
+      data: response.data.map((file) => this.normalizeMediaFile(file)),
+    };
+  }
+
+  private normalizeMediaFile(file: MediaFileResponse): MediaFileResponse {
+    return {
+      ...file,
+      url: this.normalizePublicUrl(file.url),
+    };
   }
 
   private getPngDimensions(buffer: Buffer): { width: number; height: number } {
