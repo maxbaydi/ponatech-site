@@ -189,3 +189,13 @@ model SupplyRequest {
 
   @@map("supply_requests")
 }
+
+model SiteSetting {
+  id              String   @id @default(uuid())
+  key             String   @unique
+  displayCurrency String   @default("RUB")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("site_settings")
+}

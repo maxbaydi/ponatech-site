@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { motion, useInView } from 'framer-motion';
 import { Building2, Globe2, Users, Camera } from 'lucide-react';
 import { BRAND_COUNT } from '@/data/brands';
-import numberSectionBg from '@/assets/number-section-bg.png';
+import numberSectionBg from '@/assets/number-section-bg.webp';
 
 interface StatItemProps {
   icon: React.ReactNode;

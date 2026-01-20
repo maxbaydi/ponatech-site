@@ -26,16 +26,16 @@ const GRID_CONFIG: CategoryGridItem[] = [
 ];
 
 const CATEGORY_IMAGES: Record<string, string | null> = {
-  'kontrollery-i-sistemy-upravleniya': '/assets/categories/control.png',
-  'privodnaya-tehnika': '/assets/categories/privod-tehnika.png',
-  'reduktory-i-mehanicheskaya-peredacha': '/assets/categories/reductor-mehanich-peredacha.png',
-  'pnevmatika-i-gidravlika': '/assets/categories/pnevmatika-gidravlika.png',
+  'kontrollery-i-sistemy-upravleniya': '/assets/categories/control.webp',
+  'privodnaya-tehnika': '/assets/categories/privod-tehnika.webp',
+  'reduktory-i-mehanicheskaya-peredacha': '/assets/categories/reductor-mehanich-peredacha.webp',
+  'pnevmatika-i-gidravlika': '/assets/categories/pnevmatika-gidravlika.webp',
   'datchiki-i-izmeritelnye-pribory': '/assets/categories/datchiki-pribory.webp',
-  'promyshlennye-soediniteli-i-klemmy': '/assets/categories/klemy.png',
-  'elektrotehnika-i-kommutacionnoe-oborudovanie': '/assets/categories/komutacionnoe-oborudovanie.png',
-  'istochniki-pitaniya-i-ibp': '/assets/categories/pitanie-ibp.png',
-  'servery-shd-i-setevoe-oborudovanie': '/assets/categories/server-shd.png',
-  'sistemy-videonablyudeniya-i-bezopasnosti': '/assets/categories/vidonabludanie-bezopassnost.png',
+  'promyshlennye-soediniteli-i-klemmy': '/assets/categories/klemy.webp',
+  'elektrotehnika-i-kommutacionnoe-oborudovanie': '/assets/categories/komutacionnoe-oborudovanie.webp',
+  'istochniki-pitaniya-i-ibp': '/assets/categories/pitanie-ibp.webp',
+  'servery-shd-i-setevoe-oborudovanie': '/assets/categories/server-shd.webp',
+  'sistemy-videonablyudeniya-i-bezopasnosti': '/assets/categories/vidonabludanie-bezopassnost.webp',
 };
 
 const PLACEHOLDER_EMOJIS: Record<string, string> = {

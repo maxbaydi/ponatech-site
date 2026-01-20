@@ -12,7 +12,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useBrands } from '@/lib/hooks/use-brands';
 import { useCategories } from '@/lib/hooks/use-categories';
+import { useDisplayCurrency } from '@/lib/hooks/use-site-settings';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getCurrencySymbol } from '@/lib/currency';
 import type { Category } from '@/lib/api/types';
 
 interface ProductFiltersProps {
@@ -218,6 +220,7 @@ function CategoryFilterList({ items, selectedIds, onToggle, emptyMessage, isLoad
 }
 
 function FilterContent() {
+  const displayCurrency = useDisplayCurrency();
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchParamsRef = useRef(searchParams);
@@ -239,6 +242,10 @@ function FilterContent() {
 
   const selectedBrandSet = useMemo(() => new Set(selectedBrands), [selectedBrands]);
   const selectedCategorySet = useMemo(() => new Set(selectedCategories), [selectedCategories]);
+  const priceLabel = useMemo(
+    () => PRICE_LABEL.replace('₽', getCurrencySymbol(displayCurrency)),
+    [displayCurrency]
+  );
 
   const filteredBrands = useMemo(() => {
     if (!brands) return [];
@@ -387,7 +394,7 @@ function FilterContent() {
         </Button>
       )}
 
-      <FilterSection label={PRICE_LABEL}>
+      <FilterSection label={priceLabel}>
         <div className="flex gap-2">
           <Input
             type="number"

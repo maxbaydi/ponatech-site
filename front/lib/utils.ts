@@ -10,6 +10,7 @@ export function formatPrice(price: number | string, currency = 'RUB'): string {
   return new Intl.NumberFormat('ru-RU', {
     style: 'currency',
     currency,
+    currencyDisplay: 'narrowSymbol',
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(numPrice);

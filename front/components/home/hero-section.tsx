@@ -7,13 +7,13 @@ import { ArrowRight, Globe, Shield, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import heroSectionCollage from '@/assets/herosection-1.jpg';
-import abbLogo from '@/assets/ABB.png';
-import ciscoLogo from '@/assets/cisco.png';
-import omronLogo from '@/assets/omron.png';
-import sickLogo from '@/assets/sick.png';
-import siemensLogo from '@/assets/siemens.png';
-import wagoLogo from '@/assets/wago.png';
-import yaskawaLogo from '@/assets/yaskawa.png';
+import abbLogo from '@/assets/ABB.webp';
+import ciscoLogo from '@/assets/cisco.webp';
+import omronLogo from '@/assets/omron.webp';
+import sickLogo from '@/assets/sick.webp';
+import siemensLogo from '@/assets/siemens.webp';
+import wagoLogo from '@/assets/wago.webp';
+import yaskawaLogo from '@/assets/yaskawa.webp';
 
 const LOGOS = [
   { id: 'omron', src: omronLogo, alt: 'Omron', opacity: 'opacity-70' },

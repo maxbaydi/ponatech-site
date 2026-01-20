@@ -168,7 +168,7 @@ export function Header() {
           <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center">
               <Image
-                src="/assets/ponatech-logo-rectangular.PNG"
+                src="/assets/ponatech-logo-rectangular.webp"
                 alt="Pona Tech"
                 width={160}
                 height={48}

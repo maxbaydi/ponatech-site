@@ -1,5 +1,15 @@
 export type ProductStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'MANAGER' | 'CUSTOMER';
+export type DisplayCurrency = 'RUB' | 'CNY';
+
+export interface SiteSettings {
+  displayCurrency: DisplayCurrency;
+  updatedAt?: string;
+}
+
+export interface UpdateSiteSettingsRequest {
+  displayCurrency: DisplayCurrency;
+}
 
 export interface Brand {
   id: string;

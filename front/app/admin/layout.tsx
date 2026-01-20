@@ -10,6 +10,7 @@ import {
   Building2,
   FolderTree,
   Image as ImageIcon,
+  Settings,
   Users,
   ChevronLeft,
   Menu,
@@ -30,18 +31,20 @@ const NAV_ITEMS = [
   { icon: ImageIcon, label: 'Медиабиблиотека', href: '/admin/media' },
 ];
 
+const SUPER_ADMIN_NAV_ITEMS = [{ icon: Settings, label: 'Настройки', href: '/admin/settings' }];
+
 const ADMIN_NAV_ITEMS = [{ icon: Users, label: 'Пользователи', href: '/admin/users' }];
 
 function AdminSidebar({ className }: { className?: string }) {
   const pathname = usePathname();
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, isSuperAdmin } = useAuth();
 
   return (
     <div className={cn('flex flex-col h-full', className)}>
       <div className="p-4">
         <Link href="/" className="flex items-center gap-2">
           <Image
-            src="/assets/ponatech-logo-rectangular.PNG"
+            src="/assets/ponatech-logo-rectangular.webp"
             alt="Pona Tech"
             width={120}
             height={34}
@@ -69,6 +72,23 @@ function AdminSidebar({ className }: { className?: string }) {
               {item.label}
             </Link>
           ))}
+
+          {isSuperAdmin &&
+            SUPER_ADMIN_NAV_ITEMS.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                  pathname === item.href || pathname.startsWith(item.href + '/')
+                    ? 'bg-primary text-white'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                )}
+              >
+                <item.icon className="h-4 w-4" />
+                {item.label}
+              </Link>
+            ))}
 
           {isAdmin && (
             <>

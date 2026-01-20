@@ -38,6 +38,8 @@ import {
 } from '@/lib/hooks/use-products';
 import { useBrands } from '@/lib/hooks/use-brands';
 import { useCategories } from '@/lib/hooks/use-categories';
+import { useDebouncedSearchParams } from '@/lib/hooks/use-debounced-search-params';
+import { useDisplayCurrency } from '@/lib/hooks/use-site-settings';
 import { formatPrice } from '@/lib/utils';
 import type { Product, ProductStatus, Category } from '@/lib/api/types';
 
@@ -112,6 +114,7 @@ const NO_CATEGORY_VALUE = '__NO_CATEGORY__';
 export default function ProductsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const displayCurrency = useDisplayCurrency();
 
   const page = parsePositiveInt(searchParams.get('page'), DEFAULT_PAGE);
   const limitRaw = parsePositiveInt(searchParams.get('limit'), DEFAULT_PAGE_SIZE);
@@ -119,8 +122,13 @@ export default function ProductsPage() {
     ? (limitRaw as (typeof PAGE_SIZE_OPTIONS)[number])
     : DEFAULT_PAGE_SIZE;
 
-  const [searchInput, setSearchInput] = useState(() => searchParams.get('search') ?? '');
-  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('search') ?? '');
+  const { searchInput, setSearchInput, searchQuery, buildUrlWithParams } = useDebouncedSearchParams({
+    basePath: '/admin/manage-products',
+    searchKey: 'search',
+    pageKey: 'page',
+    defaultPage: DEFAULT_PAGE,
+    delayMs: SEARCH_DEBOUNCE_MS,
+  });
 
   const brandIdFilterValue = searchParams.get('brandId') ?? ALL_BRANDS_VALUE;
   const categoryIdFilterValue = searchParams.get('categoryId') ?? ALL_CATEGORIES_VALUE;
@@ -171,31 +179,6 @@ export default function ProductsPage() {
 
   const [bulkCategoryOpen, setBulkCategoryOpen] = useState(false);
   const [bulkCategoryId, setBulkCategoryId] = useState<string>(NO_CATEGORY_VALUE);
-
-  const buildUrlWithParams = (updates: Record<string, string | number | undefined | null>) => {
-    const next = new URLSearchParams(searchParams.toString());
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value === undefined || value === null || value === '') {
-        next.delete(key);
-        return;
-      }
-      next.set(key, String(value));
-    });
-    const query = next.toString();
-    return `/admin/manage-products${query ? `?${query}` : ''}`;
-  };
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      const next = searchInput.trim();
-      setSearchQuery(next);
-      router.replace(buildUrlWithParams({ search: next || undefined, page: DEFAULT_PAGE }));
-    }, SEARCH_DEBOUNCE_MS);
-
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, [searchInput, router]);
 
   useEffect(() => {
     if (!products || products.length === 0) {
@@ -568,7 +551,7 @@ export default function ProductsPage() {
                       </TableCell>
                       <TableCell className="text-muted-foreground">{product.sku}</TableCell>
                       <TableCell>{product.brand?.name || '-'}</TableCell>
-                      <TableCell>{formatPrice(product.price, product.currency)}</TableCell>
+                      <TableCell>{formatPrice(product.price, displayCurrency)}</TableCell>
                       <TableCell>
                         <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
                       </TableCell>

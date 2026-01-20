@@ -9,7 +9,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="relative z-10 flex flex-col justify-between p-12 text-white">
           <Link href="/">
             <Image
-              src="/assets/ponatech-logo-rectangular.PNG"
+              src="/assets/ponatech-logo-rectangular.webp"
               alt="Pona Tech"
               width={160}
               height={46}
@@ -34,7 +34,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="w-full max-w-md">
           <Link href="/" className="lg:hidden flex justify-center mb-8">
             <Image
-              src="/assets/ponatech-logo-rectangular.PNG"
+              src="/assets/ponatech-logo-rectangular.webp"
               alt="Pona Tech"
               width={140}
               height={40}

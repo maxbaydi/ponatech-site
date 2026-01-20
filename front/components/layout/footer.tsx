@@ -33,7 +33,7 @@ export function Footer() {
           <div className="lg:col-span-2">
             <Link href="/" className="inline-block mb-4">
               <Image
-                src="/assets/ponatech-logo-rectangular.PNG"
+                src="/assets/ponatech-logo-rectangular.webp"
                 alt="Pona Tech"
                 width={160}
                 height={46}

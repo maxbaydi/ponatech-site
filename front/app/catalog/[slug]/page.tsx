@@ -38,6 +38,7 @@ import { useProductBySlug, useProducts } from '@/lib/hooks/use-products';
 import { useCategories } from '@/lib/hooks/use-categories';
 import { resolveProductImage } from '@/lib/products';
 import { formatPrice } from '@/lib/utils';
+import { useDisplayCurrency } from '@/lib/hooks/use-site-settings';
 import type { ProductImage, Category } from '@/lib/api/types';
 
 function findCategoryPath(categories: Category[], targetId: string): Category[] {
@@ -221,6 +222,7 @@ export default function ProductPage({ params }: ProductPageProps) {
   const { slug } = use(params);
   const router = useRouter();
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const displayCurrency = useDisplayCurrency();
   const { data: product, isLoading, error } = useProductBySlug(slug);
   const { data: allCategories } = useCategories();
   const cartItems = useCartStore((state) => state.items);
@@ -371,7 +373,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                   <div className="bg-gradient-to-r from-primary/5 to-transparent rounded-xl p-4 mb-6">
                     <p className="text-sm text-muted-foreground mb-1">Цена</p>
                     <div className="text-3xl md:text-4xl font-bold text-primary">
-                      {formatPrice(product.price, product.currency)}
+                      {formatPrice(product.price, displayCurrency)}
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       * Цена указана для справки, точную стоимость уточняйте у менеджера

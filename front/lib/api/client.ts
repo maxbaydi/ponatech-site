@@ -29,6 +29,8 @@ import type {
   RequestFormData,
   RegisterRequest,
   SupplyRequestResponse,
+  SiteSettings,
+  UpdateSiteSettingsRequest,
   UpdateBrandRequest,
   UpdateCategoryRequest,
   UpdateMediaFileRequest,
@@ -316,6 +318,17 @@ class ApiClient {
 
   async updateProfile(data: UpdateProfileRequest): Promise<AuthUser> {
     return this.request<AuthUser>('/auth/me', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getSiteSettings(): Promise<SiteSettings> {
+    return this.request<SiteSettings>('/settings');
+  }
+
+  async updateSiteSettings(data: UpdateSiteSettingsRequest): Promise<SiteSettings> {
+    return this.request<SiteSettings>('/settings', {
       method: 'PATCH',
       body: JSON.stringify(data),
     });

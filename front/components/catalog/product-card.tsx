@@ -12,6 +12,7 @@ import { useAuth } from '@/lib/auth/auth-context';
 import { buildLoginRedirectUrl } from '@/lib/auth/login-redirect';
 import { resolveProductImage } from '@/lib/products';
 import { formatPrice } from '@/lib/utils';
+import { useDisplayCurrency } from '@/lib/hooks/use-site-settings';
 import type { Product } from '@/lib/api/types';
 
 interface ProductCardProps {
@@ -127,6 +128,7 @@ function CartActionButton({ product, size = CART_BUTTON_SIZE }: CartActionButton
 }
 
 export function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
+  const displayCurrency = useDisplayCurrency();
   const productImage = resolveProductImage(product);
   const descriptionText = htmlToText(product.description);
   const productHref = `/catalog/${product.slug}`;
@@ -161,7 +163,7 @@ export function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
               )}
             </div>
             <div className="flex items-center justify-between mt-4 gap-3">
-              <p className="font-bold text-xl text-primary">{formatPrice(product.price, product.currency)}</p>
+              <p className="font-bold text-xl text-primary">{formatPrice(product.price, displayCurrency)}</p>
               <div className="flex items-center gap-2">
                 <DetailsButton href={productHref} />
                 <CartActionButton product={product} />
@@ -203,7 +205,7 @@ export function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
               {product.category.name}
             </Badge>
           )}
-          <p className="font-bold text-lg text-primary">{formatPrice(product.price, product.currency)}</p>
+          <p className="font-bold text-lg text-primary">{formatPrice(product.price, displayCurrency)}</p>
         </div>
         <div className="mt-4 flex items-center gap-2">
           <DetailsButton

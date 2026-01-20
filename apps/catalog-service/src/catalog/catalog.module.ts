@@ -19,6 +19,9 @@ import { CartService } from './cart/cart.service';
 import { RequestsController } from './requests/requests.controller';
 import { RequestsRepository } from './requests/requests.repository';
 import { RequestsService } from './requests/requests.service';
+import { SiteSettingsController } from './settings/settings.controller';
+import { SiteSettingsRepository } from './settings/settings.repository';
+import { SiteSettingsService } from './settings/settings.service';
 
 @Module({
   imports: [PrismaModule, MediaModule],
@@ -29,6 +32,7 @@ import { RequestsService } from './requests/requests.service';
     CatalogGrpcController,
     RequestsController,
     CartController,
+    SiteSettingsController,
   ],
   providers: [
     BrandsRepository,
@@ -41,6 +45,8 @@ import { RequestsService } from './requests/requests.service';
     RequestsService,
     CartRepository,
     CartService,
+    SiteSettingsRepository,
+    SiteSettingsService,
     JwtAuthGuard,
     RolesGuard,
   ],

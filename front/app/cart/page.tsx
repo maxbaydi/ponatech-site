@@ -15,6 +15,7 @@ import { getCartItemsCount, useCartStore } from '@/lib/cart';
 import { useCartRecommendations } from '@/lib/hooks/use-cart-recommendations';
 import { useProducts } from '@/lib/hooks/use-products';
 import { formatPrice } from '@/lib/utils';
+import { useDisplayCurrency } from '@/lib/hooks/use-site-settings';
 import type { Product, ProductStatus } from '@/lib/api/types';
 
 const RECOMMENDATIONS_LIMIT = 4;
@@ -77,6 +78,7 @@ export default function CartPage() {
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const removeItem = useCartStore((state) => state.removeItem);
   const clear = useCartStore((state) => state.clear);
+  const displayCurrency = useDisplayCurrency();
 
   const hasItems = items.length > 0;
   const cartItemIds = useMemo(() => new Set(items.map((item) => String(item.id))), [items]);
@@ -133,7 +135,7 @@ export default function CartPage() {
       return Number.isFinite(price) ? acc + price * item.quantity : acc;
     }, 0);
     const hasPrice = items.some((item) => Number.isFinite(Number(item.price)));
-    return { sum, hasPrice, currency: items[0]?.currency ?? 'RUB' };
+    return { sum, hasPrice };
   }, [items]);
 
   return (
@@ -267,7 +269,7 @@ export default function CartPage() {
                             </TableCell>
                             <TableCell className="hidden md:table-cell text-sm">
                               {Number.isFinite(Number(item.price))
-                                ? formatPrice(Number(item.price), item.currency)
+                                ? formatPrice(Number(item.price), displayCurrency)
                                 : '—'}
                             </TableCell>
                             <TableCell className="text-right">
@@ -298,7 +300,7 @@ export default function CartPage() {
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Сумма</span>
                       <span className="font-medium">
-                        {totals.hasPrice ? formatPrice(totals.sum, totals.currency) : '—'}
+                        {totals.hasPrice ? formatPrice(totals.sum, displayCurrency) : '—'}
                       </span>
                     </div>
                     <Button asChild size="lg" className="w-full">

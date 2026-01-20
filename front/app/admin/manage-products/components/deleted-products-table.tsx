@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Search, MoreHorizontal, Trash2, RotateCcw, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -33,6 +33,8 @@ import {
   usePermanentDeleteProductsBatch,
 } from '@/lib/hooks/use-products';
 import { useBrands } from '@/lib/hooks/use-brands';
+import { useDebouncedSearchParams } from '@/lib/hooks/use-debounced-search-params';
+import { useDisplayCurrency } from '@/lib/hooks/use-site-settings';
 import { formatPrice } from '@/lib/utils';
 import type { Product, ProductStatus } from '@/lib/api/types';
 import {
@@ -92,8 +94,8 @@ const getPaginationRange = (current: number, total: number): Array<number | 'ell
 };
 
 export function DeletedProductsTable() {
-  const router = useRouter();
   const searchParams = useSearchParams();
+  const displayCurrency = useDisplayCurrency();
 
   const page = parsePositiveInt(searchParams.get('trashPage'), DEFAULT_PAGE);
   const limitRaw = parsePositiveInt(searchParams.get('trashLimit'), DEFAULT_PAGE_SIZE);
@@ -101,8 +103,13 @@ export function DeletedProductsTable() {
     ? (limitRaw as (typeof PAGE_SIZE_OPTIONS)[number])
     : DEFAULT_PAGE_SIZE;
 
-  const [searchInput, setSearchInput] = useState(() => searchParams.get('trashSearch') ?? '');
-  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('trashSearch') ?? '');
+  const { searchInput, setSearchInput, searchQuery, buildUrlWithParams } = useDebouncedSearchParams({
+    basePath: '/admin/manage-products',
+    searchKey: 'trashSearch',
+    pageKey: 'trashPage',
+    defaultPage: DEFAULT_PAGE,
+    delayMs: SEARCH_DEBOUNCE_MS,
+  });
 
   const brandIdFilterValue = searchParams.get('trashBrandId') ?? ALL_BRANDS_VALUE;
 
@@ -131,31 +138,6 @@ export function DeletedProductsTable() {
 
   const [confirmPermanentDeleteOpen, setConfirmPermanentDeleteOpen] = useState(false);
   const [confirmPermanentDeleteIds, setConfirmPermanentDeleteIds] = useState<string[]>([]);
-
-  const buildUrlWithParams = (updates: Record<string, string | number | undefined | null>) => {
-    const next = new URLSearchParams(searchParams.toString());
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value === undefined || value === null || value === '') {
-        next.delete(key);
-        return;
-      }
-      next.set(key, String(value));
-    });
-    const query = next.toString();
-    return `/admin/manage-products${query ? `?${query}` : ''}`;
-  };
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      const next = searchInput.trim();
-      setSearchQuery(next);
-      router.replace(buildUrlWithParams({ trashSearch: next || undefined, trashPage: DEFAULT_PAGE }));
-    }, SEARCH_DEBOUNCE_MS);
-
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, [searchInput, router]);
 
   useEffect(() => {
     if (!products || products.length === 0) {
@@ -359,7 +341,7 @@ export function DeletedProductsTable() {
                       </TableCell>
                       <TableCell className="text-muted-foreground">{product.sku}</TableCell>
                       <TableCell>{product.brand?.name || '-'}</TableCell>
-                      <TableCell>{formatPrice(product.price, product.currency)}</TableCell>
+                      <TableCell>{formatPrice(product.price, displayCurrency)}</TableCell>
                       <TableCell>
                         <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
                       </TableCell>
