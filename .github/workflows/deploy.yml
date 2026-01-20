@@ -68,9 +68,10 @@ jobs:
           chmod 600 ~/.ssh/key
           ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Copy compose file
+      - name: Copy files to server
         run: |
           scp -i ~/.ssh/key -P ${{ secrets.SSH_PORT }} docker-compose.prod.yml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/docker-compose.yaml
+          scp -i ~/.ssh/key -P ${{ secrets.SSH_PORT }} nginx/nginx.conf ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/nginx.conf
 
       - name: Deploy
         run: |
@@ -79,8 +80,8 @@ jobs:
             echo '${{ secrets.CR_PAT }}' | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
             export IMAGE_TAG=${{ github.sha }}
             docker compose pull
-            docker compose up -d
+            docker compose up -d --force-recreate --remove-orphans
             sleep 15
-            docker compose exec -T catalog-service npx prisma migrate deploy || true
+            docker compose exec -T catalog-service npx prisma migrate deploy --schema prisma/schema.prisma || true
             docker image prune -f
           "

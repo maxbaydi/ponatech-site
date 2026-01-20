@@ -96,7 +96,7 @@ class ApiClient {
     Cookies.remove(REFRESH_TOKEN_KEY);
   }
 
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  private async request<T>(endpoint: string, options: RequestInit = {}, isRetry = false): Promise<T> {
     const baseUrl = endpoint.startsWith('/auth/') ? this.authBaseUrl : this.catalogBaseUrl;
     const url = `${baseUrl}${endpoint}`;
     const accessToken = this.getAccessToken();
@@ -125,11 +125,16 @@ class ApiClient {
       });
     }
 
-    if (response.status === 401) {
+    if (response.status === 401 && !isRetry) {
       const refreshed = await this.refreshAccessToken();
       if (refreshed) {
-        return this.request<T>(endpoint, options);
+        return this.request<T>(endpoint, options, true);
       }
+      this.clearTokens();
+      throw toApiError({ status: 401, endpoint, payload: await safeParseResponseBody(response) });
+    }
+
+    if (response.status === 401) {
       this.clearTokens();
       throw toApiError({ status: 401, endpoint, payload: await safeParseResponseBody(response) });
     }
