@@ -30,6 +30,19 @@ export class CategoriesRepository {
     return this.prisma.category.findFirst({ where: { slug, deletedAt: null } });
   }
 
+  async findByNameOrSlug(name: string, slugs: string[]): Promise<CategoryResponse | null> {
+    const uniqueSlugs = Array.from(new Set(slugs)).filter((slug) => slug.trim().length > 0);
+    return this.prisma.category.findFirst({
+      where: {
+        deletedAt: null,
+        OR: [
+          { name: { equals: name, mode: 'insensitive' } },
+          ...(uniqueSlugs.length > 0 ? [{ slug: { in: uniqueSlugs } }] : []),
+        ],
+      },
+    });
+  }
+
   async create(data: CreateCategoryDto): Promise<CategoryResponse> {
     return this.prisma.category.create({ data });
   }

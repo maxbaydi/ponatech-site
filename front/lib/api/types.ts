@@ -146,6 +146,8 @@ export interface UpdateProductRequest extends Partial<CreateProductRequest> {}
 
 export interface BatchOperationResult {
   count: number;
+  missingIds?: string[];
+  failedIds?: string[];
 }
 
 export interface ProductIdsRequest {
@@ -316,4 +318,13 @@ export interface UploadFromUrlRequest {
 
 export interface UpdateMediaFileRequest {
   alt?: string;
+}
+
+export interface MediaIdsRequest {
+  ids: string[];
+}
+
+export interface MediaDownloadUrlsResponse {
+  files: Array<{ id: string; url: string; filename: string }>;
+  missingIds?: string[];
 }

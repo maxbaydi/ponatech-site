@@ -1,11 +1,24 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
-import { Search, Upload, Trash2, Image as ImageIcon, Loader2, Copy, Check } from 'lucide-react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import {
+  Search,
+  Upload,
+  Trash2,
+  Image as ImageIcon,
+  Loader2,
+  Copy,
+  Check,
+  Download,
+  X,
+  CheckSquare,
+  Square,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -21,7 +34,13 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import { useMediaFiles, useUploadMedia, useDeleteMediaFile } from '@/lib/hooks/use-media';
+import {
+  useMediaFiles,
+  useUploadMedia,
+  useDeleteMediaFile,
+  useDeleteMediaFilesBatch,
+  useDownloadMediaFilesBatch,
+} from '@/lib/hooks/use-media';
 import type { MediaFile } from '@/lib/api/types';
 
 const ITEMS_PER_PAGE = 24;
@@ -32,19 +51,51 @@ const formatFileSize = (bytes: number): string => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
+const downloadFile = async (url: string, filename: string) => {
+  const response = await fetch(url);
+  const blob = await response.blob();
+  const blobUrl = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = blobUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(blobUrl);
+};
+
+const downloadBlob = (blob: Blob, filename: string) => {
+  const blobUrl = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = blobUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(blobUrl);
+};
+
 export default function MediaLibraryPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [selectedFile, setSelectedFile] = useState<MediaFile | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [copiedUrl, setCopiedUrl] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data, isLoading } = useMediaFiles({ search: search || undefined, page, limit: ITEMS_PER_PAGE });
   const uploadMedia = useUploadMedia();
   const deleteMediaFile = useDeleteMediaFile();
+  const deleteMediaFilesBatch = useDeleteMediaFilesBatch();
+  const downloadMediaFilesBatch = useDownloadMediaFilesBatch();
 
   const files = data?.data ?? [];
   const totalPages = data?.totalPages ?? 0;
+
+  const isSelectionMode = selectedIds.size > 0;
+  const allSelected = files.length > 0 && files.every((file) => selectedIds.has(file.id));
+  const someSelected = files.some((file) => selectedIds.has(file.id)) && !allSelected;
 
   const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files;
@@ -65,6 +116,26 @@ export default function MediaLibraryPage() {
       setSelectedFile(null);
     }
   }, [deleteMediaFile]);
+
+  const handleDeleteBatch = useCallback(async () => {
+    const count = selectedIds.size;
+    if (confirm(`Удалить ${count} ${count === 1 ? 'файл' : count < 5 ? 'файла' : 'файлов'}?`)) {
+      const result = await deleteMediaFilesBatch.mutateAsync(Array.from(selectedIds));
+      const failedIds = result.failedIds ?? [];
+      setSelectedIds(new Set(failedIds));
+    }
+  }, [deleteMediaFilesBatch, selectedIds]);
+
+  const handleDownloadBatch = useCallback(async () => {
+    setIsDownloading(true);
+    try {
+      const blob = await downloadMediaFilesBatch.mutateAsync(Array.from(selectedIds));
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      downloadBlob(blob, `media-files-${timestamp}.zip`);
+    } finally {
+      setIsDownloading(false);
+    }
+  }, [downloadMediaFilesBatch, selectedIds]);
 
   const handleCopyUrl = useCallback(async (url: string) => {
     await navigator.clipboard.writeText(url);
@@ -87,6 +158,39 @@ export default function MediaLibraryPage() {
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
   }, []);
+
+  const toggleFileSelection = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback(() => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(files.map((f) => f.id)));
+    }
+  }, [allSelected, files]);
+
+  const clearSelection = useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
+
+  const paginationNumbers = useMemo(() => {
+    return Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+      if (totalPages <= 5) return i + 1;
+      if (page <= 3) return i + 1;
+      if (page >= totalPages - 2) return totalPages - 4 + i;
+      return page - 2 + i;
+    });
+  }, [page, totalPages]);
 
   return (
     <div>
@@ -115,20 +219,79 @@ export default function MediaLibraryPage() {
         </div>
       </div>
 
+      {isSelectionMode && (
+        <div className="mb-4 flex flex-wrap items-center gap-2 p-3 bg-muted rounded-lg">
+          <span className="text-sm font-medium">
+            Выбрано: {selectedIds.size}
+          </span>
+          <div className="flex items-center gap-2 ml-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadBatch}
+              disabled={isDownloading}
+            >
+              {isDownloading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="mr-2 h-4 w-4" />
+              )}
+              Скачать
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDeleteBatch}
+              disabled={deleteMediaFilesBatch.isPending}
+            >
+              {deleteMediaFilesBatch.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="mr-2 h-4 w-4" />
+              )}
+              Удалить
+            </Button>
+            <Button variant="ghost" size="sm" onClick={clearSelection}>
+              <X className="mr-2 h-4 w-4" />
+              Отменить
+            </Button>
+          </div>
+        </div>
+      )}
+
       <Card>
         <CardHeader className="pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="relative w-full sm:max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Поиск файлов..."
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(1);
-                }}
-                className="pl-10"
-              />
+            <div className="flex items-center gap-2">
+              {files.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={toggleSelectAll}
+                  title={allSelected ? 'Снять выбор' : 'Выбрать все'}
+                >
+                  {allSelected ? (
+                    <CheckSquare className="h-4 w-4" />
+                  ) : someSelected ? (
+                    <CheckSquare className="h-4 w-4 opacity-50" />
+                  ) : (
+                    <Square className="h-4 w-4" />
+                  )}
+                </Button>
+              )}
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Поиск файлов..."
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setPage(1);
+                  }}
+                  className="pl-10"
+                />
+              </div>
             </div>
             {data?.total !== undefined && (
               <div className="text-sm text-muted-foreground sm:ml-auto">Всего: {data.total}</div>
@@ -149,25 +312,49 @@ export default function MediaLibraryPage() {
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
               >
-                {files.map((file) => (
-                  <button
-                    key={file.id}
-                    type="button"
-                    onClick={() => setSelectedFile(file)}
-                    className="group relative aspect-square rounded-lg overflow-hidden border bg-muted hover:ring-2 hover:ring-primary focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <img
-                      src={file.url}
-                      alt={file.alt || file.originalName}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <span className="text-white text-xs px-2 text-center truncate max-w-full">
-                        {file.originalName}
-                      </span>
+                {files.map((file) => {
+                  const isSelected = selectedIds.has(file.id);
+                  return (
+                    <div key={file.id} className="relative group">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isSelectionMode) {
+                            toggleFileSelection(file.id);
+                          } else {
+                            setSelectedFile(file);
+                          }
+                        }}
+                        className={`relative w-full aspect-square rounded-lg overflow-hidden border bg-muted hover:ring-2 hover:ring-primary focus:outline-none focus:ring-2 focus:ring-primary transition-all ${
+                          isSelected ? 'ring-2 ring-primary' : ''
+                        }`}
+                      >
+                        <img
+                          src={file.url}
+                          alt={file.alt || file.originalName}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
+                          <span className="text-white text-xs px-2 text-center truncate max-w-full">
+                            {file.originalName}
+                          </span>
+                        </div>
+                      </button>
+                      <div
+                        className={`absolute top-2 left-2 z-10 transition-opacity ${
+                          isSelectionMode || isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                        }`}
+                      >
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => toggleFileSelection(file.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="bg-white/90 border-gray-400 shadow-none"
+                        />
+                      </div>
                     </div>
-                  </button>
-                ))}
+                  );
+                })}
               </div>
 
               {totalPages > 1 && (
@@ -185,32 +372,20 @@ export default function MediaLibraryPage() {
                           className={page <= 1 ? 'pointer-events-none opacity-50' : undefined}
                         />
                       </PaginationItem>
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        let pageNum: number;
-                        if (totalPages <= 5) {
-                          pageNum = i + 1;
-                        } else if (page <= 3) {
-                          pageNum = i + 1;
-                        } else if (page >= totalPages - 2) {
-                          pageNum = totalPages - 4 + i;
-                        } else {
-                          pageNum = page - 2 + i;
-                        }
-                        return (
-                          <PaginationItem key={pageNum}>
-                            <PaginationLink
-                              href="#"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                setPage(pageNum);
-                              }}
-                              isActive={pageNum === page}
-                            >
-                              {pageNum}
-                            </PaginationLink>
-                          </PaginationItem>
-                        );
-                      })}
+                      {paginationNumbers.map((pageNum) => (
+                        <PaginationItem key={pageNum}>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setPage(pageNum);
+                            }}
+                            isActive={pageNum === page}
+                          >
+                            {pageNum}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
                       <PaginationItem>
                         <PaginationNext
                           href="#"
@@ -303,18 +478,27 @@ export default function MediaLibraryPage() {
             </div>
           )}
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSelectedFile(null)}>
-              Закрыть
-            </Button>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button
-              variant="destructive"
-              onClick={() => selectedFile && handleDelete(selectedFile.id)}
-              disabled={deleteMediaFile.isPending}
+              variant="outline"
+              onClick={() => selectedFile && downloadFile(selectedFile.url, selectedFile.originalName)}
             >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Удалить
+              <Download className="mr-2 h-4 w-4" />
+              Скачать
             </Button>
+            <div className="flex gap-2 ml-auto">
+              <Button variant="outline" onClick={() => setSelectedFile(null)}>
+                Закрыть
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => selectedFile && handleDelete(selectedFile.id)}
+                disabled={deleteMediaFile.isPending}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Удалить
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

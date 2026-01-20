@@ -196,47 +196,48 @@ export default function CartPage() {
                     <CardDescription>Корзина формирует перечень, который будет добавлен в заявку.</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Table>
+                    <Table className="table-fixed">
                       <TableHeader>
                         <TableRow>
+                          <TableHead className="w-16 shrink-0" />
                           <TableHead>Товар</TableHead>
-                          <TableHead className="hidden sm:table-cell">SKU</TableHead>
-                          <TableHead>Количество</TableHead>
-                          <TableHead className="hidden md:table-cell">Цена</TableHead>
-                          <TableHead className="text-right">Действия</TableHead>
+                          <TableHead className="hidden sm:table-cell w-28">SKU</TableHead>
+                          <TableHead className="w-32">Количество</TableHead>
+                          <TableHead className="hidden md:table-cell w-28">Цена</TableHead>
+                          <TableHead className="text-right w-28">Действия</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {items.map((item) => (
                           <TableRow key={item.id}>
+                            <TableCell className="w-16 p-2">
+                              <div className={CART_ITEM_IMAGE_WRAPPER_CLASS}>
+                                {item.imageUrl ? (
+                                  <Image
+                                    src={item.imageUrl}
+                                    alt={item.imageAlt ?? item.title}
+                                    width={CART_ITEM_IMAGE_SIZE}
+                                    height={CART_ITEM_IMAGE_SIZE}
+                                    sizes={CART_ITEM_IMAGE_SIZES}
+                                    className={CART_ITEM_IMAGE_CLASS}
+                                    unoptimized
+                                  />
+                                ) : (
+                                  <Package className={CART_ITEM_IMAGE_ICON_CLASS} />
+                                )}
+                              </div>
+                            </TableCell>
                             <TableCell>
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className={CART_ITEM_IMAGE_WRAPPER_CLASS}>
-                                  {item.imageUrl ? (
-                                    <Image
-                                      src={item.imageUrl}
-                                      alt={item.imageAlt ?? item.title}
-                                      width={CART_ITEM_IMAGE_SIZE}
-                                      height={CART_ITEM_IMAGE_SIZE}
-                                      sizes={CART_ITEM_IMAGE_SIZES}
-                                      className={CART_ITEM_IMAGE_CLASS}
-                                      unoptimized
-                                    />
-                                  ) : (
-                                    <Package className={CART_ITEM_IMAGE_ICON_CLASS} />
-                                  )}
-                                </div>
-                                <div className="min-w-0">
-                                  <Link
-                                    href={`/catalog/${item.slug}`}
-                                    className="font-medium hover:text-primary transition-colors line-clamp-2"
-                                  >
-                                    {item.title}
-                                  </Link>
-                                  {item.brandName && (
-                                    <p className="text-xs text-muted-foreground mt-1">Бренд: {item.brandName}</p>
-                                  )}
-                                </div>
+                              <div className="min-w-0">
+                                <Link
+                                  href={`/catalog/${item.slug}`}
+                                  className="font-medium hover:text-primary transition-colors line-clamp-2"
+                                >
+                                  {item.title}
+                                </Link>
+                                {item.brandName && (
+                                  <p className="text-xs text-muted-foreground mt-1">Бренд: {item.brandName}</p>
+                                )}
                               </div>
                             </TableCell>
                             <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">

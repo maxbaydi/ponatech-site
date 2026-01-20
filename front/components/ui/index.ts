@@ -10,6 +10,7 @@ export * from './image-canvas';
 export * from './input';
 export * from './label';
 export * from './pagination';
+export * from './progress';
 export * from './scroll-area';
 export * from './select';
 export * from './separator';

@@ -1,5 +1,19 @@
-import { IsOptional, IsString, IsUrl, IsInt, Min, Max } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsUrl,
+  IsInt,
+  Min,
+  Max,
+  IsArray,
+  ArrayNotEmpty,
+  ArrayUnique,
+  ArrayMaxSize,
+  IsUUID,
+} from 'class-validator';
 import { Type } from 'class-transformer';
+
+const MAX_MEDIA_BATCH_SIZE = 200;
 
 export interface MediaFileResponse {
   id: string;
@@ -55,4 +69,24 @@ export interface PaginatedMediaFilesResponse {
   page: number;
   limit: number;
   totalPages: number;
+}
+
+export class MediaIdsDto {
+  @IsArray()
+  @ArrayNotEmpty()
+  @ArrayUnique()
+  @ArrayMaxSize(MAX_MEDIA_BATCH_SIZE)
+  @IsUUID('4', { each: true })
+  ids!: string[];
+}
+
+export interface BatchOperationResult {
+  count: number;
+  missingIds?: string[];
+  failedIds?: string[];
+}
+
+export interface MediaDownloadUrlsResponse {
+  files: Array<{ id: string; url: string; filename: string }>;
+  missingIds?: string[];
 }

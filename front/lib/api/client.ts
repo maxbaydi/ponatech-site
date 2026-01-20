@@ -17,6 +17,7 @@ import type {
   ImportProductsCsvRequest,
   ImportProductsCsvResult,
   LoginRequest,
+  MediaDownloadUrlsResponse,
   MediaFile,
   MediaFilesFilters,
   PaginatedResponse,
@@ -586,6 +587,27 @@ class ApiClient {
 
   async deleteMediaFile(id: string): Promise<void> {
     return this.request<void>(`/media/${id}`, { method: 'DELETE' });
+  }
+
+  async deleteMediaFilesBatch(ids: string[]): Promise<BatchOperationResult> {
+    return this.request<BatchOperationResult>('/media/batch/delete', {
+      method: 'POST',
+      body: JSON.stringify({ ids }),
+    });
+  }
+
+  async getMediaDownloadUrls(ids: string[]): Promise<MediaDownloadUrlsResponse> {
+    return this.request<MediaDownloadUrlsResponse>('/media/batch/download-urls', {
+      method: 'POST',
+      body: JSON.stringify({ ids }),
+    });
+  }
+
+  async downloadMediaFilesBatch(ids: string[]): Promise<Blob> {
+    return this.requestBlob('/media/batch/download', {
+      method: 'POST',
+      body: JSON.stringify({ ids }),
+    });
   }
 }
 

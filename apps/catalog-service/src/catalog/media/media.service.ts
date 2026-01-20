@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Readable } from 'stream';
 import { MinioService } from '../../minio/minio.service';
 import { MediaRepository } from './media.repository';
 import {
@@ -6,10 +7,15 @@ import {
   MediaFilesQueryDto,
   PaginatedMediaFilesResponse,
   UpdateMediaFileDto,
+  BatchOperationResult,
+  MediaDownloadUrlsResponse,
 } from './dto/media.dto';
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const DELETE_BATCH_CONCURRENCY = 5;
+
+type MediaArchiveEntry = { id: string; originalName: string; stream: Readable };
 
 @Injectable()
 export class MediaService {
@@ -116,6 +122,76 @@ export class MediaService {
     const file = await this.findOne(id);
     await this.minioService.delete(file.filename);
     await this.mediaRepository.delete(id);
+  }
+
+  async deleteBatch(ids: string[]): Promise<BatchOperationResult> {
+    if (ids.length === 0) {
+      return { count: 0 };
+    }
+
+    const files = await this.mediaRepository.findByIds(ids);
+    const filesById = new Map(files.map((file) => [file.id, file]));
+    const missingIds = ids.filter((id) => !filesById.has(id));
+
+    if (files.length === 0) {
+      return {
+        count: 0,
+        missingIds: missingIds.length > 0 ? missingIds : undefined,
+      };
+    }
+
+    const deleteTargets = files.map((file) => ({ id: file.id, filename: file.filename }));
+    const { deletedIds, failedIds } = await this.deleteFilesInStorage(deleteTargets);
+
+    if (deletedIds.length === 0) {
+      return {
+        count: 0,
+        missingIds: missingIds.length > 0 ? missingIds : undefined,
+        failedIds: failedIds.length > 0 ? failedIds : undefined,
+      };
+    }
+
+    const result = await this.mediaRepository.deleteBatch(deletedIds);
+
+    return {
+      count: result.count,
+      missingIds: missingIds.length > 0 ? missingIds : undefined,
+      failedIds: failedIds.length > 0 ? failedIds : undefined,
+    };
+  }
+
+  async getDownloadUrls(ids: string[]): Promise<MediaDownloadUrlsResponse> {
+    const files = await this.mediaRepository.findByIds(ids);
+    const filesById = new Map(files.map((file) => [file.id, file]));
+    const missingIds = ids.filter((id) => !filesById.has(id));
+
+    return {
+      files: ids.flatMap((id) => {
+        const file = filesById.get(id);
+        return file
+          ? [{ id: file.id, url: file.url, filename: file.originalName }]
+          : [];
+      }),
+      missingIds: missingIds.length > 0 ? missingIds : undefined,
+    };
+  }
+
+  async getFilesForArchive(ids: string[]): Promise<MediaArchiveEntry[]> {
+    const files = await this.mediaRepository.findByIds(ids);
+    const filesById = new Map(files.map((file) => [file.id, file]));
+    const missingIds = ids.filter((id) => !filesById.has(id));
+
+    if (missingIds.length > 0) {
+      throw new NotFoundException(`Media files not found: ${missingIds.join(', ')}`);
+    }
+
+    return Promise.all(
+      ids.map(async (id) => {
+        const file = filesById.get(id)!;
+        const stream = await this.minioService.getObject(file.filename);
+        return { id: file.id, originalName: file.originalName, stream };
+      }),
+    );
   }
 
   private validateFile(file: Express.Multer.File): void {
@@ -240,5 +316,39 @@ export class MediaService {
     } catch {
       return 'image';
     }
+  }
+
+  private async deleteFilesInStorage(
+    files: Array<{ id: string; filename: string }>,
+  ): Promise<{ deletedIds: string[]; failedIds: string[] }> {
+    const deletedIds: string[] = [];
+    const failedIds: string[] = [];
+
+    for (const chunk of this.chunkArray(files, DELETE_BATCH_CONCURRENCY)) {
+      const results = await Promise.allSettled(
+        chunk.map((file) => this.minioService.delete(file.filename)),
+      );
+
+      results.forEach((result, index) => {
+        const { id } = chunk[index];
+        if (result.status === 'fulfilled') {
+          deletedIds.push(id);
+        } else {
+          failedIds.push(id);
+        }
+      });
+    }
+
+    return { deletedIds, failedIds };
+  }
+
+  private chunkArray<T>(items: T[], size: number): T[][] {
+    if (size <= 0) return [items];
+
+    const chunks: T[][] = [];
+    for (let i = 0; i < items.length; i += size) {
+      chunks.push(items.slice(i, i + size));
+    }
+    return chunks;
   }
 }

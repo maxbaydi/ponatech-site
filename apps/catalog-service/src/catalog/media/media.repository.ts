@@ -70,4 +70,17 @@ export class MediaRepository {
   async delete(id: string) {
     return this.prisma.mediaFile.delete({ where: { id } });
   }
+
+  async findByIds(ids: string[]) {
+    return this.prisma.mediaFile.findMany({
+      where: { id: { in: ids } },
+    });
+  }
+
+  async deleteBatch(ids: string[]) {
+    const result = await this.prisma.mediaFile.deleteMany({
+      where: { id: { in: ids } },
+    });
+    return { count: result.count };
+  }
 }

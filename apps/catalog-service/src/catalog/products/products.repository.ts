@@ -260,15 +260,19 @@ export class ProductsRepository {
   }
 
   async hardDeleteOne(id: string): Promise<void> {
+    const cleanup = this.buildHardDeleteCleanup(id, id);
     await this.prisma.$transaction([
-      this.prisma.productImage.deleteMany({ where: { productId: id } }),
+      cleanup.cartItems,
+      cleanup.images,
       this.prisma.product.delete({ where: { id } }),
     ]);
   }
 
   async hardDeleteMany(ids: string[]): Promise<{ count: number }> {
+    const cleanup = this.buildHardDeleteCleanup({ in: ids }, { in: ids });
     const [, result] = await this.prisma.$transaction([
-      this.prisma.productImage.deleteMany({ where: { productId: { in: ids } } }),
+      cleanup.cartItems,
+      cleanup.images,
       this.prisma.product.deleteMany({ where: { id: { in: ids }, deletedAt: { not: null } } }),
     ]);
     return result;
@@ -310,6 +314,19 @@ export class ProductsRepository {
     if (dto.categoryId !== undefined) data.categoryId = dto.categoryId || null;
 
     return data;
+  }
+
+  private buildHardDeleteCleanup(
+    cartItemProductId: Prisma.CartItemWhereInput['productId'],
+    productImageProductId: Prisma.ProductImageWhereInput['productId'],
+  ): {
+    cartItems: Prisma.PrismaPromise<Prisma.BatchPayload>;
+    images: Prisma.PrismaPromise<Prisma.BatchPayload>;
+  } {
+    return {
+      cartItems: this.prisma.cartItem.deleteMany({ where: { productId: cartItemProductId } }),
+      images: this.prisma.productImage.deleteMany({ where: { productId: productImageProductId } }),
+    };
   }
 
   private buildAttributeFilters(

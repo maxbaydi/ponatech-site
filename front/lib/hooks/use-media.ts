@@ -64,3 +64,26 @@ export function useDeleteMediaFile() {
     },
   });
 }
+
+export function useDeleteMediaFilesBatch() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (ids: string[]) => apiClient.deleteMediaFilesBatch(ids),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['media'] });
+    },
+  });
+}
+
+export function useGetMediaDownloadUrls() {
+  return useMutation({
+    mutationFn: (ids: string[]) => apiClient.getMediaDownloadUrls(ids),
+  });
+}
+
+export function useDownloadMediaFilesBatch() {
+  return useMutation({
+    mutationFn: (ids: string[]) => apiClient.downloadMediaFilesBatch(ids),
+  });
+}

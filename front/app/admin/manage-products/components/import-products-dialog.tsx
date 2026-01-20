@@ -26,7 +26,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { useImportProductsCsv } from '@/lib/hooks/use-products';
+import { useIndeterminateProgress } from '@/lib/hooks/use-indeterminate-progress';
 import type { ProductCsvColumn, ProductStatus } from '@/lib/api/types';
 
 const CSV_COLUMNS: ProductCsvColumn[] = [
@@ -46,6 +48,7 @@ const DEFAULT_IMPORT_STATUS: ProductStatus = 'PUBLISHED';
 
 export function ImportProductsDialog() {
   const importCsv = useImportProductsCsv();
+  const progressValue = useIndeterminateProgress(importCsv.isPending);
 
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -239,6 +242,12 @@ export function ImportProductsDialog() {
             </Card>
           )}
         </div>
+
+        {importCsv.isPending && (
+          <div className="pt-2">
+            <Progress value={progressValue} />
+          </div>
+        )}
 
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>

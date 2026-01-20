@@ -14,8 +14,10 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Progress } from '@/components/ui/progress';
 import { useExportProductsCsv } from '@/lib/hooks/use-products';
 import { useBrands } from '@/lib/hooks/use-brands';
+import { useIndeterminateProgress } from '@/lib/hooks/use-indeterminate-progress';
 import type { ExportProductsCsvRequest, ProductCsvColumn } from '@/lib/api/types';
 
 const CSV_COLUMNS: ProductCsvColumn[] = [
@@ -40,6 +42,7 @@ interface ExportProductsDialogProps {
 export function ExportProductsDialog({ searchQuery, selectedIds }: ExportProductsDialogProps) {
   const { data: brands } = useBrands();
   const exportCsv = useExportProductsCsv();
+  const progressValue = useIndeterminateProgress(exportCsv.isPending);
 
   const [open, setOpen] = useState(false);
   const [columns, setColumns] = useState<Set<ProductCsvColumn>>(() => new Set(CSV_COLUMNS));
@@ -143,6 +146,12 @@ export function ExportProductsDialog({ searchQuery, selectedIds }: ExportProduct
             </div>
           </div>
         </div>
+
+        {exportCsv.isPending && (
+          <div className="pt-2">
+            <Progress value={progressValue} />
+          </div>
+        )}
 
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>

@@ -25,6 +25,8 @@ const CSV_REQUIRED_COLUMNS = ['name', 'article', 'price', 'brand'] as const;
 const DEFAULT_PRODUCT_CURRENCY = 'RUB';
 const DEFAULT_PRODUCT_STATUS: ProductStatus = ProductStatus.DRAFT;
 const DEFAULT_IMPORT_STATUS: ProductStatus = ProductStatus.PUBLISHED;
+const DEFAULT_BRAND_SLUG_BASE = 'brand';
+const DEFAULT_CATEGORY_SLUG_BASE = 'category';
 
 const MAX_SLUG_ATTEMPTS = 50;
 const MAX_EXPORT_LIMIT = 50_000;
@@ -142,37 +144,63 @@ export class ProductsService {
 
     await new Promise<void>((resolve, reject) => {
       const parser = parseString(text, { headers: true, trim: true, ignoreEmpty: true });
+      let inFlight = 0;
+      let ended = false;
+      let rejected = false;
 
-      parser.on('error', reject);
+      const safeReject = (error: unknown) => {
+        if (rejected) return;
+        rejected = true;
+        reject(error);
+      };
+
+      const maybeResolve = () => {
+        if (!rejected && ended && inFlight === 0) {
+          resolve();
+        }
+      };
+
+      parser.on('error', safeReject);
 
       parser.on('headers', (headers: string[]) => {
         const normalized = new Set(headers.map((h) => String(h).trim()));
         const missing = CSV_REQUIRED_COLUMNS.filter((col) => !normalized.has(col));
         if (missing.length > 0) {
-          reject(new BadRequestException(`Missing CSV columns: ${missing.join(', ')}`));
-          return;
+          safeReject(new BadRequestException(`Missing CSV columns: ${missing.join(', ')}`));
+          parser.destroy();
         }
       });
 
-      parser.on('data', async (row: CsvRow) => {
+      parser.on('data', (row: CsvRow) => {
+        if (rejected) return;
         rowIndex += 1;
         const csvRowNumber = rowIndex + 1; // header is row 1
         result.total += 1;
+        inFlight += 1;
 
         parser.pause();
-        try {
-          const outcome = await this.upsertFromCsvRow(row, { status, updateBySku });
-          if (outcome === 'created') result.created += 1;
-          if (outcome === 'updated') result.updated += 1;
-        } catch (error: unknown) {
-          result.failed += 1;
-          result.errors.push({ row: csvRowNumber, message: this.toCsvErrorMessage(error) });
-        } finally {
-          parser.resume();
-        }
+        this.upsertFromCsvRow(row, { status, updateBySku })
+          .then((outcome) => {
+            if (outcome === 'created') result.created += 1;
+            if (outcome === 'updated') result.updated += 1;
+          })
+          .catch((error: unknown) => {
+            result.failed += 1;
+            result.errors.push({ row: csvRowNumber, message: this.toCsvErrorMessage(error) });
+          })
+          .finally(() => {
+            inFlight -= 1;
+            if (!parser.destroyed) {
+              parser.resume();
+            }
+            maybeResolve();
+          });
       });
 
-      parser.on('end', () => resolve());
+      parser.on('end', () => {
+        ended = true;
+        maybeResolve();
+      });
     });
 
     return result;
@@ -306,11 +334,11 @@ export class ProductsService {
     const parsedSpecs = this.parseSpecsFromCsv(rawCharacteristics);
     const characteristics = parsedSpecs.hasSpecs ? null : rawCharacteristics;
     const brandName = this.requireString(row.brand, 'brand');
-    const categoryName = this.normalizeString(row.category);
+    const categoryValue = this.normalizeString(row.category);
     const imgUrl = this.normalizeString(row.img);
 
     const brandId = await this.getOrCreateBrandId(brandName);
-    const categoryId = categoryName ? await this.getOrCreateCategoryId(categoryName) : undefined;
+    const categoryId = categoryValue ? await this.getOrCreateCategoryId(categoryValue) : undefined;
     
     const mediaFile = imgUrl ? await this.uploadImageToMediaLibrary(imgUrl, name) : null;
 
@@ -454,19 +482,21 @@ export class ProductsService {
     const existing = await this.brandsRepository.findByName(name);
     if (existing) return existing.id;
 
-    const base = slugify(name) || 'brand';
+    const base = slugify(name) || DEFAULT_BRAND_SLUG_BASE;
     const slug = await this.buildUniqueSlug(base, (candidate) => this.brandsRepository.findBySlug(candidate));
     const created = await this.prisma.brand.create({ data: { name, slug } });
     return created.id;
   }
 
-  private async getOrCreateCategoryId(name: string): Promise<string> {
-    const existing = await this.categoriesRepository.findByName(name);
+  private async getOrCreateCategoryId(value: string): Promise<string> {
+    const slugified = slugify(value);
+    const slugCandidates = slugified && slugified !== value ? [value, slugified] : [value];
+    const existing = await this.categoriesRepository.findByNameOrSlug(value, slugCandidates);
     if (existing) return existing.id;
 
-    const base = slugify(name) || 'category';
+    const base = slugified || DEFAULT_CATEGORY_SLUG_BASE;
     const slug = await this.buildUniqueSlug(base, (candidate) => this.categoriesRepository.findBySlug(candidate));
-    const created = await this.prisma.category.create({ data: { name, slug } });
+    const created = await this.prisma.category.create({ data: { name: value, slug } });
     return created.id;
   }
 
