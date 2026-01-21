@@ -2,7 +2,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Mail, Phone, MapPin } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { BRAND_CATEGORIES } from '@/data/brands';
 import { SITE_CONTACTS } from '@/lib/site-contacts';
 
 const FOOTER_LINKS = {
@@ -41,7 +40,7 @@ export function Footer() {
               />
             </Link>
             <p className="text-background/70 text-sm leading-relaxed max-w-sm mb-6">
-              PONA TECH — международные поставки промышленного и ИТ-оборудования. Прямые закупки от 70+ мировых
+              PONA TECH — международные поставки промышленного и ИТ-оборудования в Россию. Прямые закупки от 70+ мировых
               брендов.
             </p>
             <div className="flex flex-col gap-3">
@@ -125,11 +124,6 @@ export function Footer() {
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-background/50">© {currentYear} PONA TECH. Все права защищены.</p>
-          <div className="flex items-center gap-6">
-            <span className="text-xs text-background/40">
-              Работаем с {Object.keys(BRAND_CATEGORIES).length} категориями оборудования
-            </span>
-          </div>
         </div>
       </div>
     </footer>

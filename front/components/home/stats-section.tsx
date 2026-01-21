@@ -4,7 +4,6 @@ import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import { motion, useInView } from 'framer-motion';
 import { Building2, Globe2, Users, Camera } from 'lucide-react';
-import { BRAND_COUNT } from '@/data/brands';
 import numberSectionBg from '@/assets/number-section-bg.webp';
 
 interface StatItemProps {
@@ -59,14 +58,14 @@ function StatCard({ icon, value, suffix, label, delay }: StatItemProps) {
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.5, delay }}
     >
-      <div className="flex flex-col items-center justify-center text-center w-[150px] h-[150px] p-4 rounded-2xl bg-primary shadow-sm transition-all duration-300 group-hover:shadow-lg">
+      <div className="flex flex-col items-center justify-center text-center aspect-square p-4 rounded-2xl bg-primary shadow-sm transition-all duration-300 group-hover:shadow-lg">
         <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mb-3">
           {icon}
         </div>
         <div className="text-2xl sm:text-3xl font-bold text-white mb-2">
           <AnimatedNumber value={value} suffix={suffix} inView={inView} />
         </div>
-        <p className="text-white/80 text-sm">{label}</p>
+        <p className="text-white/80 text-xs sm:text-sm">{label}</p>
       </div>
     </motion.div>
   );
@@ -106,7 +105,7 @@ function InspectionCard({ delay }: { delay: number }) {
 const STATS = [
   {
     icon: <Building2 className="w-5 h-5 text-white" />,
-    value: BRAND_COUNT,
+    value: 70,
     suffix: '+',
     label: 'Мировых брендов',
   },
@@ -118,7 +117,7 @@ const STATS = [
   },
   {
     icon: <Users className="w-5 h-5 text-white" />,
-    value: 500,
+    value: 1500,
     suffix: '+',
     label: 'Довольных клиентов',
   },
@@ -146,11 +145,15 @@ export function StatsSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-[150px_150px_150px_1fr] gap-3 sm:gap-4">
-          {STATS.map((stat, i) => (
-            <StatCard key={stat.label} {...stat} delay={i * 0.1} />
-          ))}
-          <InspectionCard delay={0.3} />
+        <div className="flex flex-col items-center gap-4 sm:gap-6">
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 w-full max-w-md sm:max-w-lg">
+            {STATS.map((stat, i) => (
+              <StatCard key={stat.label} {...stat} delay={i * 0.1} />
+            ))}
+          </div>
+          <div className="w-full max-w-2xl">
+            <InspectionCard delay={0.3} />
+          </div>
         </div>
       </div>
     </section>

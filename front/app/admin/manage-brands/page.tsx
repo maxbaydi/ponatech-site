@@ -77,68 +77,70 @@ export default function BrandsPage() {
               ))}
             </div>
           ) : filteredBrands && filteredBrands.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Бренд</TableHead>
-                  <TableHead>Slug</TableHead>
-                  <TableHead>Страна</TableHead>
-                  <TableHead>Избранный</TableHead>
-                  <TableHead className="w-[70px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredBrands.map((brand) => (
-                  <TableRow key={brand.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <BrandLogo
-                          name={brand.name}
-                          src={brand.logoUrl}
-                          size="sm"
-                          className="rounded"
-                        />
-                        <div className="font-medium">{brand.name}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{brand.slug}</TableCell>
-                    <TableCell>{brand.country || '-'}</TableCell>
-                    <TableCell>
-                      {brand.isFeatured && (
-                        <Badge variant="secondary">
-                          <Star className="mr-1 h-3 w-3" />
-                          Featured
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link href={`/admin/manage-brands/${brand.id}/edit`}>
-                              <Pencil className="mr-2 h-4 w-4" />
-                              Редактировать
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleDelete(brand.id)}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Удалить
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Бренд</TableHead>
+                    <TableHead className="hidden sm:table-cell">Slug</TableHead>
+                    <TableHead className="hidden md:table-cell">Страна</TableHead>
+                    <TableHead className="hidden sm:table-cell">Избранный</TableHead>
+                    <TableHead className="w-[70px]"></TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredBrands.map((brand) => (
+                    <TableRow key={brand.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <BrandLogo
+                            name={brand.name}
+                            src={brand.logoUrl}
+                            size="sm"
+                            className="rounded shrink-0"
+                          />
+                          <div className="font-medium min-w-[100px]">{brand.name}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground hidden sm:table-cell">{brand.slug}</TableCell>
+                      <TableCell className="hidden md:table-cell">{brand.country || '-'}</TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        {brand.isFeatured && (
+                          <Badge variant="secondary">
+                            <Star className="mr-1 h-3 w-3" />
+                            Featured
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem asChild>
+                              <Link href={`/admin/manage-brands/${brand.id}/edit`}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Редактировать
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleDelete(brand.id)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Удалить
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           ) : (
             <div className="p-8 text-center text-muted-foreground">
               <p>Бренды не найдены</p>

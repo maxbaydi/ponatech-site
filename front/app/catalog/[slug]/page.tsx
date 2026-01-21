@@ -19,12 +19,12 @@ import {
   Truck,
   Clock,
   CheckCircle2,
-  Phone,
   ZoomIn,
   ChevronLeft,
   ShoppingCart,
   Check,
 } from 'lucide-react';
+import { FaTelegramPlane } from 'react-icons/fa';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
@@ -199,7 +199,7 @@ const DELIVERY_FEATURES = [
   {
     icon: Shield,
     title: 'Гарантия качества',
-    description: 'Предгрузочная инспекция с фото/видео отчётом',
+    description: 'Предгрузочная инспекция с фото- и видеоотчётом',
   },
   {
     icon: Truck,
@@ -208,13 +208,13 @@ const DELIVERY_FEATURES = [
   },
   {
     icon: Clock,
-    title: 'Сроки поставки',
-    description: '2-6 недель в зависимости от маршрута',
+    title: 'Сроки поставки в Россию',
+    description: '1-3 недели в зависимости от маршрута',
   },
   {
     icon: CheckCircle2,
     title: 'Документы',
-    description: 'Полное таможенное оформление',
+    description: 'Инвойс, упаковочный лист, сертификаты',
   },
 ];
 
@@ -389,41 +389,41 @@ export default function ProductPage({ params }: ProductPageProps) {
 
                   <Separator className="my-6" />
 
-                  <div className="flex flex-col sm:flex-row gap-3 mb-8">
-                    <Button size="lg" className="flex-1 h-14 text-base" asChild>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
+                    <Button size="lg" className="w-full h-14 text-base" asChild>
                       <Link href={`/request?product=${encodeURIComponent(product.title)}&sku=${product.sku}`}>
-                        <Send className="mr-2 h-5 w-5" />
-                        Запросить цену
+                        <Send className="mr-2 h-5 w-5 shrink-0" />
+                        <span className="truncate">Запросить цену</span>
                       </Link>
                     </Button>
                     {isInCart ? (
                       <Button
                         size="lg"
                         variant="outline"
-                        className="flex-1 h-14 text-base border-primary text-primary hover:bg-primary hover:text-white"
+                        className="w-full h-14 text-base border-primary text-primary hover:bg-primary hover:text-white"
                         type="button"
                         onClick={handleRemoveFromCart}
                       >
-                        <Check className="mr-2 h-5 w-5" />
-                        В корзине
+                        <Check className="mr-2 h-5 w-5 shrink-0" />
+                        <span className="truncate">В корзине</span>
                       </Button>
                     ) : (
                       <Button
                         size="lg"
                         variant="outline"
-                        className="flex-1 h-14 text-base"
+                        className="w-full h-14 text-base"
                         type="button"
                         onClick={handleAddToCart}
                       >
-                        <ShoppingCart className="mr-2 h-5 w-5" />
-                        В корзину
+                        <ShoppingCart className="mr-2 h-5 w-5 shrink-0" />
+                        <span className="truncate">В корзину</span>
                       </Button>
                     )}
-                    <Button size="lg" variant="outline" className="flex-1 h-14 text-base" asChild>
-                      <Link href={`tel:${SITE_CONTACTS.phones.telegram.tel}`}>
-                        <Phone className="mr-2 h-5 w-5" />
-                        Позвонить
-                      </Link>
+                    <Button size="lg" variant="outline" className="w-full h-14 text-base sm:col-span-2 lg:col-span-1" asChild>
+                      <a href={SITE_CONTACTS.phones.telegram.link} target="_blank" rel="noopener noreferrer">
+                        <FaTelegramPlane className="mr-2 h-5 w-5 shrink-0" />
+                        <span className="truncate">Написать в Telegram</span>
+                      </a>
                     </Button>
                   </div>
                 </motion.div>
@@ -520,8 +520,8 @@ export default function ProductPage({ params }: ProductPageProps) {
                       <div>
                         <h4 className="font-medium mb-2">Возврат и обмен</h4>
                         <p className="text-sm text-muted-foreground">
-                          В случае выявления заводского брака мы организуем возврат или обмен 
-                          товара за свой счёт.
+                          При обнаружении заводского брака мы организуем возврат средств или замену товара. 
+                          Логистические расходы на возврат оплачиваются отдельно.
                         </p>
                       </div>
                     </CardContent>

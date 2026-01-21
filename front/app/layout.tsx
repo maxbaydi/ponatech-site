@@ -13,7 +13,7 @@ const onest = Onest({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Pona Tech - Поставки промышленного оборудования из Китая',
+    default: 'Pona Tech - Поставки промышленного оборудования в Россию',
     template: '%s | Pona Tech',
   },
   description:

@@ -512,84 +512,86 @@ export default function ProductsPage() {
               ))}
             </div>
           ) : products && products.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[48px]">
-                    <Checkbox
-                      checked={allVisibleSelected ? true : someVisibleSelected ? 'indeterminate' : false}
-                      onCheckedChange={toggleSelectAllVisible}
-                      aria-label="Выбрать все товары на странице"
-                    />
-                  </TableHead>
-                  <TableHead className="w-12"></TableHead>
-                  <TableHead>Товар</TableHead>
-                  <TableHead>SKU</TableHead>
-                  <TableHead>Бренд</TableHead>
-                  <TableHead>Цена</TableHead>
-                  <TableHead>Статус</TableHead>
-                  <TableHead className="w-[70px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {products.map((product) => {
-                  const statusBadge = STATUS_BADGES[product.status];
-                  return (
-                    <TableRow key={product.id}>
-                      <TableCell>
-                        <Checkbox
-                          checked={selectedIds.has(product.id)}
-                          onCheckedChange={() => toggleSelected(product.id)}
-                          aria-label={`Выбрать товар ${product.title}`}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <ProductImagePreview images={product.images} title={product.title} />
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-medium">{product.title}</div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{product.sku}</TableCell>
-                      <TableCell>{product.brand?.name || '-'}</TableCell>
-                      <TableCell>{formatPrice(product.price, displayCurrency)}</TableCell>
-                      <TableCell>
-                        <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
-                              <Link href={`/catalog/${product.slug}`}>
-                                <Eye className="mr-2 h-4 w-4" />
-                                Просмотр
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <Link href={`/admin/manage-products/${product.id}/edit`}>
-                                <Pencil className="mr-2 h-4 w-4" />
-                                Редактировать
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleDelete(product.id)}
-                              className="text-destructive"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Удалить
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[48px]">
+                      <Checkbox
+                        checked={allVisibleSelected ? true : someVisibleSelected ? 'indeterminate' : false}
+                        onCheckedChange={toggleSelectAllVisible}
+                        aria-label="Выбрать все товары на странице"
+                      />
+                    </TableHead>
+                    <TableHead className="w-12 hidden sm:table-cell"></TableHead>
+                    <TableHead>Товар</TableHead>
+                    <TableHead className="hidden md:table-cell">SKU</TableHead>
+                    <TableHead className="hidden lg:table-cell">Бренд</TableHead>
+                    <TableHead className="hidden sm:table-cell">Цена</TableHead>
+                    <TableHead>Статус</TableHead>
+                    <TableHead className="w-[70px]"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {products.map((product) => {
+                    const statusBadge = STATUS_BADGES[product.status];
+                    return (
+                      <TableRow key={product.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedIds.has(product.id)}
+                            onCheckedChange={() => toggleSelected(product.id)}
+                            aria-label={`Выбрать товар ${product.title}`}
+                          />
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          <ProductImagePreview images={product.images} title={product.title} />
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-medium min-w-[150px]">{product.title}</div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground hidden md:table-cell">{product.sku}</TableCell>
+                        <TableCell className="hidden lg:table-cell">{product.brand?.name || '-'}</TableCell>
+                        <TableCell className="hidden sm:table-cell">{formatPrice(product.price, displayCurrency)}</TableCell>
+                        <TableCell>
+                          <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem asChild>
+                                <Link href={`/catalog/${product.slug}`}>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  Просмотр
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link href={`/admin/manage-products/${product.id}/edit`}>
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  Редактировать
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDelete(product.id)}
+                                className="text-destructive"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Удалить
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           ) : (
             <div className="p-8 text-center text-muted-foreground">
               <p>Товары не найдены</p>

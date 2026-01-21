@@ -81,7 +81,7 @@ export function CategoriesSection() {
           Популярные категории
         </h2>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 auto-rows-[100px] sm:auto-rows-[110px]">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 auto-rows-[140px] sm:auto-rows-[130px] lg:auto-rows-[110px]">
           {items.map((item, index) => (
             <motion.div
               key={item.slug}
@@ -136,9 +136,9 @@ export function CategoriesSection() {
               className="lg:hidden"
             >
               <Link href={item.apiId ? `/catalog?categoryId=${item.apiId}` : `/catalog`} className="block h-full group">
-                <div className="h-full bg-card rounded-2xl border border-border/50 p-4 flex flex-col transition-all duration-300 hover:shadow-lg hover:border-primary/30 overflow-hidden">
-                  <div className="flex-1 flex items-center justify-center mb-2">
-                    <div className={cn('w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center rounded-xl text-2xl sm:text-3xl', !CATEGORY_IMAGES[item.slug] && 'bg-muted/50')}>
+                <div className="h-full bg-card rounded-2xl border border-border/50 p-3 sm:p-4 flex flex-col transition-all duration-300 hover:shadow-lg hover:border-primary/30 overflow-hidden">
+                  <div className="flex items-center justify-center mb-2 sm:mb-3">
+                    <div className={cn('w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center rounded-xl text-xl sm:text-2xl', !CATEGORY_IMAGES[item.slug] && 'bg-muted/50')}>
                       {CATEGORY_IMAGES[item.slug] ? (
                         <img src={CATEGORY_IMAGES[item.slug]!} alt={item.name} className="w-full h-full object-contain" />
                       ) : (
@@ -146,11 +146,11 @@ export function CategoriesSection() {
                       )}
                     </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors leading-tight mb-1 line-clamp-2">
+                  <div className="flex-1 flex flex-col justify-end">
+                    <h3 className="font-semibold text-xs sm:text-sm text-foreground group-hover:text-primary transition-colors leading-tight mb-0.5">
                       {item.name}
                     </h3>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">
                       {item.brandSlugs.length} брендов
                     </p>
                   </div>

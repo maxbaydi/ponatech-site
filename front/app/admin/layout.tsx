@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -35,14 +35,18 @@ const SUPER_ADMIN_NAV_ITEMS = [{ icon: Settings, label: 'Настройки', hr
 
 const ADMIN_NAV_ITEMS = [{ icon: Users, label: 'Пользователи', href: '/admin/users' }];
 
-function AdminSidebar({ className }: { className?: string }) {
+function AdminSidebar({ className, onNavClick }: { className?: string; onNavClick?: () => void }) {
   const pathname = usePathname();
   const { user, logout, isAdmin, isSuperAdmin } = useAuth();
+
+  const handleNavClick = () => {
+    onNavClick?.();
+  };
 
   return (
     <div className={cn('flex flex-col h-full', className)}>
       <div className="p-4">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2" onClick={handleNavClick}>
           <Image
             src="/assets/ponatech-logo-rectangular.webp"
             alt="Pona Tech"
@@ -61,6 +65,7 @@ function AdminSidebar({ className }: { className?: string }) {
             <Link
               key={item.href}
               href={item.href}
+              onClick={handleNavClick}
               className={cn(
                 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                 pathname === item.href || pathname.startsWith(item.href + '/')
@@ -78,6 +83,7 @@ function AdminSidebar({ className }: { className?: string }) {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={handleNavClick}
                 className={cn(
                   'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                   pathname === item.href || pathname.startsWith(item.href + '/')
@@ -97,6 +103,7 @@ function AdminSidebar({ className }: { className?: string }) {
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={handleNavClick}
                   className={cn(
                     'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                     pathname === item.href
@@ -119,7 +126,7 @@ function AdminSidebar({ className }: { className?: string }) {
         <div className="text-xs text-muted-foreground truncate">{user?.email}</div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" asChild className="flex-1">
-            <Link href="/">
+            <Link href="/" onClick={handleNavClick}>
               <ChevronLeft className="h-4 w-4 mr-1" />
               На сайт
             </Link>
@@ -155,6 +162,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return null;
   }
 
+  const [sheetOpen, setSheetOpen] = useState(false);
+
   return (
     <div className="min-h-screen flex">
       <aside className="hidden lg:flex w-64 border-r bg-background flex-col">
@@ -163,7 +172,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       <div className="flex-1 flex flex-col min-h-screen">
         <header className="h-14 border-b bg-background flex items-center px-4 lg:hidden">
-          <Sheet>
+          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon">
                 <Menu className="h-5 w-5" />
@@ -171,7 +180,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </SheetTrigger>
             <SheetContent side="left" className="w-full sm:w-64 p-0">
               <SheetTitle className="sr-only">Меню администратора</SheetTitle>
-              <AdminSidebar />
+              <AdminSidebar onNavClick={() => setSheetOpen(false)} />
             </SheetContent>
           </Sheet>
           <span className="ml-4 font-semibold truncate">Админ-панель</span>

@@ -55,12 +55,12 @@ const FEATURES = [
   {
     icon: Package,
     title: 'Быстрый расчёт',
-    description: 'Получите коммерческое предложение в течение 24 часов',
+    description: 'Коммерческое предложение от 24 часов в зависимости от сложности запроса',
   },
   {
     icon: Shield,
     title: 'Гарантия качества',
-    description: 'Предгрузочная проверка каждого заказа',
+    description: 'Предгрузочная проверка каждого заказа с фото- и видеоотчётом',
   },
   {
     icon: Truck,
@@ -159,7 +159,7 @@ function RequestForm() {
     setSubmitSuccess('');
     try {
       await apiClient.createSupplyRequest(data);
-      setSubmitSuccess('Спасибо! Заявка получена. Мы свяжемся с вами в течение 24 часов.');
+      setSubmitSuccess('Спасибо! Заявка получена. Мы свяжемся с вами в рабочее время в течение 24 часов.');
       form.reset(initialValues);
     } catch (err: unknown) {
       const apiErr = err as { message?: string; fieldErrors?: Record<string, string> } | null;
@@ -308,8 +308,8 @@ export default function RequestPage() {
           <div className="text-center mb-8 sm:mb-12">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">Оставить заявку</h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Заполните форму заявки на поставку оборудования. Наши специалисты свяжутся с вами в 
-              течение 24 часов для уточнения деталей и расчёта стоимости.
+              Заполните форму заявки на поставку оборудования. Наши специалисты свяжутся с вами 
+              в течение 24 часов в рабочее время для уточнения деталей и расчёта стоимости.
             </p>
           </div>
 

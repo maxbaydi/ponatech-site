@@ -101,66 +101,68 @@ export default function CategoriesPage() {
               ))}
             </div>
           ) : filteredCategories && filteredCategories.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Категория</TableHead>
-                  <TableHead>Slug</TableHead>
-                  <TableHead>Родительская</TableHead>
-                  <TableHead className="w-[70px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCategories.map((category) => (
-                  <TableRow key={category.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        {category.level > 0 && (
-                          <div 
-                            className="flex items-center text-muted-foreground"
-                            style={{ marginLeft: `${(category.level - 1) * 20}px` }}
-                          >
-                            <ChevronRight className="w-4 h-4" />
-                          </div>
-                        )}
-                        <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0">
-                          <FolderTree className="w-5 h-5 text-muted-foreground" />
-                        </div>
-                        <div className="font-medium">{category.name}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{category.slug}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {category.parentName || '-'}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link href={`/admin/manage-categories/${category.id}/edit`}>
-                              <Pencil className="mr-2 h-4 w-4" />
-                              Редактировать
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleDelete(category.id)}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Удалить
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Категория</TableHead>
+                    <TableHead className="hidden sm:table-cell">Slug</TableHead>
+                    <TableHead className="hidden md:table-cell">Родительская</TableHead>
+                    <TableHead className="w-[70px]"></TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredCategories.map((category) => (
+                    <TableRow key={category.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          {category.level > 0 && (
+                            <div 
+                              className="flex items-center text-muted-foreground"
+                              style={{ marginLeft: `${(category.level - 1) * 12}px` }}
+                            >
+                              <ChevronRight className="w-4 h-4" />
+                            </div>
+                          )}
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded bg-muted flex items-center justify-center shrink-0">
+                            <FolderTree className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+                          </div>
+                          <div className="font-medium text-sm sm:text-base min-w-[100px]">{category.name}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground hidden sm:table-cell">{category.slug}</TableCell>
+                      <TableCell className="text-muted-foreground hidden md:table-cell">
+                        {category.parentName || '-'}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem asChild>
+                              <Link href={`/admin/manage-categories/${category.id}/edit`}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Редактировать
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleDelete(category.id)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Удалить
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           ) : (
             <div className="p-8 text-center text-muted-foreground">
               <p>Категории не найдены</p>

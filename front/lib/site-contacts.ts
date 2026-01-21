@@ -4,6 +4,7 @@ export const SITE_CONTACTS = {
       title: 'Telegram',
       display: '+7 (925) 4031-888',
       tel: '+79254031888',
+      link: 'https://t.me/+79254031888',
     },
     office: {
       title: 'Офис',

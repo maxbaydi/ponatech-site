@@ -129,95 +129,97 @@ export default function UsersPage() {
             </div>
           ) : data && data.users.length > 0 ? (
             <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Роль</TableHead>
-                    <TableHead>Статус</TableHead>
-                    <TableHead>Дата регистрации</TableHead>
-                    <TableHead className="w-[70px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.users.map((user) => {
-                    const roleBadge = ROLE_BADGES[user.role];
-                    const isCurrentUser = user.id === currentUser?.id;
-                    return (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          <div className="font-medium">
-                            {user.email}
-                            {isCurrentUser && (
-                              <span className="ml-2 text-xs text-muted-foreground">(вы)</span>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={roleBadge.variant}>{roleBadge.label}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          {user.isActive ? (
-                            <Badge variant="outline" className="text-green-600 border-green-600">
-                              Активен
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-red-600 border-red-600">
-                              Неактивен
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {formatDate(user.createdAt)}
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" disabled={isCurrentUser}>
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuSub>
-                                <DropdownMenuSubTrigger>
-                                  <Shield className="mr-2 h-4 w-4" />
-                                  Изменить роль
-                                </DropdownMenuSubTrigger>
-                                <DropdownMenuSubContent>
-                                  {ROLES.map((role) => (
-                                    <DropdownMenuItem
-                                      key={role}
-                                      onClick={() => handleRoleChange(user.id, role)}
-                                      disabled={user.role === role}
-                                    >
-                                      {ROLE_BADGES[role].label}
-                                      {user.role === role && ' ✓'}
-                                    </DropdownMenuItem>
-                                  ))}
-                                </DropdownMenuSubContent>
-                              </DropdownMenuSub>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => handleLogoutAll(user.id)}>
-                                <LogOut className="mr-2 h-4 w-4" />
-                                Завершить все сессии
-                              </DropdownMenuItem>
-                              {user.isActive && (
-                                <DropdownMenuItem
-                                  onClick={() => handleDeactivate(user.id)}
-                                  className="text-destructive"
-                                >
-                                  <UserX className="mr-2 h-4 w-4" />
-                                  Деактивировать
-                                </DropdownMenuItem>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Роль</TableHead>
+                      <TableHead className="hidden sm:table-cell">Статус</TableHead>
+                      <TableHead className="hidden md:table-cell">Дата регистрации</TableHead>
+                      <TableHead className="w-[70px]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {data.users.map((user) => {
+                      const roleBadge = ROLE_BADGES[user.role];
+                      const isCurrentUser = user.id === currentUser?.id;
+                      return (
+                        <TableRow key={user.id}>
+                          <TableCell>
+                            <div className="font-medium min-w-[150px] text-sm sm:text-base">
+                              <span className="break-all">{user.email}</span>
+                              {isCurrentUser && (
+                                <span className="ml-2 text-xs text-muted-foreground">(вы)</span>
                               )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={roleBadge.variant} className="text-xs sm:text-sm">{roleBadge.label}</Badge>
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell">
+                            {user.isActive ? (
+                              <Badge variant="outline" className="text-green-600 border-green-600">
+                                Активен
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-red-600 border-red-600">
+                                Неактивен
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground hidden md:table-cell">
+                            {formatDate(user.createdAt)}
+                          </TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" disabled={isCurrentUser}>
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuSub>
+                                  <DropdownMenuSubTrigger>
+                                    <Shield className="mr-2 h-4 w-4" />
+                                    Изменить роль
+                                  </DropdownMenuSubTrigger>
+                                  <DropdownMenuSubContent>
+                                    {ROLES.map((role) => (
+                                      <DropdownMenuItem
+                                        key={role}
+                                        onClick={() => handleRoleChange(user.id, role)}
+                                        disabled={user.role === role}
+                                      >
+                                        {ROLE_BADGES[role].label}
+                                        {user.role === role && ' ✓'}
+                                      </DropdownMenuItem>
+                                    ))}
+                                  </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => handleLogoutAll(user.id)}>
+                                  <LogOut className="mr-2 h-4 w-4" />
+                                  Завершить все сессии
+                                </DropdownMenuItem>
+                                {user.isActive && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleDeactivate(user.id)}
+                                    className="text-destructive"
+                                  >
+                                    <UserX className="mr-2 h-4 w-4" />
+                                    Деактивировать
+                                  </DropdownMenuItem>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
 
               {data.totalPages > 1 && (
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 border-t">
