@@ -328,10 +328,12 @@
   }
 
   .header-brand-dropdown {
-    width: min(var(--size-header-brand-dropdown), var(--radix-dropdown-menu-content-available-width, 90vw));
+    width: 500px;
     min-width: min(var(--size-header-brand-dropdown-min-w), var(--radix-dropdown-menu-content-available-width, 90vw));
-    max-height: min(var(--size-header-brand-dropdown-max-h), 85vh);
-    border-radius: var(--radius-lg);
+    height: 750px;
+    max-height: 750px;
+    border-radius: 16px;
+    opacity: 0.95;
   }
 
   .header-brand-grid {
