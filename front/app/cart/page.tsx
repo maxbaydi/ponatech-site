@@ -197,91 +197,155 @@ export default function CartPage() {
                     <CardTitle>Список товаров</CardTitle>
                     <CardDescription>Корзина формирует перечень, который будет добавлен в заявку.</CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <Table className="table-fixed">
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-16 shrink-0" />
-                          <TableHead>Товар</TableHead>
-                          <TableHead className="hidden sm:table-cell w-28">SKU</TableHead>
-                          <TableHead className="w-32">Количество</TableHead>
-                          <TableHead className="hidden md:table-cell w-28">Цена</TableHead>
-                          <TableHead className="text-right w-28">Действия</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {items.map((item) => (
-                          <TableRow key={item.id}>
-                            <TableCell className="w-16 p-2">
-                              <div className={CART_ITEM_IMAGE_WRAPPER_CLASS}>
-                                {item.imageUrl ? (
-                                  <Image
-                                    src={item.imageUrl}
-                                    alt={item.imageAlt ?? item.title}
-                                    width={CART_ITEM_IMAGE_SIZE}
-                                    height={CART_ITEM_IMAGE_SIZE}
-                                    sizes={CART_ITEM_IMAGE_SIZES}
-                                    className={CART_ITEM_IMAGE_CLASS}
-                                    unoptimized
-                                  />
-                                ) : (
-                                  <Package className={CART_ITEM_IMAGE_ICON_CLASS} />
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="min-w-0">
-                                <Link
-                                  href={`/catalog/${item.slug}`}
-                                  className="font-medium hover:text-primary transition-colors line-clamp-2"
-                                >
-                                  {item.title}
-                                </Link>
-                                {item.brandName && (
-                                  <p className="text-xs text-muted-foreground mt-1">Бренд: {item.brandName}</p>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">
-                              {item.sku}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
+                  <CardContent className="px-3 sm:px-6">
+                    <div className="hidden sm:block overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-14" />
+                            <TableHead>Товар</TableHead>
+                            <TableHead className="hidden md:table-cell">SKU</TableHead>
+                            <TableHead>Кол-во</TableHead>
+                            <TableHead className="hidden lg:table-cell">Цена</TableHead>
+                            <TableHead className="text-right">Действия</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {items.map((item) => (
+                            <TableRow key={item.id}>
+                              <TableCell className="p-2">
+                                <div className={CART_ITEM_IMAGE_WRAPPER_CLASS}>
+                                  {item.imageUrl ? (
+                                    <Image
+                                      src={item.imageUrl}
+                                      alt={item.imageAlt ?? item.title}
+                                      width={CART_ITEM_IMAGE_SIZE}
+                                      height={CART_ITEM_IMAGE_SIZE}
+                                      sizes={CART_ITEM_IMAGE_SIZES}
+                                      className={CART_ITEM_IMAGE_CLASS}
+                                      unoptimized
+                                    />
+                                  ) : (
+                                    <Package className={CART_ITEM_IMAGE_ICON_CLASS} />
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="min-w-0">
+                                  <Link
+                                    href={`/catalog/${item.slug}`}
+                                    className="font-medium hover:text-primary transition-colors line-clamp-2"
+                                  >
+                                    {item.title}
+                                  </Link>
+                                  {item.brandName && (
+                                    <p className="text-xs text-muted-foreground mt-1">Бренд: {item.brandName}</p>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
+                                {item.sku}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    type="button"
+                                    className="h-8 w-8"
+                                    disabled={item.quantity <= 1}
+                                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                  >
+                                    <Minus className="h-3 w-3" />
+                                  </Button>
+                                  <span className="min-w-[24px] text-center text-sm font-medium">{item.quantity}</span>
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    type="button"
+                                    className="h-8 w-8"
+                                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                  >
+                                    <Plus className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                              <TableCell className="hidden lg:table-cell text-sm">
+                                {Number.isFinite(Number(item.price))
+                                  ? formatPrice(Number(item.price), displayCurrency)
+                                  : '—'}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Button variant="ghost" size="icon" onClick={() => removeItem(item.id)}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    <div className="sm:hidden space-y-3">
+                      {items.map((item) => (
+                        <div key={item.id} className="flex gap-3 p-3 bg-muted/30 rounded-lg">
+                          <div className={CART_ITEM_IMAGE_WRAPPER_CLASS}>
+                            {item.imageUrl ? (
+                              <Image
+                                src={item.imageUrl}
+                                alt={item.imageAlt ?? item.title}
+                                width={CART_ITEM_IMAGE_SIZE}
+                                height={CART_ITEM_IMAGE_SIZE}
+                                sizes={CART_ITEM_IMAGE_SIZES}
+                                className={CART_ITEM_IMAGE_CLASS}
+                                unoptimized
+                              />
+                            ) : (
+                              <Package className={CART_ITEM_IMAGE_ICON_CLASS} />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <Link
+                              href={`/catalog/${item.slug}`}
+                              className="font-medium hover:text-primary transition-colors line-clamp-2 text-sm"
+                            >
+                              {item.title}
+                            </Link>
+                            {item.brandName && (
+                              <p className="text-xs text-muted-foreground mt-0.5">Бренд: {item.brandName}</p>
+                            )}
+                            <div className="flex items-center justify-between mt-2">
+                              <div className="flex items-center gap-1">
                                 <Button
                                   variant="outline"
                                   size="icon"
                                   type="button"
+                                  className="h-7 w-7"
                                   disabled={item.quantity <= 1}
                                   onClick={() => updateQuantity(item.id, item.quantity - 1)}
                                 >
-                                  <Minus className="h-4 w-4" />
+                                  <Minus className="h-3 w-3" />
                                 </Button>
-                                <span className="min-w-[28px] text-center text-sm font-medium">{item.quantity}</span>
+                                <span className="min-w-[24px] text-center text-sm font-medium">{item.quantity}</span>
                                 <Button
                                   variant="outline"
                                   size="icon"
                                   type="button"
+                                  className="h-7 w-7"
                                   onClick={() => updateQuantity(item.id, item.quantity + 1)}
                                 >
-                                  <Plus className="h-4 w-4" />
+                                  <Plus className="h-3 w-3" />
                                 </Button>
                               </div>
-                            </TableCell>
-                            <TableCell className="hidden md:table-cell text-sm">
-                              {Number.isFinite(Number(item.price))
-                                ? formatPrice(Number(item.price), displayCurrency)
-                                : '—'}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button variant="ghost" size="sm" onClick={() => removeItem(item.id)}>
+                              <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => removeItem(item.id)}>
                                 <Trash2 className="h-4 w-4" />
                                 Удалить
                               </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </CardContent>
                 </Card>
 

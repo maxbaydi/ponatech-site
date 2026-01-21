@@ -7,13 +7,13 @@ import { cn } from '@/lib/utils';
 
 type GridSize = 'xl' | 'lg' | 'sm';
 
-interface GridItem {
+interface DesktopGridItem {
   slug: string;
   style: React.CSSProperties;
   size: GridSize;
 }
 
-const GRID_ITEMS: GridItem[] = [
+const DESKTOP_GRID_ITEMS: DesktopGridItem[] = [
   { slug: 'siemens', style: { gridColumn: '1 / 3', gridRow: '1 / 3' }, size: 'xl' },
   { slug: 'rockwell-automation', style: { gridColumn: '3 / 4', gridRow: '1 / 2' }, size: 'sm' },
   { slug: 'ifm', style: { gridColumn: '4 / 5', gridRow: '1 / 2' }, size: 'sm' },
@@ -36,17 +36,26 @@ const GRID_ITEMS: GridItem[] = [
   { slug: 'fanuc', style: { gridColumn: '6 / 7', gridRow: '4 / 5' }, size: 'sm' },
 ];
 
+const MOBILE_BRAND_ORDER = [
+  'siemens', 'schneider-electric', 'sick', 'br',
+  'rockwell-automation', 'ifm', 'keyence', 'abb',
+  'pepperl-fuchs', 'eaton', 'festo', 'balluff',
+  'omron', 'lenze', 'phoenix-contact', 'beckhoff',
+  'sew-eurodrive', 'pilz', 'wago', 'fanuc',
+];
+
 const LOGO_SIZES: Record<GridSize, string> = {
-  xl: 'w-40 h-40 sm:w-52 sm:h-52',
-  lg: 'w-32 h-32 sm:w-44 sm:h-44',
-  sm: 'w-14 h-14 sm:w-20 sm:h-20',
+  xl: 'w-40 h-40 lg:w-52 lg:h-52',
+  lg: 'w-32 h-32 lg:w-44 lg:h-44',
+  sm: 'w-14 h-14 lg:w-20 lg:h-20',
 };
 
-function BrandLogoBox({ name, src, size }: { name: string; src?: string; size: GridSize }) {
+function BrandLogoBox({ name, src, size, isMobile }: { name: string; src?: string; size: GridSize; isMobile?: boolean }) {
   const initials = name.slice(0, 2).toUpperCase();
+  const sizeClass = isMobile ? 'w-16 h-16' : LOGO_SIZES[size];
   
   return (
-    <div className={cn('flex items-center justify-center', LOGO_SIZES[size])}>
+    <div className={cn('flex items-center justify-center', sizeClass)}>
       {src ? (
         <img src={src} alt={name} className="w-full h-full object-contain" />
       ) : (
@@ -57,16 +66,22 @@ function BrandLogoBox({ name, src, size }: { name: string; src?: string; size: G
 }
 
 export function TopBrandsGrid() {
-  const items = GRID_ITEMS.map(item => {
+  const desktopItems = DESKTOP_GRID_ITEMS.map(item => {
     const brand = BRANDS.find(b => b.slug === item.slug);
     return brand ? { ...brand, ...item } : null;
-  }).filter(Boolean) as (typeof BRANDS[number] & GridItem)[];
+  }).filter(Boolean) as (typeof BRANDS[number] & DesktopGridItem)[];
+
+  const mobileItems = MOBILE_BRAND_ORDER.map(slug => {
+    const brand = BRANDS.find(b => b.slug === slug);
+    return brand ?? null;
+  }).filter(Boolean) as typeof BRANDS[number][];
 
   return (
     <section className="mb-10 sm:mb-12">
       <h2 className="text-xl sm:text-2xl font-bold mb-6">Топ 20 брендов</h2>
-      <div className="grid grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4 auto-rows-[70px] sm:auto-rows-[85px]">
-        {items.map((item, index) => (
+      
+      <div className="hidden lg:grid grid-cols-8 gap-4 auto-rows-[85px]">
+        {desktopItems.map((item, index) => (
           <motion.div
             key={item.slug}
             initial={{ opacity: 0, scale: 0.95 }}
@@ -77,6 +92,23 @@ export function TopBrandsGrid() {
             <Link href={`/brands/${item.slug}`} className="block h-full">
               <div className="relative h-full bg-card rounded-xl border border-border/50 shadow-sm flex items-center justify-center transition-all duration-300 hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5 group overflow-hidden">
                 <BrandLogoBox name={item.name} src={item.logo} size={item.size} />
+              </div>
+            </Link>
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 lg:hidden">
+        {mobileItems.map((item, index) => (
+          <motion.div
+            key={item.slug}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, delay: index * 0.02 }}
+          >
+            <Link href={`/brands/${item.slug}`} className="block">
+              <div className="aspect-square bg-card rounded-xl border border-border/50 shadow-sm flex items-center justify-center transition-all duration-300 hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5 group overflow-hidden p-3">
+                <BrandLogoBox name={item.name} src={item.logo} size="sm" isMobile />
               </div>
             </Link>
           </motion.div>
