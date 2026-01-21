@@ -196,8 +196,25 @@ model SupplyRequest {
   requestNumber  String? @unique
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  attachments SupplyRequestAttachment[]
 
   @@map("supply_requests")
+}
+
+model SupplyRequestAttachment {
+  id           String   @id @default(uuid())
+  requestId    String
+  request      SupplyRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([requestId])
+  @@map("supply_request_attachments")
 }
 
 model SiteSetting {

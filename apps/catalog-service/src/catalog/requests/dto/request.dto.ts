@@ -79,6 +79,16 @@ export interface SupplyRequestResponse {
   updatedAt: Date;
 }
 
+export interface SupplyRequestAttachmentResponse {
+  id: string;
+  requestId: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  url: string;
+  createdAt: Date;
+}
+
 export interface SupplyRequestStatsResponse {
   newRequests: number;
   periodDays: number;

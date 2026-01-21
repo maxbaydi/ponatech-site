@@ -7,3 +7,4 @@ export * from './use-media';
 export * from './use-users';
 export * from './use-site-settings';
 export * from './use-supply-requests';
+export * from './use-request-attachments';

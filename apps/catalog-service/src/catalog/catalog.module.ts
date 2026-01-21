@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module';
+import { MinioModule } from '../minio/minio.module';
 import { BrandsController } from './brands/brands.controller';
 import { BrandsRepository } from './brands/brands.repository';
 import { BrandsService } from './brands/brands.service';
@@ -24,7 +25,7 @@ import { SiteSettingsRepository } from './settings/settings.repository';
 import { SiteSettingsService } from './settings/settings.service';
 
 @Module({
-  imports: [PrismaModule, MediaModule],
+  imports: [PrismaModule, MediaModule, MinioModule],
   controllers: [
     BrandsController,
     CategoriesController,

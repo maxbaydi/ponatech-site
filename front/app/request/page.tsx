@@ -1,11 +1,11 @@
 'use client';
 
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Send, CheckCircle2, Package, Shield, Truck, Loader2 } from 'lucide-react';
+import { Send, CheckCircle2, Package, Shield, Truck, Loader2, Paperclip, X, FileText, Image as ImageIcon } from 'lucide-react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
@@ -13,12 +13,30 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { apiClient } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/auth-context';
 import { buildCartDescription, useCartStore } from '@/lib/cart';
+import { formatFileSize } from '@/lib/utils';
+import {
+  REQUEST_ATTACHMENT_ACCEPT,
+  REQUEST_ATTACHMENT_MAX_FILES,
+  REQUEST_ATTACHMENT_MAX_SIZE,
+  getRequestAttachmentIssue,
+  getRequestAttachmentKey,
+  isRequestAttachmentImage,
+} from '@/lib/requests/request-attachments';
 
 const MIN_PHONE_LENGTH = 10;
 const MIN_DESCRIPTION_LENGTH = 10;
+const MAX_FILE_SIZE_MB = Math.round(REQUEST_ATTACHMENT_MAX_SIZE / 1024 / 1024);
+const ATTACHMENTS_LABEL = 'Файлы';
+const ATTACHMENTS_HELPER_SHORT = 'JPG, PNG, PDF, DOC, XLS и другие';
+const ATTACHMENTS_HELPER_FULL =
+  'JPG, PNG, WEBP, GIF, PDF, DOC, DOCX, XLS, XLSX, XLSM, XLSB, CSV, TXT, RTF, ODT, ODS, ODP, PPT, PPTX';
+const ATTACHMENTS_LIMITS = `До ${REQUEST_ATTACHMENT_MAX_FILES} файлов, до ${MAX_FILE_SIZE_MB} МБ каждый`;
+const ATTACHMENTS_BUTTON_LABEL = 'Добавить файлы';
+const ATTACHMENTS_EMPTY_LABEL = 'Файлы не добавлены';
 
 const countPhoneDigits = (value: string): number => value.replace(/\D/g, '').length;
 
@@ -77,6 +95,9 @@ function RequestForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState('');
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [attachmentsError, setAttachmentsError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const productFromUrl = searchParams.get('product') || '';
   const skuFromUrl = searchParams.get('sku') || '';
   const brandFromUrl = searchParams.get('brand') || '';
@@ -154,15 +175,87 @@ function RequestForm() {
     });
   }, [form, user]);
 
+  const buildAttachmentError = useCallback(
+    (file: File, issue: 'empty' | 'too_large' | 'unsupported') => {
+      if (issue === 'empty') {
+        return `Файл "${file.name}" пустой.`;
+      }
+      if (issue === 'too_large') {
+        return `Файл "${file.name}" больше ${MAX_FILE_SIZE_MB} МБ.`;
+      }
+      return `Файл "${file.name}" не подходит по формату.`;
+    },
+    [],
+  );
+
+  const handleAttachmentSelect = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const selectedFiles = Array.from(event.target.files ?? []);
+      if (selectedFiles.length === 0) return;
+
+      const existingKeys = new Set(attachments.map(getRequestAttachmentKey));
+      const nextFiles: File[] = [];
+      const errors: string[] = [];
+      let remainingSlots = REQUEST_ATTACHMENT_MAX_FILES - attachments.length;
+
+      for (const file of selectedFiles) {
+        if (remainingSlots <= 0) {
+          errors.push(`Можно прикрепить не более ${REQUEST_ATTACHMENT_MAX_FILES} файлов.`);
+          break;
+        }
+
+        const key = getRequestAttachmentKey(file);
+        if (existingKeys.has(key)) {
+          continue;
+        }
+
+        const issue = getRequestAttachmentIssue(file);
+        if (issue) {
+          errors.push(buildAttachmentError(file, issue));
+          continue;
+        }
+
+        nextFiles.push(file);
+        existingKeys.add(key);
+        remainingSlots -= 1;
+      }
+
+      if (nextFiles.length > 0) {
+        setAttachments((prev) => [...prev, ...nextFiles]);
+      }
+
+      setAttachmentsError(errors.length > 0 ? errors.join('\n') : '');
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    },
+    [attachments, buildAttachmentError],
+  );
+
+  const handleAttachmentRemove = useCallback((fileKey: string) => {
+    setAttachments((prev) => prev.filter((file) => getRequestAttachmentKey(file) !== fileKey));
+    setAttachmentsError('');
+  }, []);
+
   const onSubmit = async (data: RequestFormData) => {
     setIsSubmitting(true);
     setSubmitError('');
     setSubmitSuccess('');
     try {
-      await apiClient.createSupplyRequest(data);
+      if (attachments.length > 0) {
+        await apiClient.createSupplyRequestWithAttachments(data, attachments);
+      } else {
+        await apiClient.createSupplyRequest(data);
+      }
       await clearCart();
       setSubmitSuccess('Спасибо! Заявка получена. Мы свяжемся с вами как только запрос будет обработан.');
       form.reset(initialValues);
+      setAttachments([]);
+      setAttachmentsError('');
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     } catch (err: unknown) {
       const apiErr = err as { message?: string; fieldErrors?: Record<string, string> } | null;
       const message =
@@ -285,6 +378,86 @@ function RequestForm() {
                 </FormItem>
               )}
             />
+
+            <div className="space-y-3">
+              <FormLabel>{ATTACHMENTS_LABEL}</FormLabel>
+              <div className="rounded-lg border border-dashed p-4">
+                <Input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept={REQUEST_ATTACHMENT_ACCEPT}
+                  onChange={handleAttachmentSelect}
+                  className="hidden"
+                />
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="space-y-1">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="text-xs text-muted-foreground cursor-help underline decoration-dotted underline-offset-2">
+                            {ATTACHMENTS_HELPER_SHORT}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-xs">
+                          {ATTACHMENTS_HELPER_FULL}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <div className="text-xs text-muted-foreground">{ATTACHMENTS_LIMITS}</div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Paperclip className="mr-2 h-4 w-4" />
+                    {ATTACHMENTS_BUTTON_LABEL}
+                  </Button>
+                </div>
+              </div>
+
+              {attachmentsError && (
+                <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive whitespace-pre-wrap">
+                  {attachmentsError}
+                </div>
+              )}
+
+              {attachments.length === 0 ? (
+                <div className="text-xs text-muted-foreground">{ATTACHMENTS_EMPTY_LABEL}</div>
+              ) : (
+                <div className="space-y-2">
+                  {attachments.map((file) => {
+                    const isImage = isRequestAttachmentImage(file.type);
+                    const fileKey = getRequestAttachmentKey(file);
+
+                    return (
+                      <div key={fileKey} className="flex items-center gap-3 rounded-lg border p-3">
+                        <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center text-muted-foreground">
+                          {isImage ? <ImageIcon className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-medium truncate">{file.name}</div>
+                          <div className="text-xs text-muted-foreground">{formatFileSize(file.size)}</div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleAttachmentRemove(fileKey)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              <p className="text-xs text-muted-foreground/70">
+                Если требуется прикрепить видео или большие файлы, воспользуйтесь облачным хранилищем и прикрепите ссылку на ваш файл к запросу.
+              </p>
+            </div>
 
             <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
               {isSubmitting ? (

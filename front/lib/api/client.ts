@@ -24,6 +24,7 @@ import type {
   Product,
   ProductFilters,
   SupplyRequest,
+  SupplyRequestAttachment,
   UpdateProductsBrandBatchRequest,
   UpdateProductsCategoryBatchRequest,
   UpdateProductsStatusBatchRequest,
@@ -79,6 +80,9 @@ const REQUESTS_ENDPOINT = '/requests';
 const REQUESTS_STATS_ENDPOINT = '/requests/stats';
 const REQUEST_STATUS_ENDPOINT = (id: string) => `${REQUESTS_ENDPOINT}/${id}/status`;
 const MY_REQUESTS_ENDPOINT = `${REQUESTS_ENDPOINT}/my`;
+const REQUESTS_WITH_ATTACHMENTS_ENDPOINT = `${REQUESTS_ENDPOINT}/with-attachments`;
+const REQUEST_ATTACHMENTS_ENDPOINT = (id: string) => `${REQUESTS_ENDPOINT}/${id}/attachments`;
+const REQUEST_ATTACHMENTS_DOWNLOAD_ENDPOINT = (id: string) => `${REQUEST_ATTACHMENTS_ENDPOINT(id)}/download`;
 const USERS_STATS_ENDPOINT = '/auth/admin/users/stats';
 
 class ApiClient {
@@ -520,6 +524,20 @@ class ApiClient {
     });
   }
 
+  async createSupplyRequestWithAttachments(
+    data: RequestFormData,
+    files: File[],
+  ): Promise<SupplyRequestResponse> {
+    const formData = new FormData();
+    formData.append('name', data.name);
+    formData.append('email', data.email);
+    formData.append('phone', data.phone);
+    if (data.company) formData.append('company', data.company);
+    formData.append('description', data.description);
+    files.forEach((file) => formData.append('files', file));
+    return this.requestForm<SupplyRequestResponse>(REQUESTS_WITH_ATTACHMENTS_ENDPOINT, formData);
+  }
+
   async getSupplyRequests(filters?: SupplyRequestsFilters): Promise<PaginatedResponse<SupplyRequest>> {
     const params = new URLSearchParams();
     if (filters?.page) params.append('page', String(filters.page));
@@ -542,6 +560,16 @@ class ApiClient {
 
   async getSupplyRequestsStats(): Promise<SupplyRequestsStats> {
     return this.request<SupplyRequestsStats>(REQUESTS_STATS_ENDPOINT);
+  }
+
+  async getSupplyRequestAttachments(id: string): Promise<SupplyRequestAttachment[]> {
+    return this.request<SupplyRequestAttachment[]>(REQUEST_ATTACHMENTS_ENDPOINT(id));
+  }
+
+  async downloadSupplyRequestAttachments(id: string): Promise<Blob> {
+    return this.requestBlob(REQUEST_ATTACHMENTS_DOWNLOAD_ENDPOINT(id), {
+      method: 'GET',
+    });
   }
 
   async updateSupplyRequestStatus(id: string, data: UpdateSupplyRequestStatusRequest): Promise<SupplyRequest> {

@@ -249,6 +249,16 @@ export interface SupplyRequestResponse {
   createdAt: string;
 }
 
+export interface SupplyRequestAttachment {
+  id: string;
+  requestId: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  url: string;
+  createdAt: string;
+}
+
 export interface SupplyRequest {
   id: string;
   name: string;

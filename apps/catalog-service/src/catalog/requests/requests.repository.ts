@@ -23,21 +23,53 @@ const SEQUENCE_NUMBER_PATTERN = /^\d+$/;
 const PAD_CHAR = '0';
 const MONTH_OFFSET = 1;
 
+type RequestAttachmentInput = {
+  filename: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  url: string;
+};
+
 @Injectable()
 export class RequestsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateRequestDto): Promise<RequestResponse> {
-    return this.prisma.$transaction(async (tx) => {
-      const created = await tx.supplyRequest.create({ data: dto });
-      const requestNumber = this.buildRequestNumber(created.sequenceNumber, created.createdAt);
+    return this.createWithAttachments(dto, []);
+  }
 
-      await tx.supplyRequest.update({
-        where: { id: created.id },
-        data: { requestNumber },
-      });
+  async createWithAttachments(
+    dto: CreateRequestDto,
+    attachments: RequestAttachmentInput[],
+  ): Promise<RequestResponse> {
+    return this.prisma.$transaction(async (tx) => {
+      const created = await this.createRequestWithNumber(tx, dto);
+
+      if (attachments.length > 0) {
+        await tx.supplyRequestAttachment.createMany({
+          data: attachments.map((attachment) => ({
+            ...attachment,
+            requestId: created.id,
+          })),
+        });
+      }
 
       return { id: created.id, createdAt: created.createdAt };
+    });
+  }
+
+  async findById(id: string): Promise<{ id: string; email: string } | null> {
+    return this.prisma.supplyRequest.findUnique({
+      where: { id },
+      select: { id: true, email: true },
+    });
+  }
+
+  async findAttachmentsByRequestId(requestId: string) {
+    return this.prisma.supplyRequestAttachment.findMany({
+      where: { requestId },
+      orderBy: { createdAt: 'asc' },
     });
   }
 
@@ -209,5 +241,17 @@ export class RequestsRepository {
     const date = new Date();
     date.setDate(date.getDate() - days);
     return date;
+  }
+
+  private async createRequestWithNumber(
+    tx: Prisma.TransactionClient,
+    dto: CreateRequestDto,
+  ) {
+    const created = await tx.supplyRequest.create({ data: dto });
+    const requestNumber = this.buildRequestNumber(created.sequenceNumber, created.createdAt);
+    return tx.supplyRequest.update({
+      where: { id: created.id },
+      data: { requestNumber },
+    });
   }
 }
