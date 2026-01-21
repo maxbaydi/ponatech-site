@@ -389,18 +389,12 @@ export default function ProductPage({ params }: ProductPageProps) {
 
                   <Separator className="my-6" />
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
-                    <Button size="lg" className="w-full h-14 text-base" asChild>
-                      <Link href={`/request?product=${encodeURIComponent(product.title)}&sku=${product.sku}`}>
-                        <Send className="mr-2 h-5 w-5 shrink-0" />
-                        <span className="truncate">Запросить цену</span>
-                      </Link>
-                    </Button>
+                  <div className="flex flex-col sm:flex-row lg:flex-col gap-3 mb-4">
                     {isInCart ? (
                       <Button
                         size="lg"
                         variant="outline"
-                        className="w-full h-14 text-base border-primary text-primary hover:bg-primary hover:text-white"
+                        className="w-full sm:flex-1 lg:w-full h-14 text-base border-primary text-primary hover:bg-primary hover:text-white min-w-0"
                         type="button"
                         onClick={handleRemoveFromCart}
                       >
@@ -411,7 +405,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                       <Button
                         size="lg"
                         variant="outline"
-                        className="w-full h-14 text-base"
+                        className="w-full sm:flex-1 lg:w-full h-14 text-base min-w-0"
                         type="button"
                         onClick={handleAddToCart}
                       >
@@ -419,13 +413,20 @@ export default function ProductPage({ params }: ProductPageProps) {
                         <span className="truncate">В корзину</span>
                       </Button>
                     )}
-                    <Button size="lg" variant="outline" className="w-full h-14 text-base sm:col-span-2 lg:col-span-1" asChild>
+                    <Button size="lg" variant="outline" className="w-full sm:flex-1 lg:w-full h-14 text-base min-w-0" asChild>
                       <a href={SITE_CONTACTS.phones.telegram.link} target="_blank" rel="noopener noreferrer">
                         <FaTelegramPlane className="mr-2 h-5 w-5 shrink-0" />
                         <span className="truncate">Написать в Telegram</span>
                       </a>
                     </Button>
                   </div>
+
+                  <Button size="lg" className="w-full h-14 text-base" asChild>
+                    <Link href={`/request?product=${encodeURIComponent(product.title)}&sku=${product.sku}`}>
+                      <Send className="mr-2 h-5 w-5 shrink-0" />
+                      <span className="truncate">Запросить цену</span>
+                    </Link>
+                  </Button>
                 </motion.div>
               </div>
 
