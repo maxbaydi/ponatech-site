@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -29,17 +31,39 @@ const PAGE_LABEL = 'Страница';
 const TOTAL_LABEL = 'Всего';
 const PREV_LABEL = 'Назад';
 const NEXT_LABEL = 'Вперёд';
+const SEARCH_PLACEHOLDER = 'Поиск по номеру заявки...';
 
 const DEFAULT_PAGE = 1;
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 5;
 const SKELETON_ROWS = 4;
+const SEARCH_DEBOUNCE_MS = 400;
 const EMPTY_REQUESTS: SupplyRequest[] = [];
 
 export function RequestsHistory() {
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(DEFAULT_PAGE);
   const [selectedRequest, setSelectedRequest] = useState<SupplyRequest | null>(null);
 
-  const { data, isLoading, error } = useMySupplyRequests({ page, limit: PAGE_SIZE });
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setSearchQuery(searchInput.trim());
+      setPage(DEFAULT_PAGE);
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => clearTimeout(timeout);
+  }, [searchInput]);
+
+  const filters = useMemo(
+    () => ({
+      page,
+      limit: PAGE_SIZE,
+      search: searchQuery || undefined,
+    }),
+    [page, searchQuery]
+  );
+
+  const { data, isLoading, error } = useMySupplyRequests(filters);
   const requests = data?.data ?? EMPTY_REQUESTS;
   const totalPages = data?.totalPages ?? 0;
   const total = data?.total ?? 0;
@@ -55,6 +79,16 @@ export function RequestsHistory() {
 
   return (
     <div className="space-y-4">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder={SEARCH_PLACEHOLDER}
+          value={searchInput}
+          onChange={(event) => setSearchInput(event.target.value)}
+          className="pl-10"
+        />
+      </div>
+
       {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: SKELETON_ROWS }).map((_, index) => (

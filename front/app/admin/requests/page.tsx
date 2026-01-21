@@ -45,7 +45,7 @@ const REQUEST_LABEL = 'Запрос';
 const DETAILS_LABEL = 'Подробнее';
 
 const DEFAULT_PAGE = 1;
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 400;
 const DESCRIPTION_PREVIEW_LENGTH = 100;
 const SKELETON_ROWS = 5;
