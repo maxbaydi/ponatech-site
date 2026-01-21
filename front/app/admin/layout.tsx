@@ -9,6 +9,7 @@ import {
   Package,
   Building2,
   FolderTree,
+  ClipboardList,
   Image as ImageIcon,
   Settings,
   Users,
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
   { icon: Package, label: 'Товары', href: '/admin/manage-products' },
   { icon: Building2, label: 'Бренды', href: '/admin/manage-brands' },
   { icon: FolderTree, label: 'Категории', href: '/admin/manage-categories' },
+  { icon: ClipboardList, label: 'Заявки', href: '/admin/requests' },
   { icon: ImageIcon, label: 'Медиабиблиотека', href: '/admin/media' },
 ];
 
@@ -143,6 +145,7 @@ function AdminSidebar({ className, onNavClick }: { className?: string; onNavClic
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, isManager } = useAuth();
   const router = useRouter();
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading && (!isAuthenticated || !isManager)) {
@@ -161,8 +164,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!isAuthenticated || !isManager) {
     return null;
   }
-
-  const [sheetOpen, setSheetOpen] = useState(false);
 
   return (
     <div className="min-h-screen flex">

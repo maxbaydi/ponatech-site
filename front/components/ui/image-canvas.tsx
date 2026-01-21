@@ -11,7 +11,7 @@ export function ImageCanvas({ src, alt = '', className = '', showPlaceholder = t
   return (
     <div
       className={`relative w-full bg-white ${className}`}
-      style={{ aspectRatio: '16/9' }}
+      style={{ aspectRatio: '4/3' }}
     >
       {src ? (
         <img

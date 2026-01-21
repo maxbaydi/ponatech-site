@@ -95,6 +95,10 @@ export class AuthRepository {
     return { users, total };
   }
 
+  async countUsersSince(since: Date): Promise<number> {
+    return this.prisma.user.count({ where: { createdAt: { gte: since } } });
+  }
+
   verifyPassword(password: string, storedHash: string): boolean {
     return this.verifyPasswordHash(password, storedHash);
   }

@@ -23,12 +23,16 @@ import type {
   PaginatedResponse,
   Product,
   ProductFilters,
+  SupplyRequest,
   UpdateProductsBrandBatchRequest,
   UpdateProductsCategoryBatchRequest,
   UpdateProductsStatusBatchRequest,
+  UpdateSupplyRequestStatusRequest,
   RequestFormData,
   RegisterRequest,
   SupplyRequestResponse,
+  SupplyRequestsFilters,
+  SupplyRequestsStats,
   SiteSettings,
   UpdateSiteSettingsRequest,
   UpdateBrandRequest,
@@ -42,6 +46,7 @@ import type {
   User,
   UsersFilters,
   UsersResponse,
+  UsersStats,
 } from './types';
 import { ApiError, toApiError } from './errors';
 
@@ -70,6 +75,11 @@ const AUTH_API_URL = getRequiredEnv(DEFAULT_AUTH_API_URL, 'auth');
 
 const ACCESS_TOKEN_KEY = 'pona_access_token';
 const REFRESH_TOKEN_KEY = 'pona_refresh_token';
+const REQUESTS_ENDPOINT = '/requests';
+const REQUESTS_STATS_ENDPOINT = '/requests/stats';
+const REQUEST_STATUS_ENDPOINT = (id: string) => `${REQUESTS_ENDPOINT}/${id}/status`;
+const MY_REQUESTS_ENDPOINT = `${REQUESTS_ENDPOINT}/my`;
+const USERS_STATS_ENDPOINT = '/auth/admin/users/stats';
 
 class ApiClient {
   private catalogBaseUrl: string;
@@ -504,8 +514,39 @@ class ApiClient {
   }
 
   async createSupplyRequest(data: RequestFormData): Promise<SupplyRequestResponse> {
-    return this.request<SupplyRequestResponse>('/requests', {
+    return this.request<SupplyRequestResponse>(REQUESTS_ENDPOINT, {
       method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getSupplyRequests(filters?: SupplyRequestsFilters): Promise<PaginatedResponse<SupplyRequest>> {
+    const params = new URLSearchParams();
+    if (filters?.page) params.append('page', String(filters.page));
+    if (filters?.limit) params.append('limit', String(filters.limit));
+    if (filters?.search) params.append('search', filters.search);
+    if (filters?.status) params.append('status', filters.status);
+    const query = params.toString();
+    return this.request<PaginatedResponse<SupplyRequest>>(`${REQUESTS_ENDPOINT}${query ? `?${query}` : ''}`);
+  }
+
+  async getMySupplyRequests(filters?: SupplyRequestsFilters): Promise<PaginatedResponse<SupplyRequest>> {
+    const params = new URLSearchParams();
+    if (filters?.page) params.append('page', String(filters.page));
+    if (filters?.limit) params.append('limit', String(filters.limit));
+    if (filters?.search) params.append('search', filters.search);
+    if (filters?.status) params.append('status', filters.status);
+    const query = params.toString();
+    return this.request<PaginatedResponse<SupplyRequest>>(`${MY_REQUESTS_ENDPOINT}${query ? `?${query}` : ''}`);
+  }
+
+  async getSupplyRequestsStats(): Promise<SupplyRequestsStats> {
+    return this.request<SupplyRequestsStats>(REQUESTS_STATS_ENDPOINT);
+  }
+
+  async updateSupplyRequestStatus(id: string, data: UpdateSupplyRequestStatusRequest): Promise<SupplyRequest> {
+    return this.request<SupplyRequest>(REQUEST_STATUS_ENDPOINT(id), {
+      method: 'PATCH',
       body: JSON.stringify(data),
     });
   }
@@ -556,6 +597,10 @@ class ApiClient {
     if (filters?.search) params.append('search', filters.search);
     const query = params.toString();
     return this.request<UsersResponse>(`/auth/admin/users${query ? `?${query}` : ''}`);
+  }
+
+  async getUsersStats(): Promise<UsersStats> {
+    return this.request<UsersStats>(USERS_STATS_ENDPOINT);
   }
 
   async updateUserRole(userId: string, data: UpdateUserRoleRequest): Promise<User> {

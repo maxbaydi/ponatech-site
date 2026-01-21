@@ -1,19 +1,51 @@
 'use client';
 
-import { Package, Building2, FolderTree, TrendingUp } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import Link from 'next/link';
+import { ClipboardList, Package, UserPlus } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import type { BadgeProps } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useProducts } from '@/lib/hooks/use-products';
-import { useBrands } from '@/lib/hooks/use-brands';
-import { useCategories } from '@/lib/hooks/use-categories';
+import { useSupplyRequestsStats } from '@/lib/hooks/use-supply-requests';
+import { useUsersStats } from '@/lib/hooks/use-users';
+
+const PAGE_TITLE = 'Дашборд';
+const PAGE_DESCRIPTION = 'Ключевые показатели и быстрые действия';
+const REQUESTS_TITLE = 'Новые заявки';
+const USERS_TITLE = 'Новые пользователи';
+const PRODUCTS_TITLE = 'Всего товаров';
+const PRODUCTS_DESCRIPTION = 'В каталоге';
+const ACTIONS_TITLE = 'Быстрые действия';
+const ACTIONS_DESCRIPTION = 'Переход к работе с заявками';
+const ACTIONS_LABEL = 'Перейти к заявкам';
+const REQUESTS_ATTENTION_LABEL = 'Требуют внимания';
+const REQUESTS_CLEAR_LABEL = 'Новых нет';
+const PERIOD_PREFIX = 'За последние';
+const PERIOD_SUFFIX = 'дн.';
+const PRODUCTS_COUNT_PAGE = 1;
+const PRODUCTS_COUNT_LIMIT = 1;
+const DEFAULT_STATS_DAYS = 7;
+const EMPTY_COUNT = 0;
+const BADGE_VARIANT_ATTENTION: BadgeProps['variant'] = 'destructive';
+const BADGE_VARIANT_OK: BadgeProps['variant'] = 'secondary';
+
+type StatBadge = {
+  label: string;
+  variant: BadgeProps['variant'];
+};
 
 interface StatCardProps {
   title: string;
   value: number | string;
   icon: React.ReactNode;
   description?: string;
+  badge?: StatBadge;
 }
 
-function StatCard({ title, value, icon, description }: StatCardProps) {
+const formatPeriodLabel = (days: number): string => `${PERIOD_PREFIX} ${days} ${PERIOD_SUFFIX}`;
+
+function StatCard({ title, value, icon, description, badge }: StatCardProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -22,120 +54,83 @@ function StatCard({ title, value, icon, description }: StatCardProps) {
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
-        {description && <p className="text-xs text-muted-foreground">{description}</p>}
+        {(description || badge) && (
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            {description && <span>{description}</span>}
+            {badge && <Badge variant={badge.variant}>{badge.label}</Badge>}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
 }
 
 export default function DashboardPage() {
-  const { data: allProductsPage } = useProducts({ page: 1, limit: 1 });
-  const { data: publishedProductsPage } = useProducts({ status: 'PUBLISHED', page: 1, limit: 1 });
-  const { data: draftProductsPage } = useProducts({ status: 'DRAFT', page: 1, limit: 1 });
-  const { data: latestProductsPage } = useProducts({ page: 1, limit: 5, sort: 'created_desc' });
-  const { data: brands } = useBrands();
-  const { data: categories } = useCategories();
+  const { data: allProductsPage } = useProducts({ page: PRODUCTS_COUNT_PAGE, limit: PRODUCTS_COUNT_LIMIT });
+  const { data: requestsStats } = useSupplyRequestsStats();
+  const { data: usersStats } = useUsersStats();
 
-  const totalProducts = allProductsPage?.total ?? 0;
-  const publishedProducts = publishedProductsPage?.total ?? 0;
-  const draftProducts = draftProductsPage?.total ?? 0;
-  const latestProducts = latestProductsPage?.data ?? [];
+  const totalProducts = allProductsPage?.total ?? EMPTY_COUNT;
+  const newRequests = requestsStats?.newRequests ?? EMPTY_COUNT;
+  const newUsers = usersStats?.newUsers ?? EMPTY_COUNT;
+  const requestsPeriodDays = requestsStats?.periodDays ?? DEFAULT_STATS_DAYS;
+  const usersPeriodDays = usersStats?.periodDays ?? DEFAULT_STATS_DAYS;
+  const requestsBadge: StatBadge = newRequests > EMPTY_COUNT
+    ? { label: REQUESTS_ATTENTION_LABEL, variant: BADGE_VARIANT_ATTENTION }
+    : { label: REQUESTS_CLEAR_LABEL, variant: BADGE_VARIANT_OK };
+
+  const statsCards: StatCardProps[] = [
+    {
+      title: REQUESTS_TITLE,
+      value: newRequests,
+      icon: <ClipboardList className="h-4 w-4 text-muted-foreground" />,
+      description: formatPeriodLabel(requestsPeriodDays),
+      badge: requestsBadge,
+    },
+    {
+      title: USERS_TITLE,
+      value: newUsers,
+      icon: <UserPlus className="h-4 w-4 text-muted-foreground" />,
+      description: formatPeriodLabel(usersPeriodDays),
+    },
+    {
+      title: PRODUCTS_TITLE,
+      value: totalProducts,
+      icon: <Package className="h-4 w-4 text-muted-foreground" />,
+      description: PRODUCTS_DESCRIPTION,
+    },
+  ];
 
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Дашборд</h1>
-        <p className="text-muted-foreground">Обзор системы управления каталогом</p>
+        <h1 className="text-2xl font-bold">{PAGE_TITLE}</h1>
+        <p className="text-muted-foreground">{PAGE_DESCRIPTION}</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Всего товаров"
-          value={totalProducts}
-          icon={<Package className="h-4 w-4 text-muted-foreground" />}
-          description={`${publishedProducts} опубликовано, ${draftProducts} черновиков`}
-        />
-        <StatCard
-          title="Бренды"
-          value={brands?.length || 0}
-          icon={<Building2 className="h-4 w-4 text-muted-foreground" />}
-          description="Активных производителей"
-        />
-        <StatCard
-          title="Категории"
-          value={categories?.length || 0}
-          icon={<FolderTree className="h-4 w-4 text-muted-foreground" />}
-          description="Категорий товаров"
-        />
-        <StatCard
-          title="Активность"
-          value="+12%"
-          icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />}
-          description="За последний месяц"
-        />
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {statsCards.map((card) => (
+          <StatCard
+            key={card.title}
+            title={card.title}
+            value={card.value}
+            icon={card.icon}
+            description={card.description}
+            badge={card.badge}
+          />
+        ))}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 mt-6">
+      <div className="mt-6">
         <Card>
           <CardHeader>
-            <CardTitle>Последние товары</CardTitle>
+            <CardTitle>{ACTIONS_TITLE}</CardTitle>
+            <CardDescription>{ACTIONS_DESCRIPTION}</CardDescription>
           </CardHeader>
           <CardContent>
-            {latestProducts.length > 0 ? (
-              <div className="space-y-4">
-                {latestProducts.map((product) => (
-                  <div key={product.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <div>
-                      <p className="font-medium text-sm">{product.title}</p>
-                      <p className="text-xs text-muted-foreground">{product.sku}</p>
-                    </div>
-                    <span
-                      className={`text-xs px-2 py-1 rounded-full ${
-                        product.status === 'PUBLISHED'
-                          ? 'bg-success/10 text-success'
-                          : 'bg-muted text-muted-foreground'
-                      }`}
-                    >
-                      {product.status === 'PUBLISHED' ? 'Опубликован' : 'Черновик'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-sm">Нет товаров</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Популярные бренды</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {brands && brands.length > 0 ? (
-              <div className="space-y-4">
-                {brands.slice(0, 5).map((brand) => (
-                  <div key={brand.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded bg-muted flex items-center justify-center">
-                        <span className="text-xs font-bold">{brand.name.slice(0, 2)}</span>
-                      </div>
-                      <div>
-                        <p className="font-medium text-sm">{brand.name}</p>
-                        <p className="text-xs text-muted-foreground">{brand.country}</p>
-                      </div>
-                    </div>
-                    {brand.isFeatured && (
-                      <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
-                        Featured
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-sm">Нет брендов</p>
-            )}
+            <Button asChild>
+              <Link href="/admin/requests">{ACTIONS_LABEL}</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>

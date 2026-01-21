@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth } from '@/lib/auth/auth-context';
+import { RequestsHistory } from './requests-history';
 
 const ROLE_LABELS: Record<string, { label: string; color: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   CUSTOMER: { label: 'Клиент', color: 'outline' },
@@ -140,7 +141,6 @@ export default function ProfilePage() {
     setPasswordError('');
     setPasswordSuccess('');
     try {
-      console.log('Password change:', data);
       setPasswordSuccess('Пароль успешно изменён.');
       passwordForm.reset();
     } catch {
@@ -384,9 +384,7 @@ export default function ProfilePage() {
                     <CardDescription>Ваши заявки на поставку оборудования</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-center py-8 text-muted-foreground">
-                      <p>У вас пока нет заявок</p>
-                    </div>
+                    <RequestsHistory />
                   </CardContent>
                 </Card>
               </TabsContent>

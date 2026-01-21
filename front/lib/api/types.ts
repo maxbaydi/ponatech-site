@@ -1,6 +1,7 @@
 export type ProductStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'MANAGER' | 'CUSTOMER';
 export type DisplayCurrency = 'RUB' | 'CNY';
+export type SupplyRequestStatus = 'NEW' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 
 export interface SiteSettings {
   displayCurrency: DisplayCurrency;
@@ -248,6 +249,35 @@ export interface SupplyRequestResponse {
   createdAt: string;
 }
 
+export interface SupplyRequest {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  company?: string | null;
+  description: string;
+  status: SupplyRequestStatus;
+  requestNumber: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SupplyRequestsFilters {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: SupplyRequestStatus;
+}
+
+export interface UpdateSupplyRequestStatusRequest {
+  status: SupplyRequestStatus;
+}
+
+export interface SupplyRequestsStats {
+  newRequests: number;
+  periodDays: number;
+}
+
 export interface CartItem {
   id: string;
   slug: string;
@@ -295,6 +325,11 @@ export interface UsersFilters {
   page?: number;
   limit?: number;
   search?: string;
+}
+
+export interface UsersStats {
+  newUsers: number;
+  periodDays: number;
 }
 
 export interface UpdateUserRoleRequest {

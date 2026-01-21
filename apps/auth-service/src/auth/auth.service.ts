@@ -1,8 +1,12 @@
 import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { AuthRepository, AuthenticatedUser, UserRecord } from './auth.repository';
 import { AuthTokensResponse, LoginDto, RefreshTokenDto, RegisterDto } from './dto/auth.dto';
+import { UsersStatsResponse } from './dto/admin.dto';
 import { UpdateProfileDto } from './dto/profile.dto';
 import { Role } from './role.enum';
+
+const DEFAULT_USERS_STATS_DAYS = 7;
+const MIN_STATS_DAYS = 1;
 
 @Injectable()
 export class AuthService {
@@ -105,6 +109,17 @@ export class AuthService {
     };
   }
 
+  async getUsersStats(days?: number): Promise<UsersStatsResponse> {
+    const periodDays = normalizeStatsDays(days);
+    const since = getDateDaysAgo(periodDays);
+    const newUsers = await this.authRepository.countUsersSince(since);
+
+    return {
+      newUsers,
+      periodDays,
+    };
+  }
+
   async updateUserRole(
     userId: string,
     role: Role,
@@ -201,6 +216,20 @@ const normalizeProfileUpdate = (dto: UpdateProfileDto): { name?: string | null; 
   }
 
   return update;
+};
+
+const normalizeStatsDays = (days?: number): number => {
+  if (days === undefined || !Number.isFinite(days) || days < MIN_STATS_DAYS) {
+    return DEFAULT_USERS_STATS_DAYS;
+  }
+
+  return Math.floor(days);
+};
+
+const getDateDaysAgo = (days: number): Date => {
+  const date = new Date();
+  date.setDate(date.getDate() - days);
+  return date;
 };
 
 const normalizeOptionalString = (value: string | null): string | null => {

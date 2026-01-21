@@ -1,4 +1,4 @@
-import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { Role } from '../role.enum';
 
@@ -23,4 +23,20 @@ export class GetUsersQueryDto {
   @IsOptional()
   @IsString()
   search?: string;
+}
+
+const MAX_STATS_DAYS = 365;
+
+export class GetUsersStatsQueryDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(MAX_STATS_DAYS)
+  days?: number;
+}
+
+export interface UsersStatsResponse {
+  newUsers: number;
+  periodDays: number;
 }

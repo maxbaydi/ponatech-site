@@ -8,6 +8,8 @@ interface JwtPayload {
   sub?: string;
   userId?: string;
   role?: Role;
+  email?: string;
+  ver?: number;
   exp?: number;
 }
 
@@ -15,6 +17,7 @@ export interface RequestWithUser extends Request {
   user?: {
     userId: string;
     role: Role;
+    email?: string;
   };
 }
 
@@ -63,10 +66,11 @@ export class JwtAuthGuard implements CanActivate {
       throw new UnauthorizedException('Invalid access token');
     }
 
-    request.user = {
-      userId,
-      role: payload.role,
-    };
+      request.user = {
+        userId,
+        role: payload.role,
+        email: typeof payload.email === 'string' ? payload.email : undefined,
+      };
 
     return true;
   }

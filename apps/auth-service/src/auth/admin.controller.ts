@@ -1,6 +1,6 @@
 import { Body, Controller, Get, HttpCode, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { GetUsersQueryDto, UpdateUserRoleDto } from './dto/admin.dto';
+import { GetUsersQueryDto, GetUsersStatsQueryDto, UpdateUserRoleDto, UsersStatsResponse } from './dto/admin.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Roles } from './guards/roles.decorator';
 import { RolesGuard } from './guards/roles.guard';
@@ -25,6 +25,11 @@ export class AuthAdminController {
       limit: query.limit,
       search: query.search,
     });
+  }
+
+  @Get('users/stats')
+  async getUsersStats(@Query() query: GetUsersStatsQueryDto): Promise<UsersStatsResponse> {
+    return this.authService.getUsersStats(query.days);
   }
 
   @Patch('users/:id/role')

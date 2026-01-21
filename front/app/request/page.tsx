@@ -72,6 +72,7 @@ const FEATURES = [
 function RequestForm() {
   const searchParams = useSearchParams();
   const cartItems = useCartStore((state) => state.items);
+  const clearCart = useCartStore((state) => state.clear);
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -159,7 +160,8 @@ function RequestForm() {
     setSubmitSuccess('');
     try {
       await apiClient.createSupplyRequest(data);
-      setSubmitSuccess('Спасибо! Заявка получена. Мы свяжемся с вами в рабочее время в течение 24 часов.');
+      await clearCart();
+      setSubmitSuccess('Спасибо! Заявка получена. Мы свяжемся с вами как только запрос будет обработан.');
       form.reset(initialValues);
     } catch (err: unknown) {
       const apiErr = err as { message?: string; fieldErrors?: Record<string, string> } | null;
@@ -309,7 +311,7 @@ export default function RequestPage() {
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">Оставить заявку</h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Заполните форму заявки на поставку оборудования. Наши специалисты свяжутся с вами 
-              в течение 24 часов в рабочее время для уточнения деталей и расчёта стоимости.
+              от 24 часов в рабочее время для уточнения деталей и расчёта стоимости.
             </p>
           </div>
 
