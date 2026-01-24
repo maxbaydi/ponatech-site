@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { debounce } from '@/lib/utils';
 
+const CLEAR_SEARCH_LABEL = 'Очистить поиск';
+
 export function ProductSearch() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -65,10 +67,12 @@ export function ProductSearch() {
       />
       {value && (
         <Button
+          type="button"
           variant="ghost"
           size="icon"
           className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
           onClick={clearSearch}
+          aria-label={CLEAR_SEARCH_LABEL}
         >
           <X className="h-4 w-4" />
         </Button>

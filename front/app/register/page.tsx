@@ -13,6 +13,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth } from '@/lib/auth/auth-context';
 
+const PASSWORD_PLACEHOLDER = 'Минимум 8 символов';
+
 const registerSchema = z
   .object({
     email: z.string().email('Введите корректный email'),
@@ -106,7 +108,7 @@ export default function RegisterPage() {
                   <div className="relative">
                     <Input
                       type={showPassword ? 'text' : 'password'}
-                      placeholder="Минимум 6 символов"
+                      placeholder={PASSWORD_PLACEHOLDER}
                       {...field}
                     />
                     <Button

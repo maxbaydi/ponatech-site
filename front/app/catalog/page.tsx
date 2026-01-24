@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState, Suspense, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Package } from 'lucide-react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
@@ -14,10 +14,28 @@ import {
   ViewToggle,
 } from '@/components/catalog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import { useProducts } from '@/lib/hooks/use-products';
 import type { ProductFilters as ProductFiltersType } from '@/lib/api/types';
 
+const CATALOG_PATH = '/catalog';
+const RETRY_LABEL = 'Повторить';
+const RESET_FILTERS_LABEL = 'Сбросить фильтры';
+const CATALOG_ERROR_TITLE = 'Не удалось загрузить каталог';
+const CATALOG_ERROR_DESCRIPTION = 'Попробуйте повторить запрос или обновить страницу.';
+const ACTIVE_FILTER_KEYS = [
+  'brandId',
+  'brandSlug',
+  'categoryId',
+  'categorySlug',
+  'search',
+  'minPrice',
+  'maxPrice',
+  'sort',
+] as const;
+
 function CatalogContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
@@ -35,11 +53,20 @@ function CatalogContent() {
     status: 'PUBLISHED',
   };
 
-  const { data: productsPage, isLoading } = useProducts(filters);
+  const { data: productsPage, isLoading, error, refetch } = useProducts(filters);
   const products = productsPage?.data ?? [];
   const totalPages = productsPage?.totalPages ?? 0;
   const currentPage = filters.page || 1;
   const resultsKey = `${searchParams.toString()}|${viewMode}`;
+  const hasActiveFilters = ACTIVE_FILTER_KEYS.some((key) => Boolean(searchParams.get(key)));
+
+  const handleResetFilters = useCallback(() => {
+    router.push(CATALOG_PATH, { scroll: false });
+  }, [router]);
+
+  const handleRetry = useCallback(() => {
+    refetch();
+  }, [refetch]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -55,7 +82,6 @@ function CatalogContent() {
 
           <div className="flex flex-col lg:flex-row gap-8">
             <ProductFilters />
-            <ProductFilters isMobile />
 
             <div className="flex-1">
               <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-4 mb-6">
@@ -86,6 +112,22 @@ function CatalogContent() {
                     </div>
                   ))}
                 </div>
+              ) : error ? (
+                <div key={`error-${resultsKey}`} className="text-center py-12 sm:py-16 smooth-appear">
+                  <Package className="w-12 h-12 sm:w-16 sm:h-16 text-destructive/40 mx-auto mb-4" />
+                  <h3 className="font-semibold text-lg mb-2">{CATALOG_ERROR_TITLE}</h3>
+                  <p className="text-muted-foreground mb-6">{CATALOG_ERROR_DESCRIPTION}</p>
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                    <Button variant="outline" onClick={handleRetry}>
+                      {RETRY_LABEL}
+                    </Button>
+                    {hasActiveFilters && (
+                      <Button variant="ghost" onClick={handleResetFilters}>
+                        {RESET_FILTERS_LABEL}
+                      </Button>
+                    )}
+                  </div>
+                </div>
               ) : products.length > 0 ? (
                   <div key={`results-${resultsKey}`} className="smooth-appear">
                   <div className="text-sm text-muted-foreground mb-4">
@@ -114,6 +156,11 @@ function CatalogContent() {
                   <p className="text-muted-foreground">
                     Попробуйте изменить параметры фильтрации или поисковый запрос
                   </p>
+                  {hasActiveFilters && (
+                    <Button variant="outline" className="mt-4" onClick={handleResetFilters}>
+                      {RESET_FILTERS_LABEL}
+                    </Button>
+                  )}
                 </div>
               )}
             </div>

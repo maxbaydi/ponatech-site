@@ -22,6 +22,8 @@ const ATTACHMENTS_LOADING_LABEL = 'Загрузка файлов...';
 const ATTACHMENTS_DOWNLOAD_ALL_LABEL = 'Скачать все';
 const ATTACHMENTS_OPEN_LABEL = 'Открыть';
 const ATTACHMENTS_DOWNLOAD_LABEL = 'Скачать';
+const ATTACHMENTS_ERROR_LABEL = 'Не удалось загрузить файлы';
+const ATTACHMENTS_DOWNLOAD_ERROR_LABEL = 'Не удалось скачать файлы';
 
 interface RequestsHistorySheetProps {
   request: SupplyRequest | null;
@@ -41,9 +43,11 @@ const downloadBlob = (blob: Blob, filename: string) => {
 
 export function RequestsHistorySheet({ request, open, onOpenChange }: RequestsHistorySheetProps) {
   const requestId = request?.id;
-  const { data: attachments = [], isLoading: attachmentsLoading } = useSupplyRequestAttachments(requestId);
+  const { data: attachments = [], isLoading: attachmentsLoading, error: attachmentsError } = useSupplyRequestAttachments(requestId);
   const downloadAttachments = useDownloadSupplyRequestAttachments();
   const attachmentsEmptyLabel = attachmentsLoading ? ATTACHMENTS_LOADING_LABEL : ATTACHMENTS_EMPTY_LABEL;
+  const attachmentsErrorMessage = attachmentsError ? ATTACHMENTS_ERROR_LABEL : '';
+  const downloadErrorMessage = downloadAttachments.isError ? ATTACHMENTS_DOWNLOAD_ERROR_LABEL : '';
   const downloadFilename = useMemo(() => {
     if (!requestId) return 'request-attachments.zip';
     const reference = request?.requestNumber ?? requestId;
@@ -52,8 +56,12 @@ export function RequestsHistorySheet({ request, open, onOpenChange }: RequestsHi
 
   const handleDownloadAll = async () => {
     if (!requestId) return;
-    const blob = await downloadAttachments.mutateAsync(requestId);
-    downloadBlob(blob, downloadFilename);
+    try {
+      const blob = await downloadAttachments.mutateAsync(requestId);
+      downloadBlob(blob, downloadFilename);
+    } catch {
+      return;
+    }
   };
 
   return (
@@ -107,6 +115,12 @@ export function RequestsHistorySheet({ request, open, onOpenChange }: RequestsHi
                     openLabel={ATTACHMENTS_OPEN_LABEL}
                     downloadLabel={ATTACHMENTS_DOWNLOAD_LABEL}
                   />
+                  {attachmentsErrorMessage && (
+                    <p className="mt-2 text-sm text-destructive">{attachmentsErrorMessage}</p>
+                  )}
+                  {downloadErrorMessage && (
+                    <p className="mt-2 text-sm text-destructive">{downloadErrorMessage}</p>
+                  )}
                 </AccordionContent>
               </AccordionItem>
             </Accordion>

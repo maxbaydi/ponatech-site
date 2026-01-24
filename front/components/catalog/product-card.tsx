@@ -23,6 +23,7 @@ interface ProductCardProps {
 const DETAILS_LABEL = 'Подробнее';
 const ADD_TO_CART_LABEL = 'Добавить в корзину';
 const REMOVE_FROM_CART_LABEL = 'Удалить из корзины';
+const IN_CART_LABEL = 'В корзине';
 const DETAILS_BUTTON_SIZE: ButtonProps['size'] = 'sm';
 const CART_BUTTON_SIZE: ButtonProps['size'] = 'sm';
 const CART_BUTTON_CLASS = 'shrink-0 gap-1 px-2';
@@ -66,6 +67,7 @@ function DetailsButton({ href, size = DETAILS_BUTTON_SIZE, variant, className }:
 type CartActionButtonProps = {
   product: Product;
   size?: ButtonProps['size'];
+  isInCart: boolean;
 };
 
 const CART_ACTIONS = {
@@ -84,7 +86,7 @@ const CART_ACTIONS = {
   { label: string; variant: ButtonProps['variant']; Icon: typeof Plus }
 >;
 
-function CartActionButton({ product, size = CART_BUTTON_SIZE }: CartActionButtonProps) {
+function CartActionButton({ product, size = CART_BUTTON_SIZE, isInCart }: CartActionButtonProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -92,7 +94,6 @@ function CartActionButton({ product, size = CART_BUTTON_SIZE }: CartActionButton
   const addItem = useCartStore((state) => state.addItem);
   const removeItem = useCartStore((state) => state.removeItem);
   const isCartLoading = useCartStore((state) => state.isLoading);
-  const isInCart = useCartStore((state) => state.items.some((item) => item.id === product.id));
   const action = isInCart ? 'remove' : 'add';
   const { Icon, label, variant } = CART_ACTIONS[action];
 
@@ -132,6 +133,7 @@ export function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
   const productImage = resolveProductImage(product);
   const descriptionText = htmlToText(product.description);
   const productHref = `/catalog/${product.slug}`;
+  const isInCart = useCartStore((state) => state.items.some((item) => item.id === product.id));
 
   if (viewMode === 'list') {
     return (
@@ -156,17 +158,26 @@ export function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
               {descriptionText && (
                 <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{descriptionText}</p>
               )}
-              {product.category && (
-                <Badge variant="outline" className="text-xs">
-                  {product.category.name}
-                </Badge>
+              {(product.category || isInCart) && (
+                <div className="flex flex-wrap gap-2">
+                  {product.category && (
+                    <Badge variant="outline" className="text-xs">
+                      {product.category.name}
+                    </Badge>
+                  )}
+                  {isInCart && (
+                    <Badge variant="secondary" className="text-xs">
+                      {IN_CART_LABEL}
+                    </Badge>
+                  )}
+                </div>
               )}
             </div>
             <div className="flex items-center justify-between mt-4 gap-3">
               <p className="font-bold text-xl text-primary">{formatPrice(product.price, displayCurrency)}</p>
               <div className="flex items-center gap-2">
                 <DetailsButton href={productHref} />
-                <CartActionButton product={product} />
+                <CartActionButton product={product} isInCart={isInCart} />
               </div>
             </div>
           </CardContent>
@@ -200,10 +211,19 @@ export function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
               {product.title}
             </h3>
           </Link>
-          {product.category && (
-            <Badge variant="outline" className="text-xs mb-3">
-              {product.category.name}
-            </Badge>
+          {(product.category || isInCart) && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {product.category && (
+                <Badge variant="outline" className="text-xs">
+                  {product.category.name}
+                </Badge>
+              )}
+              {isInCart && (
+                <Badge variant="secondary" className="text-xs">
+                  {IN_CART_LABEL}
+                </Badge>
+              )}
+            </div>
           )}
           <p className="font-bold text-lg text-primary">{formatPrice(product.price, displayCurrency)}</p>
         </div>
@@ -213,7 +233,7 @@ export function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
             variant="outline"
             className="flex-1 justify-center transition-colors hover:bg-primary hover:text-white"
           />
-          <CartActionButton product={product} />
+          <CartActionButton product={product} isInCart={isInCart} />
         </div>
       </CardContent>
     </Card>

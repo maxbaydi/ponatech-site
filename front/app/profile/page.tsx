@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth } from '@/lib/auth/auth-context';
+import { isApiError } from '@/lib/api/errors';
 import { RequestsHistory } from './requests-history';
 
 const ROLE_LABELS: Record<string, { label: string; color: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
@@ -22,6 +23,11 @@ const ROLE_LABELS: Record<string, { label: string; color: 'default' | 'secondary
 };
 
 const MIN_PHONE_LENGTH = 10;
+const PASSWORD_MIN_LENGTH = 8;
+const CURRENT_PASSWORD_MESSAGE = 'Введите текущий пароль';
+const NEW_PASSWORD_MESSAGE = `Новый пароль должен содержать минимум ${PASSWORD_MIN_LENGTH} символов`;
+const PASSWORD_MISMATCH_MESSAGE = 'Пароли не совпадают';
+const PASSWORD_ERROR_MESSAGE = 'Не удалось изменить пароль. Попробуйте ещё раз.';
 
 const countPhoneDigits = (value: string): number => value.replace(/\D/g, '').length;
 
@@ -45,12 +51,12 @@ const profileSchema = z.object({
 
 const passwordSchema = z
   .object({
-    currentPassword: z.string().min(6, 'Введите текущий пароль'),
-    newPassword: z.string().min(6, 'Новый пароль должен содержать минимум 6 символов'),
+    currentPassword: z.string().min(PASSWORD_MIN_LENGTH, CURRENT_PASSWORD_MESSAGE),
+    newPassword: z.string().min(PASSWORD_MIN_LENGTH, NEW_PASSWORD_MESSAGE),
     confirmPassword: z.string(),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: 'Пароли не совпадают',
+    message: PASSWORD_MISMATCH_MESSAGE,
     path: ['confirmPassword'],
   });
 
@@ -58,7 +64,7 @@ type PasswordFormData = z.infer<typeof passwordSchema>;
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function ProfilePage() {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, changePassword } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isProfileSaving, setIsProfileSaving] = useState(false);
   const [profileError, setProfileError] = useState('');
@@ -141,10 +147,21 @@ export default function ProfilePage() {
     setPasswordError('');
     setPasswordSuccess('');
     try {
+      await changePassword({ currentPassword: data.currentPassword, newPassword: data.newPassword });
       setPasswordSuccess('Пароль успешно изменён.');
       passwordForm.reset();
-    } catch {
-      setPasswordError('Не удалось изменить пароль. Попробуйте ещё раз.');
+    } catch (err: unknown) {
+      const apiErr = isApiError(err) ? err : null;
+      const message = apiErr?.message || PASSWORD_ERROR_MESSAGE;
+      setPasswordError(message);
+
+      const passwordFieldError = apiErr?.fieldErrors?.password;
+
+      if (passwordFieldError) {
+        passwordForm.setError('newPassword', { message: passwordFieldError });
+      } else if (apiErr?.status === 400 || apiErr?.status === 401) {
+        passwordForm.setError('currentPassword', { message });
+      }
     } finally {
       setIsLoading(false);
     }

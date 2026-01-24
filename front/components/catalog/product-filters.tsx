@@ -13,13 +13,10 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { useBrands } from '@/lib/hooks/use-brands';
 import { useCategories } from '@/lib/hooks/use-categories';
 import { useDisplayCurrency } from '@/lib/hooks/use-site-settings';
+import { useMediaQuery } from '@/lib/hooks/use-media-query';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getCurrencySymbol } from '@/lib/currency';
 import type { Category } from '@/lib/api/types';
-
-interface ProductFiltersProps {
-  isMobile?: boolean;
-}
 
 type FilterItem = {
   id: string;
@@ -61,6 +58,14 @@ const FILTERS_TITLE = 'Фильтры';
 const PRICE_MIN_PLACEHOLDER = 'От';
 const PRICE_MAX_PLACEHOLDER = 'До';
 const CLEAR_BRAND_SEARCH_LABEL = 'Очистить поиск';
+const BRAND_SEARCH_INPUT_TYPE = 'text';
+const PRICE_MIN_VALUE = 0;
+const PRICE_NEGATIVE_ERROR = 'Цена не может быть отрицательной';
+const PRICE_RANGE_ERROR = 'Минимальная цена не может быть больше максимальной';
+const BRANDS_ERROR_MESSAGE = 'Не удалось загрузить бренды';
+const CATEGORIES_ERROR_MESSAGE = 'Не удалось загрузить категории';
+const FILTER_RETRY_LABEL = 'Повторить';
+const DESKTOP_MEDIA_QUERY = '(min-width: 1024px)';
 
 const FILTER_QUERY_KEYS = {
   brandId: 'brandId',
@@ -106,6 +111,27 @@ const orderSelectedFirst = <T extends FilterItem>(items: T[], selectedIds: Set<s
   return selected.length > 0 ? [...selected, ...unselected] : items;
 };
 
+const parsePriceValue = (value: string): number | null => {
+  if (!value) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const getPriceRangeError = (minValue: string, maxValue: string): string => {
+  const min = parsePriceValue(minValue);
+  const max = parsePriceValue(maxValue);
+
+  if ((min !== null && min < PRICE_MIN_VALUE) || (max !== null && max < PRICE_MIN_VALUE)) {
+    return PRICE_NEGATIVE_ERROR;
+  }
+
+  if (min !== null && max !== null && min > max) {
+    return PRICE_RANGE_ERROR;
+  }
+
+  return '';
+};
+
 interface FilterSectionProps {
   label: string;
   children: ReactNode;
@@ -127,6 +153,8 @@ interface FilterListProps {
   idPrefix: string;
   emptyMessage: string;
   isLoading: boolean;
+  errorMessage?: string;
+  onRetry?: () => void;
 }
 
 function FilterSkeletonList() {
@@ -139,11 +167,31 @@ function FilterSkeletonList() {
   );
 }
 
-function FilterList({ items, selectedIds, onToggle, idPrefix, emptyMessage, isLoading }: FilterListProps) {
+interface FilterErrorProps {
+  message: string;
+  onRetry?: () => void;
+}
+
+function FilterError({ message, onRetry }: FilterErrorProps) {
+  return (
+    <div className="space-y-2 pr-4">
+      <p className="text-sm text-destructive">{message}</p>
+      {onRetry && (
+        <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+          {FILTER_RETRY_LABEL}
+        </Button>
+      )}
+    </div>
+  );
+}
+
+function FilterList({ items, selectedIds, onToggle, idPrefix, emptyMessage, isLoading, errorMessage, onRetry }: FilterListProps) {
   return (
     <ScrollArea className="h-48">
       {isLoading ? (
         <FilterSkeletonList />
+      ) : errorMessage ? (
+        <FilterError message={errorMessage} onRetry={onRetry} />
       ) : items.length > 0 ? (
         <div className="space-y-2 pr-4">
           {items.map((item) => {
@@ -177,13 +225,25 @@ interface CategoryFilterListProps {
   onToggle: (id: string) => void;
   emptyMessage: string;
   isLoading: boolean;
+  errorMessage?: string;
+  onRetry?: () => void;
 }
 
-function CategoryFilterList({ items, selectedIds, onToggle, emptyMessage, isLoading }: CategoryFilterListProps) {
+function CategoryFilterList({
+  items,
+  selectedIds,
+  onToggle,
+  emptyMessage,
+  isLoading,
+  errorMessage,
+  onRetry,
+}: CategoryFilterListProps) {
   return (
     <ScrollArea className="h-48">
       {isLoading ? (
         <FilterSkeletonList />
+      ) : errorMessage ? (
+        <FilterError message={errorMessage} onRetry={onRetry} />
       ) : items.length > 0 ? (
         <div className="space-y-2 pr-4">
           {items.map((item) => {
@@ -225,8 +285,18 @@ function FilterContent() {
   const searchParams = useSearchParams();
   const searchParamsRef = useRef(searchParams);
   searchParamsRef.current = searchParams;
-  const { data: brands, isLoading: brandsLoading } = useBrands();
-  const { data: categories, isLoading: categoriesLoading } = useCategories();
+  const {
+    data: brands,
+    isLoading: brandsLoading,
+    error: brandsError,
+    refetch: refetchBrands,
+  } = useBrands();
+  const {
+    data: categories,
+    isLoading: categoriesLoading,
+    error: categoriesError,
+    refetch: refetchCategories,
+  } = useCategories();
 
   const selectedBrands =
     searchParams.get(FILTER_QUERY_KEYS.brandId)?.split(FILTER_VALUE_SEPARATOR).filter(Boolean) || [];
@@ -245,6 +315,10 @@ function FilterContent() {
   const priceLabel = useMemo(
     () => PRICE_LABEL.replace('₽', getCurrencySymbol(displayCurrency)),
     [displayCurrency]
+  );
+  const priceError = useMemo(
+    () => getPriceRangeError(minPriceValue, maxPriceValue),
+    [maxPriceValue, minPriceValue]
   );
 
   const filteredBrands = useMemo(() => {
@@ -282,6 +356,14 @@ function FilterContent() {
     clearTimeout(priceDebounceRef.current);
     priceDebounceRef.current = null;
   }, []);
+
+  const handleRetryBrands = useCallback(() => {
+    refetchBrands();
+  }, [refetchBrands]);
+
+  const handleRetryCategories = useCallback(() => {
+    refetchCategories();
+  }, [refetchCategories]);
 
   const handlePriceInputChange = useCallback((setter: (value: string) => void, value: string) => {
     isUserTypingPrice.current = true;
@@ -343,10 +425,10 @@ function FilterContent() {
   );
 
   useEffect(() => {
-    if (isUserTypingPrice.current) {
+    if (isUserTypingPrice.current && !priceError) {
       schedulePriceUpdate(minPriceValue, maxPriceValue);
     }
-  }, [minPriceValue, maxPriceValue, schedulePriceUpdate]);
+  }, [minPriceValue, maxPriceValue, priceError, schedulePriceUpdate]);
 
   useEffect(() => {
     return () => {
@@ -402,6 +484,7 @@ function FilterContent() {
             value={minPriceValue}
             onChange={(event) => handlePriceInputChange(setMinPriceValue, event.target.value)}
             className="h-9"
+            min={PRICE_MIN_VALUE}
           />
           <Input
             type="number"
@@ -409,8 +492,10 @@ function FilterContent() {
             value={maxPriceValue}
             onChange={(event) => handlePriceInputChange(setMaxPriceValue, event.target.value)}
             className="h-9"
+            min={PRICE_MIN_VALUE}
           />
         </div>
+        {priceError && <p className="text-xs text-destructive mt-2">{priceError}</p>}
       </FilterSection>
 
       <Separator />
@@ -418,7 +503,7 @@ function FilterContent() {
       <FilterSection label={BRANDS_LABEL}>
         <div className="relative mb-3">
           <Input
-            type="search"
+            type={BRAND_SEARCH_INPUT_TYPE}
             placeholder={BRAND_SEARCH_PLACEHOLDER}
             value={brandQuery}
             onChange={(event) => setBrandQuery(event.target.value)}
@@ -444,6 +529,8 @@ function FilterContent() {
           idPrefix={BRAND_CHECKBOX_ID_PREFIX}
           emptyMessage={BRAND_EMPTY_MESSAGE}
           isLoading={brandsLoading}
+          errorMessage={brandsError ? BRANDS_ERROR_MESSAGE : undefined}
+          onRetry={brandsError ? handleRetryBrands : undefined}
         />
       </FilterSection>
 
@@ -456,18 +543,22 @@ function FilterContent() {
           onToggle={toggleCategory}
           emptyMessage={CATEGORY_EMPTY_MESSAGE}
           isLoading={categoriesLoading}
+          errorMessage={categoriesError ? CATEGORIES_ERROR_MESSAGE : undefined}
+          onRetry={categoriesError ? handleRetryCategories : undefined}
         />
       </FilterSection>
     </div>
   );
 }
 
-export function ProductFilters({ isMobile }: ProductFiltersProps) {
-  if (isMobile) {
+export function ProductFilters() {
+  const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY);
+
+  if (!isDesktop) {
     return (
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="outline" size="sm" className="lg:hidden">
+          <Button variant="outline" size="sm">
             <SlidersHorizontal className="mr-2 h-4 w-4" />
             {FILTERS_TITLE}
           </Button>
@@ -485,7 +576,7 @@ export function ProductFilters({ isMobile }: ProductFiltersProps) {
   }
 
   return (
-    <div className="hidden lg:block w-64 flex-shrink-0">
+    <div className="w-64 flex-shrink-0">
       <div className="sticky top-24 bg-background rounded-xl border border-border p-4">
         <h3 className="font-semibold mb-4 flex items-center gap-2">
           <SlidersHorizontal className="h-4 w-4" />

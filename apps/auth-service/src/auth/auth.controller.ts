@@ -2,7 +2,7 @@ import { Body, Controller, Get, HttpCode, Patch, Post, Req, UnauthorizedExceptio
 import type { Request } from 'express';
 import { GrpcMethod } from '@nestjs/microservices';
 import { AuthService } from './auth.service';
-import { AuthTokensResponse, LoginDto, RefreshTokenDto, RegisterDto } from './dto/auth.dto';
+import { AuthTokensResponse, ChangePasswordDto, LoginDto, RefreshTokenDto, RegisterDto } from './dto/auth.dto';
 import { UpdateProfileDto } from './dto/profile.dto';
 import { ValidateTokenDto } from './dto/validate-token.dto';
 import { JwtAuthGuard, RequestWithUser } from './guards/jwt-auth.guard';
@@ -80,6 +80,18 @@ export class AuthController {
       phone: user.phone ?? null,
       company: user.company ?? null,
     };
+  }
+
+  @Patch('me/password')
+  @UseGuards(JwtAuthGuard)
+  async changePassword(@Req() request: Request, @Body() dto: ChangePasswordDto): Promise<AuthTokensResponse> {
+    const userId = (request as RequestWithUser).user?.userId;
+
+    if (!userId) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return this.authService.changePassword(userId, dto);
   }
 }
 

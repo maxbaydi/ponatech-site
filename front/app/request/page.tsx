@@ -37,6 +37,10 @@ const ATTACHMENTS_HELPER_FULL =
 const ATTACHMENTS_LIMITS = `До ${REQUEST_ATTACHMENT_MAX_FILES} файлов, до ${MAX_FILE_SIZE_MB} МБ каждый`;
 const ATTACHMENTS_BUTTON_LABEL = 'Добавить файлы';
 const ATTACHMENTS_EMPTY_LABEL = 'Файлы не добавлены';
+const REMOVE_ATTACHMENT_LABEL = 'Удалить файл';
+const SUBMIT_BUTTON_LABEL = 'Отправить заявку';
+const SUBMITTING_LABEL = 'Отправляем заявку...';
+const SUBMITTING_FILES_LABEL = 'Загрузка файлов...';
 
 const countPhoneDigits = (value: string): number => value.replace(/\D/g, '').length;
 
@@ -389,6 +393,7 @@ function RequestForm() {
                   accept={REQUEST_ATTACHMENT_ACCEPT}
                   onChange={handleAttachmentSelect}
                   className="hidden"
+                  disabled={isSubmitting}
                 />
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="space-y-1">
@@ -410,6 +415,7 @@ function RequestForm() {
                     type="button"
                     variant="outline"
                     onClick={() => fileInputRef.current?.click()}
+                    disabled={isSubmitting}
                   >
                     <Paperclip className="mr-2 h-4 w-4" />
                     {ATTACHMENTS_BUTTON_LABEL}
@@ -445,6 +451,8 @@ function RequestForm() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleAttachmentRemove(fileKey)}
+                          aria-label={REMOVE_ATTACHMENT_LABEL}
+                          disabled={isSubmitting}
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -452,6 +460,11 @@ function RequestForm() {
                     );
                   })}
                 </div>
+              )}
+              {isSubmitting && attachments.length > 0 && (
+                <p className="text-xs text-muted-foreground" aria-live="polite">
+                  {SUBMITTING_FILES_LABEL}
+                </p>
               )}
 
               <p className="text-xs text-muted-foreground/70">
@@ -465,7 +478,7 @@ function RequestForm() {
               ) : (
                 <Send className="mr-2 h-4 w-4" />
               )}
-              Отправить заявку
+              {isSubmitting ? SUBMITTING_LABEL : SUBMIT_BUTTON_LABEL}
             </Button>
           </form>
         </Form>

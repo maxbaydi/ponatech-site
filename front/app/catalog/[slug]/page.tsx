@@ -66,6 +66,10 @@ interface ProductPageProps {
 }
 
 const PRODUCT_LIGHTBOX_PLUGINS: Plugin[] = [Zoom, Thumbnails];
+const GALLERY_PREV_LABEL = 'Предыдущее изображение';
+const GALLERY_NEXT_LABEL = 'Следующее изображение';
+
+const buildThumbnailLabel = (index: number, total: number) => `Изображение ${index + 1} из ${total}`;
 
 function ImageGallery({ images, title }: { images: ProductImage[]; title: string }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -110,20 +114,24 @@ function ImageGallery({ images, title }: { images: ProductImage[]; title: string
           {images.length > 1 && (
             <>
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   handlePrev();
                 }}
                 className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-background"
+                aria-label={GALLERY_PREV_LABEL}
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleNext();
                 }}
                 className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-background"
+                aria-label={GALLERY_NEXT_LABEL}
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -133,9 +141,10 @@ function ImageGallery({ images, title }: { images: ProductImage[]; title: string
 
         {images.length > 1 && (
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {images.map((img, index) => (
-              <motion.button
+          {images.map((img, index) => (
+            <motion.button
                 key={img.id}
+              type="button"
                 onClick={() => setSelectedIndex(index)}
                 className={`flex-shrink-0 product-image-thumb rounded-lg border-2 overflow-hidden transition-all ${
                   index === selectedIndex
@@ -145,6 +154,7 @@ function ImageGallery({ images, title }: { images: ProductImage[]; title: string
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
+              aria-label={buildThumbnailLabel(index, images.length)}
               >
                 <img src={img.url} alt={img.alt || ''} className="object-cover w-full h-full" />
               </motion.button>

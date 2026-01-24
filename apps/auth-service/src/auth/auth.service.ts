@@ -1,12 +1,14 @@
-import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { AuthRepository, AuthenticatedUser, UserRecord } from './auth.repository';
-import { AuthTokensResponse, LoginDto, RefreshTokenDto, RegisterDto } from './dto/auth.dto';
+import { AuthTokensResponse, ChangePasswordDto, LoginDto, RefreshTokenDto, RegisterDto } from './dto/auth.dto';
 import { UsersStatsResponse } from './dto/admin.dto';
 import { UpdateProfileDto } from './dto/profile.dto';
 import { Role } from './role.enum';
 
 const DEFAULT_USERS_STATS_DAYS = 7;
 const MIN_STATS_DAYS = 1;
+const INVALID_PASSWORD_MESSAGE = 'Неверный текущий пароль';
+const PASSWORD_MATCH_MESSAGE = 'Новый пароль должен отличаться от текущего';
 
 @Injectable()
 export class AuthService {
@@ -80,6 +82,21 @@ export class AuthService {
     }
 
     return this.executeUserUpdate(() => this.authRepository.updateUserProfile(userId, update));
+  }
+
+  async changePassword(userId: string, dto: ChangePasswordDto): Promise<AuthTokensResponse> {
+    const user = await this.getProfile(userId);
+
+    if (!this.authRepository.verifyPassword(dto.currentPassword, user.passwordHash)) {
+      throw new BadRequestException(INVALID_PASSWORD_MESSAGE);
+    }
+
+    if (dto.currentPassword === dto.newPassword) {
+      throw new BadRequestException(PASSWORD_MATCH_MESSAGE);
+    }
+
+    const updatedUser = await this.authRepository.updateUserPassword(userId, dto.newPassword);
+    return this.issueTokens(updatedUser);
   }
 
   async getAllUsers(options?: { page?: number; limit?: number; search?: string }): Promise<{

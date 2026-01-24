@@ -32,6 +32,8 @@ const TOTAL_LABEL = 'Всего';
 const PREV_LABEL = 'Назад';
 const NEXT_LABEL = 'Вперёд';
 const SEARCH_PLACEHOLDER = 'Поиск по номеру заявки...';
+const TABLE_ARIA_LABEL = 'История заявок';
+const SEARCH_ARIA_LABEL = 'Поиск по номеру заявки';
 
 const DEFAULT_PAGE = 1;
 const PAGE_SIZE = 5;
@@ -86,6 +88,7 @@ export function RequestsHistory() {
           value={searchInput}
           onChange={(event) => setSearchInput(event.target.value)}
           className="pl-10"
+          aria-label={SEARCH_ARIA_LABEL}
         />
       </div>
 
@@ -116,7 +119,7 @@ export function RequestsHistory() {
             ))}
           </div>
           <div className="hidden md:block overflow-x-auto">
-            <Table>
+            <Table aria-label={TABLE_ARIA_LABEL}>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[140px]">{NUMBER_LABEL}</TableHead>

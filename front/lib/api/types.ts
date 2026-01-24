@@ -99,6 +99,11 @@ export interface UpdateProfileRequest {
   company?: string | null;
 }
 
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export interface AuthResponse {
   user: AuthUser;
   accessToken: string;

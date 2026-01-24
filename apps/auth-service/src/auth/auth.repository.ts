@@ -222,6 +222,25 @@ export class AuthRepository {
     });
   }
 
+  async updateUserPassword(userId: string, newPassword: string): Promise<UserRecord> {
+    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const user = await tx.user.update({
+        where: { id: userId },
+        data: {
+          passwordHash: this.hashPassword(newPassword),
+          tokenVersion: { increment: 1 },
+        },
+      });
+
+      await tx.refreshToken.updateMany({
+        where: { userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+
+      return user;
+    });
+  }
+
   async deactivateUser(userId: string): Promise<UserRecord> {
     return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const user = await tx.user.update({

@@ -2,7 +2,14 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
 import { apiClient } from '@/lib/api/client';
-import type { AuthUser, LoginRequest, RegisterRequest, UpdateProfileRequest, UserRole } from '@/lib/api/types';
+import type {
+  AuthUser,
+  ChangePasswordRequest,
+  LoginRequest,
+  RegisterRequest,
+  UpdateProfileRequest,
+  UserRole,
+} from '@/lib/api/types';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -12,6 +19,7 @@ interface AuthContextType {
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: UpdateProfileRequest) => Promise<AuthUser>;
+  changePassword: (data: ChangePasswordRequest) => Promise<AuthUser>;
   hasRole: (roles: UserRole | UserRole[]) => boolean;
   isManager: boolean;
   isAdmin: boolean;
@@ -77,6 +85,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return updated;
   };
 
+  const changePassword = async (data: ChangePasswordRequest) => {
+    const response = await apiClient.changePassword(data);
+    setUser(response.user);
+    return response.user;
+  };
+
   const hasRole = (roles: UserRole | UserRole[]): boolean => {
     if (!user) return false;
     const rolesArray = Array.isArray(roles) ? roles : [roles];
@@ -96,6 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     register,
     logout,
     updateProfile,
+    changePassword,
     hasRole,
     isManager: hasMinRole('MANAGER'),
     isAdmin: hasMinRole('ADMIN'),

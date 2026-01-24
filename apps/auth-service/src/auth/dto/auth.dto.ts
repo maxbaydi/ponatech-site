@@ -1,12 +1,14 @@
 import { IsEmail, IsString, MinLength } from 'class-validator';
 import { Role } from '../role.enum';
 
+const PASSWORD_MIN_LENGTH = 8;
+
 export class RegisterDto {
   @IsEmail()
   email!: string;
 
   @IsString()
-  @MinLength(8)
+  @MinLength(PASSWORD_MIN_LENGTH)
   password!: string;
 }
 
@@ -21,6 +23,16 @@ export class LoginDto {
 export class RefreshTokenDto {
   @IsString()
   refreshToken!: string;
+}
+
+export class ChangePasswordDto {
+  @IsString()
+  @MinLength(PASSWORD_MIN_LENGTH)
+  currentPassword!: string;
+
+  @IsString()
+  @MinLength(PASSWORD_MIN_LENGTH)
+  newPassword!: string;
 }
 
 export interface AuthUserResponse {

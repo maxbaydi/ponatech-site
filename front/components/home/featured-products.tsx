@@ -11,6 +11,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ProductCard } from '@/components/catalog';
 import { useProducts } from '@/lib/hooks/use-products';
 
+const FEATURED_PRODUCTS_LIMIT = 8;
+const FEATURED_ERROR_MESSAGE = 'Не удалось загрузить товары';
+const RETRY_LABEL = 'Повторить';
+
 function ProductCardSkeleton() {
   return (
     <Card className="overflow-hidden">
@@ -27,9 +31,13 @@ function ProductCardSkeleton() {
 export function FeaturedProducts() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-100px' });
-  const { data: productsPage, isLoading } = useProducts({ limit: 8, status: 'PUBLISHED' });
+  const { data: productsPage, isLoading, error, refetch } = useProducts({
+    limit: FEATURED_PRODUCTS_LIMIT,
+    status: 'PUBLISHED',
+  });
 
   const displayProducts = productsPage?.data ?? [];
+  const showError = Boolean(error) && displayProducts.length === 0;
 
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-muted/30" ref={ref}>
@@ -69,9 +77,17 @@ export function FeaturedProducts() {
 
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {Array.from({ length: 8 }).map((_, i) => (
+            {Array.from({ length: FEATURED_PRODUCTS_LIMIT }).map((_, i) => (
               <ProductCardSkeleton key={i} />
             ))}
+          </div>
+        ) : showError ? (
+          <div className="text-center py-10 sm:py-12">
+            <Package className="w-12 h-12 sm:w-16 sm:h-16 text-destructive/40 mx-auto mb-4" />
+            <p className="text-destructive mb-4">{FEATURED_ERROR_MESSAGE}</p>
+            <Button variant="outline" onClick={() => refetch()}>
+              {RETRY_LABEL}
+            </Button>
           </div>
         ) : displayProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">

@@ -9,6 +9,7 @@ import type {
   CartRecommendationsParams,
   CartRecommendationsResponse,
   Category,
+  ChangePasswordRequest,
   CreateBrandRequest,
   CreateCategoryRequest,
   CreateProductRequest,
@@ -335,6 +336,15 @@ class ApiClient {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
+  }
+
+  async changePassword(data: ChangePasswordRequest): Promise<AuthResponse> {
+    const response = await this.request<AuthResponse>('/auth/me/password', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+    this.setTokens(response.accessToken, response.refreshToken);
+    return response;
   }
 
   async getSiteSettings(): Promise<SiteSettings> {
