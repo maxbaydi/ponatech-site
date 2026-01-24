@@ -8,7 +8,9 @@ export class CategoriesService {
 
   async findAll(): Promise<CategoryTreeResponse[]> {
     const categories = await this.categoriesRepository.findAll();
-    return buildCategoryTree(categories);
+    const tree = buildCategoryTree(categories);
+    tree.forEach((node) => calculateCategoryProducts(node));
+    return tree;
   }
 
   async findOne(id: string): Promise<CategoryResponse> {
@@ -51,4 +53,12 @@ const buildCategoryTree = (categories: CategoryResponse[]): CategoryTreeResponse
   }
 
   return roots;
+};
+
+const calculateCategoryProducts = (node: CategoryTreeResponse): number => {
+  const ownCount = node.productsCount ?? 0;
+  const childrenCount = node.children.reduce((total, child) => total + calculateCategoryProducts(child), 0);
+  const total = ownCount + childrenCount;
+  node.productsCount = total;
+  return total;
 };

@@ -19,7 +19,7 @@ export interface Brand {
   description?: string | null;
   logoUrl?: string | null;
   country?: string | null;
-  isFeatured: boolean;
+  productsCount?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -30,6 +30,7 @@ export interface Category {
   slug: string;
   description?: string | null;
   parentId?: string | null;
+  productsCount?: number;
   children?: Category[];
   createdAt: string;
   updatedAt: string;
@@ -214,7 +215,6 @@ export interface CreateBrandRequest {
   description?: string;
   logoUrl?: string;
   country?: string;
-  isFeatured?: boolean;
 }
 
 export interface UpdateBrandRequest extends Partial<CreateBrandRequest> {}

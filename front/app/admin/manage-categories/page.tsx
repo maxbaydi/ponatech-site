@@ -26,17 +26,16 @@ import type { Category } from '@/lib/api/types';
 
 interface CategoryWithLevel extends Category {
   level: number;
-  parentName?: string;
 }
 
-function flattenCategories(categories: Category[], level = 0, parentName?: string): CategoryWithLevel[] {
+function flattenCategories(categories: Category[], level = 0): CategoryWithLevel[] {
   const result: CategoryWithLevel[] = [];
 
   for (const category of categories) {
-    result.push({ ...category, level, parentName });
+    result.push({ ...category, level });
 
     if (category.children && category.children.length > 0) {
-      const childItems = flattenCategories(category.children, level + 1, category.name);
+      const childItems = flattenCategories(category.children, level + 1);
       result.push(...childItems);
     }
   }
@@ -107,7 +106,7 @@ export default function CategoriesPage() {
                   <TableRow>
                     <TableHead>Категория</TableHead>
                     <TableHead className="hidden sm:table-cell">Slug</TableHead>
-                    <TableHead className="hidden md:table-cell">Родительская</TableHead>
+                    <TableHead className="hidden md:table-cell">Товары</TableHead>
                     <TableHead className="w-[70px]"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -132,7 +131,7 @@ export default function CategoriesPage() {
                       </TableCell>
                       <TableCell className="text-muted-foreground hidden sm:table-cell">{category.slug}</TableCell>
                       <TableCell className="text-muted-foreground hidden md:table-cell">
-                        {category.parentName || '-'}
+                        {category.productsCount ?? 0}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>

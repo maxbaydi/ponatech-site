@@ -34,6 +34,9 @@ const CSV_COLUMNS: ProductCsvColumn[] = [
 ];
 
 const ALL_BRANDS_VALUE = '__ALL_BRANDS__';
+const formatOptionLabel = (label: string, count?: number) => (
+  count && count > 0 ? `${label} (${count})` : label
+);
 const EXPORT_DIALOG_DESCRIPTION =
   'Выберите колонки и диапазон выгрузки. Можно экспортировать весь каталог или только выделенные позиции.';
 
@@ -131,7 +134,7 @@ export function ExportProductsDialog({ searchQuery, selectedIds }: ExportProduct
                 <SelectItem value={ALL_BRANDS_VALUE}>Все бренды</SelectItem>
                 {brands?.map((brand) => (
                   <SelectItem key={brand.id} value={brand.id}>
-                    {brand.name}
+                    {formatOptionLabel(brand.name, brand.productsCount)}
                   </SelectItem>
                 ))}
               </SelectContent>

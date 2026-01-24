@@ -25,6 +25,7 @@ export interface CategoryResponse {
   slug: string;
   description?: string | null;
   parentId?: string | null;
+  productsCount?: number;
   createdAt: Date;
   updatedAt: Date;
 }

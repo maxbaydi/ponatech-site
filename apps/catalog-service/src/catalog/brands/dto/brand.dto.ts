@@ -1,5 +1,5 @@
 import { PartialType } from '@nestjs/swagger';
-import { IsBoolean, IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class CreateBrandDto {
   @IsString()
@@ -20,9 +20,6 @@ export class CreateBrandDto {
   @IsString()
   country?: string;
 
-  @IsOptional()
-  @IsBoolean()
-  isFeatured?: boolean;
 }
 
 export class UpdateBrandDto extends PartialType(CreateBrandDto) {}
@@ -34,7 +31,7 @@ export interface BrandResponse {
   description?: string | null;
   logoUrl?: string | null;
   country?: string | null;
-  isFeatured: boolean;
+  productsCount?: number;
   createdAt: Date;
   updatedAt: Date;
 }

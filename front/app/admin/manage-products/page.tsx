@@ -43,16 +43,22 @@ import { useDisplayCurrency } from '@/lib/hooks/use-site-settings';
 import { formatPrice } from '@/lib/utils';
 import type { Product, ProductStatus, Category } from '@/lib/api/types';
 
-function flattenCategoriesForSelect(categories: Category[], prefix = ''): { id: string; name: string }[] {
-  const result: { id: string; name: string }[] = [];
+type CategoryOption = { id: string; label: string; productsCount?: number };
+
+function flattenCategoriesForSelect(categories: Category[], prefix = ''): CategoryOption[] {
+  const result: CategoryOption[] = [];
   for (const cat of categories) {
-    result.push({ id: cat.id, name: prefix ? `${prefix} → ${cat.name}` : cat.name });
+    const label = prefix ? `${prefix} → ${cat.name}` : cat.name;
+    result.push({ id: cat.id, label, productsCount: cat.productsCount });
     if (cat.children && cat.children.length > 0) {
-      result.push(...flattenCategoriesForSelect(cat.children, prefix ? `${prefix} → ${cat.name}` : cat.name));
+      result.push(...flattenCategoriesForSelect(cat.children, label));
     }
   }
   return result;
 }
+const formatOptionLabel = (label: string, count?: number) => (
+  count && count > 0 ? `${label} (${count})` : label
+);
 import {
   Pagination,
   PaginationContent,
@@ -349,7 +355,7 @@ export default function ProductsPage() {
                   <SelectItem value={ALL_BRANDS_VALUE}>Все бренды</SelectItem>
                   {brands?.map((brand) => (
                     <SelectItem key={brand.id} value={brand.id}>
-                      {brand.name}
+                      {formatOptionLabel(brand.name, brand.productsCount)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -368,7 +374,7 @@ export default function ProductsPage() {
                   <SelectItem value={ALL_CATEGORIES_VALUE}>Все категории</SelectItem>
                   {flatCategories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
-                      {category.name}
+                      {formatOptionLabel(category.label, category.productsCount)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -425,7 +431,7 @@ export default function ProductsPage() {
                         <SelectContent>
                           {brands?.map((brand) => (
                             <SelectItem key={brand.id} value={brand.id}>
-                              {brand.name}
+                              {formatOptionLabel(brand.name, brand.productsCount)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -459,7 +465,7 @@ export default function ProductsPage() {
                           <SelectItem value={NO_CATEGORY_VALUE}>Без категории</SelectItem>
                           {flatCategories.map((category) => (
                             <SelectItem key={category.id} value={category.id}>
-                              {category.name}
+                              {formatOptionLabel(category.label, category.productsCount)}
                             </SelectItem>
                           ))}
                         </SelectContent>

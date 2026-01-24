@@ -2,10 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Plus, Search, MoreHorizontal, Pencil, Trash2, Star } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -84,7 +83,7 @@ export default function BrandsPage() {
                     <TableHead>Бренд</TableHead>
                     <TableHead className="hidden sm:table-cell">Slug</TableHead>
                     <TableHead className="hidden md:table-cell">Страна</TableHead>
-                    <TableHead className="hidden sm:table-cell">Избранный</TableHead>
+                    <TableHead className="hidden sm:table-cell">Товары</TableHead>
                     <TableHead className="w-[70px]"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -104,13 +103,8 @@ export default function BrandsPage() {
                       </TableCell>
                       <TableCell className="text-muted-foreground hidden sm:table-cell">{brand.slug}</TableCell>
                       <TableCell className="hidden md:table-cell">{brand.country || '-'}</TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        {brand.isFeatured && (
-                          <Badge variant="secondary">
-                            <Star className="mr-1 h-3 w-3" />
-                            Featured
-                          </Badge>
-                        )}
+                      <TableCell className="text-muted-foreground hidden sm:table-cell">
+                        {brand.productsCount ?? 0}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>

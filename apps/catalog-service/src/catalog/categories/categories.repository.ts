@@ -7,10 +7,31 @@ export class CategoriesRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(): Promise<CategoryResponse[]> {
-    return this.prisma.category.findMany({
-      where: { deletedAt: null },
-      orderBy: { name: 'asc' },
+    const [categories, counts] = await this.prisma.$transaction([
+      this.prisma.category.findMany({
+        where: { deletedAt: null },
+        orderBy: { name: 'asc' },
+      }),
+      this.prisma.product.groupBy({
+        by: ['categoryId'],
+        where: { deletedAt: null, categoryId: { not: null } },
+        orderBy: { categoryId: 'asc' },
+        _count: { _all: true },
+      }),
+    ]);
+
+    const countsMap = new Map<string, number>();
+    counts.forEach((row) => {
+      if (row.categoryId) {
+        const count = typeof row._count === 'object' && row._count ? row._count._all ?? 0 : 0;
+        countsMap.set(row.categoryId, count);
+      }
     });
+
+    return categories.map((category) => ({
+      ...category,
+      productsCount: countsMap.get(category.id) ?? 0,
+    }));
   }
 
   async findOne(id: string): Promise<CategoryResponse | null> {

@@ -61,6 +61,9 @@ const MAX_VISIBLE_PAGES = 7;
 const EMPTY_PRODUCTS: Product[] = [];
 
 const ALL_BRANDS_VALUE = '__ALL_BRANDS__';
+const formatOptionLabel = (label: string, count?: number) => (
+  count && count > 0 ? `${label} (${count})` : label
+);
 
 const parsePositiveInt = (value: string | null, fallback: number): number => {
   const parsed = value ? Number.parseInt(value, 10) : NaN;
@@ -260,7 +263,7 @@ export function DeletedProductsTable() {
                   <SelectItem value={ALL_BRANDS_VALUE}>Все бренды</SelectItem>
                   {brands?.map((brand) => (
                     <SelectItem key={brand.id} value={brand.id}>
-                      {brand.name}
+                      {formatOptionLabel(brand.name, brand.productsCount)}
                     </SelectItem>
                   ))}
                 </SelectContent>
