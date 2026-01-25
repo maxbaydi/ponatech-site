@@ -45,6 +45,8 @@
   --size-header-brand-dropdown-max-h: 64rem;
   --size-header-brand-dropdown-col-min: 14rem;
   --size-header-brand-dropdown-gap: 0.25rem;
+  --size-header-height: 0px;
+  --size-catalog-filters-top-gap: 1.5rem;
   --size-section-padding-compact: 50px;
   --size-hero-content-max-w: 900px;
   --size-admin-shell-padding: 1rem;
@@ -288,6 +290,10 @@
     top: var(--size-admin-shell-padding);
   }
 
+  .catalog-filters-sticky {
+    top: calc(var(--size-header-height) + var(--size-catalog-filters-top-gap));
+  }
+
   @media (min-width: 1024px) {
     .admin-shell {
       padding: var(--size-admin-shell-padding-lg);
@@ -456,6 +462,12 @@
 
   .rich-text em {
     @apply italic;
+  }
+}
+
+@media (min-width: 640px) {
+  :root {
+    --size-catalog-filters-top-gap: 2rem;
   }
 }
 

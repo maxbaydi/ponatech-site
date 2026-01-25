@@ -1,558 +1,100 @@
 'use client';
 
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { X, SlidersHorizontal, ChevronRight } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { PanelLeftClose, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { useBrands } from '@/lib/hooks/use-brands';
-import { useCategories } from '@/lib/hooks/use-categories';
-import { useDisplayCurrency } from '@/lib/hooks/use-site-settings';
 import { useMediaQuery } from '@/lib/hooks/use-media-query';
-import { Skeleton } from '@/components/ui/skeleton';
-import { getCurrencySymbol } from '@/lib/currency';
-import type { Category } from '@/lib/api/types';
+import { useSearchParams, type ReadonlyURLSearchParams } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import {
+  FilterContent,
+  FILTER_ACTIVE_QUERY_KEYS,
+  FILTER_MULTI_VALUE_KEYS,
+  FILTER_VALUE_SEPARATOR,
+} from '@/components/catalog/product-filters-content';
 
-type FilterItem = {
-  id: string;
-  name: string;
-};
-
-type CategoryFilterItem = FilterItem & {
-  level: number;
-};
-
-function flattenCategoriesForFilter(categories: Category[], level = 0): CategoryFilterItem[] {
-  const result: CategoryFilterItem[] = [];
-  for (const cat of categories) {
-    result.push({ id: cat.id, name: cat.name, level });
-    if (cat.children && cat.children.length > 0) {
-      result.push(...flattenCategoriesForFilter(cat.children, level + 1));
-    }
-  }
-  return result;
+interface ProductFiltersProps {
+  compact?: boolean;
 }
 
-const CATALOG_PATH = '/catalog';
-const FILTER_VALUE_SEPARATOR = ',';
-const PAGE_RESET_VALUE = '1';
-const PRICE_DEBOUNCE_MS = 500;
-const SKELETON_ITEMS_COUNT = 5;
-const SKELETON_ITEMS = Array.from({ length: SKELETON_ITEMS_COUNT }, (_, index) => index);
-const EMPTY_VALUE = '';
-const BRAND_CHECKBOX_ID_PREFIX = 'brand-';
-const CATEGORY_CHECKBOX_ID_PREFIX = 'category-';
-const BRAND_SEARCH_PLACEHOLDER = 'Поиск бренда';
-const BRAND_EMPTY_MESSAGE = 'Бренды не найдены';
-const CATEGORY_EMPTY_MESSAGE = 'Категории не найдены';
-const PRICE_LABEL = 'Цена (₽)';
-const BRANDS_LABEL = 'Бренды';
-const CATEGORIES_LABEL = 'Категории';
-const CLEAR_FILTERS_LABEL = 'Сбросить фильтры';
 const FILTERS_TITLE = 'Фильтры';
-const PRICE_MIN_PLACEHOLDER = 'От';
-const PRICE_MAX_PLACEHOLDER = 'До';
-const CLEAR_BRAND_SEARCH_LABEL = 'Очистить поиск';
-const BRAND_SEARCH_INPUT_TYPE = 'text';
-const PRICE_MIN_VALUE = 0;
-const PRICE_NEGATIVE_ERROR = 'Цена не может быть отрицательной';
-const PRICE_RANGE_ERROR = 'Минимальная цена не может быть больше максимальной';
-const BRANDS_ERROR_MESSAGE = 'Не удалось загрузить бренды';
-const CATEGORIES_ERROR_MESSAGE = 'Не удалось загрузить категории';
-const FILTER_RETRY_LABEL = 'Повторить';
+const FILTERS_COLLAPSE_LABEL = 'Свернуть фильтры';
+const FILTERS_EXPAND_LABEL = 'Развернуть фильтры';
 const DESKTOP_MEDIA_QUERY = '(min-width: 1024px)';
+const FILTER_PANEL_STORAGE_KEY = 'catalog-filters-collapsed';
+const STORAGE_VALUE_ENABLED = '1';
+const STORAGE_VALUE_DISABLED = '0';
+const FILTER_PANEL_BASE_CLASS = 'sticky bg-background rounded-xl border border-border';
+const FILTER_PANEL_TITLE_CLASS = 'font-semibold';
+const FILTER_PANEL_TITLE_WRAPPER_CLASS = 'flex items-center gap-2';
+const FILTER_PANEL_HEADER_CLASS = 'flex items-center justify-between';
+const FILTER_PANEL_WRAPPER_CLASS = 'flex-shrink-0';
+const FILTER_PANEL_EXPANDED_WRAPPER_CLASS = 'w-64';
+const FILTER_PANEL_EXPANDED_PADDING_CLASS = 'p-4';
+const FILTER_PANEL_EXPANDED_HEADER_MARGIN_CLASS = 'mb-4';
+const FILTER_PANEL_STICKY_CLASS = 'catalog-filters-sticky';
+const FILTER_PANEL_FLOATING_BUTTON_CLASS = 'relative shadow-md';
+const FILTER_PANEL_FLOATING_BADGE_CLASS =
+  'absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-primary text-white text-xs font-semibold flex items-center justify-center';
+const FILTER_PANEL_TOGGLE_CLASS = 'shrink-0';
+const FILTER_PANEL_ICON_CLASS = 'h-4 w-4';
+const FILTER_PANEL_COLLAPSED_WRAPPER_CLASS = 'w-12';
+const FILTER_PANEL_COLLAPSED_CONTAINER_CLASS = 'sticky';
+const FILTER_PANEL_COLLAPSED_CONTENT_CLASS = 'flex justify-center';
+const WINDOW_UNDEFINED = 'undefined';
+const FILTER_BADGE_MAX = 99;
+const FILTER_BADGE_MAX_LABEL = '99+';
 
-const FILTER_QUERY_KEYS = {
-  brandId: 'brandId',
-  categoryId: 'categoryId',
-  minPrice: 'minPrice',
-  maxPrice: 'maxPrice',
-  page: 'page',
-} as const;
+const canUseStorage = () => typeof window !== WINDOW_UNDEFINED;
 
-const setOptionalParam = (params: URLSearchParams, key: string, value: string) => {
-  if (value) {
-    params.set(key, value);
-    return;
-  }
-
-  params.delete(key);
+const readCollapsedStorage = () => {
+  if (!canUseStorage()) return null;
+  const stored = window.localStorage.getItem(FILTER_PANEL_STORAGE_KEY);
+  if (stored === STORAGE_VALUE_ENABLED) return true;
+  if (stored === STORAGE_VALUE_DISABLED) return false;
+  return null;
 };
 
-const setArrayParam = (params: URLSearchParams, key: string, values: string[]) => {
-  if (values.length > 0) {
-    params.set(key, values.join(FILTER_VALUE_SEPARATOR));
-    return;
-  }
-
-  params.delete(key);
+const writeCollapsedStorage = (value: boolean) => {
+  if (!canUseStorage()) return;
+  window.localStorage.setItem(FILTER_PANEL_STORAGE_KEY, value ? STORAGE_VALUE_ENABLED : STORAGE_VALUE_DISABLED);
 };
 
-const orderSelectedFirst = <T extends FilterItem>(items: T[], selectedIds: Set<string>): T[] => {
-  if (selectedIds.size === 0 || items.length === 0) return items;
+const MULTI_VALUE_KEYS = new Set<string>(FILTER_MULTI_VALUE_KEYS);
 
-  const selected: T[] = [];
-  const unselected: T[] = [];
-
-  items.forEach((item) => {
-    if (selectedIds.has(item.id)) {
-      selected.push(item);
-      return;
+const countActiveFilters = (params: ReadonlyURLSearchParams) => {
+  return FILTER_ACTIVE_QUERY_KEYS.reduce((acc, key) => {
+    const value = params.get(key);
+    if (!value) return acc;
+    if (MULTI_VALUE_KEYS.has(key)) {
+      return acc + value.split(FILTER_VALUE_SEPARATOR).filter(Boolean).length;
     }
-
-    unselected.push(item);
-  });
-
-  return selected.length > 0 ? [...selected, ...unselected] : items;
+    return acc + 1;
+  }, 0);
 };
 
-const parsePriceValue = (value: string): number | null => {
-  if (!value) return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
-};
-
-const getPriceRangeError = (minValue: string, maxValue: string): string => {
-  const min = parsePriceValue(minValue);
-  const max = parsePriceValue(maxValue);
-
-  if ((min !== null && min < PRICE_MIN_VALUE) || (max !== null && max < PRICE_MIN_VALUE)) {
-    return PRICE_NEGATIVE_ERROR;
-  }
-
-  if (min !== null && max !== null && min > max) {
-    return PRICE_RANGE_ERROR;
-  }
-
-  return '';
-};
-
-interface FilterSectionProps {
-  label: string;
-  children: ReactNode;
-}
-
-function FilterSection({ label, children }: FilterSectionProps) {
-  return (
-    <div>
-      <Label className="text-sm font-semibold mb-3 block">{label}</Label>
-      {children}
-    </div>
-  );
-}
-
-interface FilterListProps {
-  items: FilterItem[];
-  selectedIds: Set<string>;
-  onToggle: (id: string) => void;
-  idPrefix: string;
-  emptyMessage: string;
-  isLoading: boolean;
-  errorMessage?: string;
-  onRetry?: () => void;
-}
-
-function FilterSkeletonList() {
-  return (
-    <div className="space-y-2">
-      {SKELETON_ITEMS.map((index) => (
-        <Skeleton key={index} className="h-6 w-full" />
-      ))}
-    </div>
-  );
-}
-
-interface FilterErrorProps {
-  message: string;
-  onRetry?: () => void;
-}
-
-function FilterError({ message, onRetry }: FilterErrorProps) {
-  return (
-    <div className="space-y-2 pr-4">
-      <p className="text-sm text-destructive">{message}</p>
-      {onRetry && (
-        <Button type="button" variant="outline" size="sm" onClick={onRetry}>
-          {FILTER_RETRY_LABEL}
-        </Button>
-      )}
-    </div>
-  );
-}
-
-function FilterList({ items, selectedIds, onToggle, idPrefix, emptyMessage, isLoading, errorMessage, onRetry }: FilterListProps) {
-  return (
-    <ScrollArea className="h-48">
-      {isLoading ? (
-        <FilterSkeletonList />
-      ) : errorMessage ? (
-        <FilterError message={errorMessage} onRetry={onRetry} />
-      ) : items.length > 0 ? (
-        <div className="space-y-2 pr-4">
-          {items.map((item) => {
-            const checkboxId = `${idPrefix}${item.id}`;
-            return (
-              <div key={item.id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={checkboxId}
-                  checked={selectedIds.has(item.id)}
-                  onCheckedChange={() => onToggle(item.id)}
-                />
-                <label htmlFor={checkboxId} className="text-sm cursor-pointer flex-1 truncate">
-                  {item.name}
-                </label>
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="pr-4">
-          <p className="text-sm text-muted-foreground">{emptyMessage}</p>
-        </div>
-      )}
-    </ScrollArea>
-  );
-}
-
-interface CategoryFilterListProps {
-  items: CategoryFilterItem[];
-  selectedIds: Set<string>;
-  onToggle: (id: string) => void;
-  emptyMessage: string;
-  isLoading: boolean;
-  errorMessage?: string;
-  onRetry?: () => void;
-}
-
-function CategoryFilterList({
-  items,
-  selectedIds,
-  onToggle,
-  emptyMessage,
-  isLoading,
-  errorMessage,
-  onRetry,
-}: CategoryFilterListProps) {
-  return (
-    <ScrollArea className="h-48">
-      {isLoading ? (
-        <FilterSkeletonList />
-      ) : errorMessage ? (
-        <FilterError message={errorMessage} onRetry={onRetry} />
-      ) : items.length > 0 ? (
-        <div className="space-y-2 pr-4">
-          {items.map((item) => {
-            const checkboxId = `${CATEGORY_CHECKBOX_ID_PREFIX}${item.id}`;
-            return (
-              <div key={item.id} className="flex items-center space-x-2">
-                {item.level > 0 && (
-                  <span 
-                    className="text-muted-foreground flex items-center"
-                    style={{ marginLeft: `${(item.level - 1) * 12}px` }}
-                  >
-                    <ChevronRight className="w-3 h-3" />
-                  </span>
-                )}
-                <Checkbox
-                  id={checkboxId}
-                  checked={selectedIds.has(item.id)}
-                  onCheckedChange={() => onToggle(item.id)}
-                />
-                <label htmlFor={checkboxId} className="text-sm cursor-pointer flex-1 truncate">
-                  {item.name}
-                </label>
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="pr-4">
-          <p className="text-sm text-muted-foreground">{emptyMessage}</p>
-        </div>
-      )}
-    </ScrollArea>
-  );
-}
-
-function FilterContent() {
-  const displayCurrency = useDisplayCurrency();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const searchParamsRef = useRef(searchParams);
-  searchParamsRef.current = searchParams;
-  const {
-    data: brands,
-    isLoading: brandsLoading,
-    error: brandsError,
-    refetch: refetchBrands,
-  } = useBrands();
-  const {
-    data: categories,
-    isLoading: categoriesLoading,
-    error: categoriesError,
-    refetch: refetchCategories,
-  } = useCategories();
-
-  const selectedBrands =
-    searchParams.get(FILTER_QUERY_KEYS.brandId)?.split(FILTER_VALUE_SEPARATOR).filter(Boolean) || [];
-  const selectedCategories =
-    searchParams.get(FILTER_QUERY_KEYS.categoryId)?.split(FILTER_VALUE_SEPARATOR).filter(Boolean) || [];
-  const minPriceParam = searchParams.get(FILTER_QUERY_KEYS.minPrice) || EMPTY_VALUE;
-  const maxPriceParam = searchParams.get(FILTER_QUERY_KEYS.maxPrice) || EMPTY_VALUE;
-  const [minPriceValue, setMinPriceValue] = useState(minPriceParam);
-  const [maxPriceValue, setMaxPriceValue] = useState(maxPriceParam);
-  const [brandQuery, setBrandQuery] = useState(EMPTY_VALUE);
-  const isUserTypingPrice = useRef(false);
-  const priceDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const selectedBrandSet = useMemo(() => new Set(selectedBrands), [selectedBrands]);
-  const selectedCategorySet = useMemo(() => new Set(selectedCategories), [selectedCategories]);
-  const priceLabel = useMemo(
-    () => PRICE_LABEL.replace('₽', getCurrencySymbol(displayCurrency)),
-    [displayCurrency]
-  );
-  const priceError = useMemo(
-    () => getPriceRangeError(minPriceValue, maxPriceValue),
-    [maxPriceValue, minPriceValue]
-  );
-
-  const filteredBrands = useMemo(() => {
-    if (!brands) return [];
-    const query = brandQuery.trim().toLowerCase();
-    const baseList = query ? brands.filter((brand) => brand.name.toLowerCase().includes(query)) : brands;
-    return orderSelectedFirst(baseList, selectedBrandSet);
-  }, [brands, brandQuery, selectedBrandSet]);
-
-  const flatCategories = useMemo(() => {
-    if (!categories) return [];
-    return flattenCategoriesForFilter(categories);
-  }, [categories]);
-
-  const orderedCategories = useMemo(() => {
-    if (flatCategories.length === 0) return [];
-    if (selectedCategorySet.size === 0) return flatCategories;
-    
-    const selected: CategoryFilterItem[] = [];
-    const unselected: CategoryFilterItem[] = [];
-    
-    flatCategories.forEach((item) => {
-      if (selectedCategorySet.has(item.id)) {
-        selected.push(item);
-      } else {
-        unselected.push(item);
-      }
-    });
-    
-    return selected.length > 0 ? [...selected, ...unselected] : flatCategories;
-  }, [flatCategories, selectedCategorySet]);
-
-  const clearPriceDebounce = useCallback(() => {
-    if (!priceDebounceRef.current) return;
-    clearTimeout(priceDebounceRef.current);
-    priceDebounceRef.current = null;
-  }, []);
-
-  const handleRetryBrands = useCallback(() => {
-    refetchBrands();
-  }, [refetchBrands]);
-
-  const handleRetryCategories = useCallback(() => {
-    refetchCategories();
-  }, [refetchCategories]);
-
-  const handlePriceInputChange = useCallback((setter: (value: string) => void, value: string) => {
-    isUserTypingPrice.current = true;
-    setter(value);
-  }, []);
-
-  const clearBrandSearch = () => {
-    setBrandQuery(EMPTY_VALUE);
-  };
-
-  const navigateWithParams = useCallback(
-    (params: URLSearchParams) => {
-      params.set(FILTER_QUERY_KEYS.page, PAGE_RESET_VALUE);
-      router.push(`${CATALOG_PATH}?${params.toString()}`, { scroll: false });
-    },
-    [router]
-  );
-
-  useEffect(() => {
-    const nextMin = searchParams.get(FILTER_QUERY_KEYS.minPrice) || EMPTY_VALUE;
-    const nextMax = searchParams.get(FILTER_QUERY_KEYS.maxPrice) || EMPTY_VALUE;
-
-    if (!isUserTypingPrice.current) {
-      if (nextMin !== minPriceValue) setMinPriceValue(nextMin);
-      if (nextMax !== maxPriceValue) setMaxPriceValue(nextMax);
-    }
-  }, [searchParams, minPriceValue, maxPriceValue]);
-
-  const updateFilters = useCallback(
-    (key: string, value: string | string[]) => {
-      const params = new URLSearchParams(searchParams.toString());
-
-      if (Array.isArray(value)) {
-        setArrayParam(params, key, value);
-      } else {
-        setOptionalParam(params, key, value);
-      }
-
-      navigateWithParams(params);
-    },
-    [navigateWithParams, searchParams]
-  );
-
-  const schedulePriceUpdate = useCallback(
-    (nextMin: string, nextMax: string) => {
-      clearPriceDebounce();
-
-      priceDebounceRef.current = setTimeout(() => {
-        const params = new URLSearchParams(searchParamsRef.current.toString());
-
-        setOptionalParam(params, FILTER_QUERY_KEYS.minPrice, nextMin);
-        setOptionalParam(params, FILTER_QUERY_KEYS.maxPrice, nextMax);
-
-        navigateWithParams(params);
-        isUserTypingPrice.current = false;
-      }, PRICE_DEBOUNCE_MS);
-    },
-    [clearPriceDebounce, navigateWithParams]
-  );
-
-  useEffect(() => {
-    if (isUserTypingPrice.current && !priceError) {
-      schedulePriceUpdate(minPriceValue, maxPriceValue);
-    }
-  }, [minPriceValue, maxPriceValue, priceError, schedulePriceUpdate]);
-
-  useEffect(() => {
-    return () => {
-      clearPriceDebounce();
-    };
-  }, [clearPriceDebounce]);
-
-  const toggleBrand = (brandId: string) => {
-    const newBrands = selectedBrandSet.has(brandId)
-      ? selectedBrands.filter((id) => id !== brandId)
-      : [...selectedBrands, brandId];
-    updateFilters(FILTER_QUERY_KEYS.brandId, newBrands);
-  };
-
-  const toggleCategory = (categoryId: string) => {
-    const newCategories = selectedCategorySet.has(categoryId)
-      ? selectedCategories.filter((id) => id !== categoryId)
-      : [...selectedCategories, categoryId];
-    updateFilters(FILTER_QUERY_KEYS.categoryId, newCategories);
-  };
-
-  const clearFilters = () => {
-    clearPriceDebounce();
-    isUserTypingPrice.current = false;
-    setMinPriceValue(EMPTY_VALUE);
-    setMaxPriceValue(EMPTY_VALUE);
-    clearBrandSearch();
-    router.push(CATALOG_PATH, { scroll: false });
-  };
-
-  const hasActiveFilters =
-    selectedBrands.length > 0 || selectedCategories.length > 0 || minPriceValue || maxPriceValue;
-
-  return (
-    <div className="space-y-6">
-      {hasActiveFilters && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={clearFilters}
-          className="w-full justify-start text-destructive smooth-appear"
-        >
-          <X className="mr-2 h-4 w-4" />
-          {CLEAR_FILTERS_LABEL}
-        </Button>
-      )}
-
-      <FilterSection label={priceLabel}>
-        <div className="flex gap-2">
-          <Input
-            type="number"
-            placeholder={PRICE_MIN_PLACEHOLDER}
-            value={minPriceValue}
-            onChange={(event) => handlePriceInputChange(setMinPriceValue, event.target.value)}
-            className="h-9"
-            min={PRICE_MIN_VALUE}
-          />
-          <Input
-            type="number"
-            placeholder={PRICE_MAX_PLACEHOLDER}
-            value={maxPriceValue}
-            onChange={(event) => handlePriceInputChange(setMaxPriceValue, event.target.value)}
-            className="h-9"
-            min={PRICE_MIN_VALUE}
-          />
-        </div>
-        {priceError && <p className="text-xs text-destructive mt-2">{priceError}</p>}
-      </FilterSection>
-
-      <Separator />
-
-      <FilterSection label={BRANDS_LABEL}>
-        <div className="relative mb-3">
-          <Input
-            type={BRAND_SEARCH_INPUT_TYPE}
-            placeholder={BRAND_SEARCH_PLACEHOLDER}
-            value={brandQuery}
-            onChange={(event) => setBrandQuery(event.target.value)}
-            className="h-8 pr-8"
-          />
-          {brandQuery && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={clearBrandSearch}
-              className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
-              aria-label={CLEAR_BRAND_SEARCH_LABEL}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-        <FilterList
-          items={filteredBrands}
-          selectedIds={selectedBrandSet}
-          onToggle={toggleBrand}
-          idPrefix={BRAND_CHECKBOX_ID_PREFIX}
-          emptyMessage={BRAND_EMPTY_MESSAGE}
-          isLoading={brandsLoading}
-          errorMessage={brandsError ? BRANDS_ERROR_MESSAGE : undefined}
-          onRetry={brandsError ? handleRetryBrands : undefined}
-        />
-      </FilterSection>
-
-      <Separator />
-
-      <FilterSection label={CATEGORIES_LABEL}>
-        <CategoryFilterList
-          items={orderedCategories}
-          selectedIds={selectedCategorySet}
-          onToggle={toggleCategory}
-          emptyMessage={CATEGORY_EMPTY_MESSAGE}
-          isLoading={categoriesLoading}
-          errorMessage={categoriesError ? CATEGORIES_ERROR_MESSAGE : undefined}
-          onRetry={categoriesError ? handleRetryCategories : undefined}
-        />
-      </FilterSection>
-    </div>
-  );
-}
-
-export function ProductFilters() {
+export function ProductFilters({ compact = false }: ProductFiltersProps) {
   const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY);
+  const searchParams = useSearchParams();
+  const [isCollapsed, setIsCollapsed] = useState(compact);
+  const activeFiltersCount = countActiveFilters(searchParams);
+  const activeFiltersLabel =
+    activeFiltersCount > FILTER_BADGE_MAX ? FILTER_BADGE_MAX_LABEL : `${activeFiltersCount}`;
+
+  useEffect(() => {
+    if (!isDesktop) return;
+    const stored = readCollapsedStorage();
+    setIsCollapsed(stored ?? compact);
+  }, [compact, isDesktop]);
+
+  const toggleCollapsed = () => {
+    setIsCollapsed((prev) => {
+      const next = !prev;
+      writeCollapsedStorage(next);
+      return next;
+    });
+  };
 
   if (!isDesktop) {
     return (
@@ -575,13 +117,43 @@ export function ProductFilters() {
     );
   }
 
+  if (isCollapsed) {
+    return (
+      <div className={cn(FILTER_PANEL_WRAPPER_CLASS, FILTER_PANEL_COLLAPSED_WRAPPER_CLASS)}>
+        <div className={cn(FILTER_PANEL_COLLAPSED_CONTAINER_CLASS, FILTER_PANEL_STICKY_CLASS, FILTER_PANEL_COLLAPSED_CONTENT_CLASS)}>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={toggleCollapsed}
+            aria-label={FILTERS_EXPAND_LABEL}
+            className={FILTER_PANEL_FLOATING_BUTTON_CLASS}
+          >
+            <SlidersHorizontal className={FILTER_PANEL_ICON_CLASS} />
+            {activeFiltersCount > 0 && <span className={FILTER_PANEL_FLOATING_BADGE_CLASS}>{activeFiltersLabel}</span>}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-64 flex-shrink-0">
-      <div className="sticky top-24 bg-background rounded-xl border border-border p-4">
-        <h3 className="font-semibold mb-4 flex items-center gap-2">
-          <SlidersHorizontal className="h-4 w-4" />
-          {FILTERS_TITLE}
-        </h3>
+    <div className={cn(FILTER_PANEL_WRAPPER_CLASS, FILTER_PANEL_EXPANDED_WRAPPER_CLASS)}>
+      <div className={cn(FILTER_PANEL_BASE_CLASS, FILTER_PANEL_STICKY_CLASS, FILTER_PANEL_EXPANDED_PADDING_CLASS)}>
+        <div className={cn(FILTER_PANEL_HEADER_CLASS, FILTER_PANEL_EXPANDED_HEADER_MARGIN_CLASS)}>
+          <div className={FILTER_PANEL_TITLE_WRAPPER_CLASS}>
+            <SlidersHorizontal className={FILTER_PANEL_ICON_CLASS} />
+            <h3 className={FILTER_PANEL_TITLE_CLASS}>{FILTERS_TITLE}</h3>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleCollapsed}
+            aria-label={FILTERS_COLLAPSE_LABEL}
+            className={FILTER_PANEL_TOGGLE_CLASS}
+          >
+            <PanelLeftClose className={FILTER_PANEL_ICON_CLASS} />
+          </Button>
+        </div>
         <FilterContent />
       </div>
     </div>

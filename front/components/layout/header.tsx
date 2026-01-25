@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { LayoutGrid, Menu, Search, User, ChevronDown, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -37,6 +37,9 @@ const SORT_LOCALE = 'ru';
 const SEARCH_PARAM = 'search';
 const PAGE_PARAM = 'page';
 const FIRST_PAGE = '1';
+const HEADER_HEIGHT_CSS_VAR = '--size-header-height';
+const HEADER_HEIGHT_FALLBACK = '0px';
+const WINDOW_RESIZE_EVENT = 'resize';
 
 type HeaderBrandOption = { name: string; slug: string; logoSrc?: string | null };
 
@@ -82,6 +85,7 @@ function HeaderNavLinks(props: {
 export function Header() {
   const router = useRouter();
   const pathname = usePathname();
+  const headerRef = useRef<HTMLDivElement | null>(null);
 
   const { user, isAuthenticated, logout, isManager } = useAuth();
   const { data: apiBrands } = useBrands();
@@ -109,6 +113,37 @@ export function Header() {
     );
   }, [apiBrands]);
 
+  useLayoutEffect(() => {
+    const target = headerRef.current;
+    if (!target) return;
+
+    const rootStyle = document.documentElement.style;
+    const resetHeight = () => {
+      rootStyle.setProperty(HEADER_HEIGHT_CSS_VAR, HEADER_HEIGHT_FALLBACK);
+    };
+    const updateHeight = () => {
+      rootStyle.setProperty(HEADER_HEIGHT_CSS_VAR, `${target.offsetHeight}px`);
+    };
+
+    updateHeight();
+
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener(WINDOW_RESIZE_EVENT, updateHeight);
+      return () => {
+        window.removeEventListener(WINDOW_RESIZE_EVENT, updateHeight);
+        resetHeight();
+      };
+    }
+
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(target);
+
+    return () => {
+      observer.disconnect();
+      resetHeight();
+    };
+  }, []);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -129,7 +164,7 @@ export function Header() {
   };
 
   return (
-    <div className="sticky top-0 z-50 w-full">
+    <div ref={headerRef} className="sticky top-0 z-50 w-full">
       <div className="w-full border-b border-border bg-background">
         <div className="container-custom">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 py-2 text-xs text-muted-foreground">
