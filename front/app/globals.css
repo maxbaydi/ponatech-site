@@ -47,6 +47,8 @@
   --size-header-brand-dropdown-gap: 0.25rem;
   --size-section-padding-compact: 50px;
   --size-hero-content-max-w: 900px;
+  --size-admin-shell-padding: 1rem;
+  --size-admin-shell-padding-lg: 1.5rem;
   
   --font-sans: var(--font-onest), 'Onest', arial, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
@@ -269,6 +271,35 @@
 
   .container-custom {
     @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .admin-shell {
+    box-sizing: border-box;
+    min-height: 100vh;
+    padding: var(--size-admin-shell-padding);
+  }
+
+  .admin-sidebar-frame {
+    height: calc(100vh - var(--size-admin-shell-padding) - var(--size-admin-shell-padding));
+  }
+
+  .admin-sidebar-sticky {
+    position: sticky;
+    top: var(--size-admin-shell-padding);
+  }
+
+  @media (min-width: 1024px) {
+    .admin-shell {
+      padding: var(--size-admin-shell-padding-lg);
+    }
+
+    .admin-sidebar-frame {
+      height: calc(100vh - var(--size-admin-shell-padding-lg) - var(--size-admin-shell-padding-lg));
+    }
+
+    .admin-sidebar-sticky {
+      top: var(--size-admin-shell-padding-lg);
+    }
   }
 
   .hero-content-max-w {
