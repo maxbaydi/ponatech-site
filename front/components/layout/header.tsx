@@ -40,6 +40,8 @@ const FIRST_PAGE = '1';
 const HEADER_HEIGHT_CSS_VAR = '--size-header-height';
 const HEADER_HEIGHT_FALLBACK = '0px';
 const WINDOW_RESIZE_EVENT = 'resize';
+const HEADER_SURFACE_CLASS = 'container-custom bg-background';
+const HEADER_MAIN_CLASS = cn(HEADER_SURFACE_CLASS, 'rounded-b-2xl');
 
 type HeaderBrandOption = { name: string; slug: string; logoSrc?: string | null };
 
@@ -164,7 +166,7 @@ export function Header() {
   };
 
   return (
-    <div ref={headerRef} className="sticky top-0 z-50 w-full">
+    <>
       <div className="w-full border-b border-border bg-background">
         <div className="container-custom">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 py-2 text-xs text-muted-foreground">
@@ -197,9 +199,9 @@ export function Header() {
         </div>
       </div>
 
-      <header className="w-full border-b border-border bg-background">
-        <div className="container-custom">
-          <div className="flex h-20 items-center gap-4">
+      <div ref={headerRef} className="sticky top-0 z-50 w-full pointer-events-none">
+        <header className={cn(HEADER_MAIN_CLASS, "pointer-events-auto")}>
+        <div className="flex h-20 items-center gap-4">
           <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center">
               <Image
@@ -220,221 +222,221 @@ export function Header() {
             </Button>
           </div>
 
-          <form
-            className="hidden md:flex flex-1 min-w-0 justify-center"
-            onSubmit={(e) => {
-              e.preventDefault();
-              runSearch();
-            }}
-          >
-            <div className="flex h-12 w-full max-w-2xl lg:max-w-3xl items-center rounded-xl border-2 border-primary bg-background px-1.5 gap-1">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className="-mx-[3px] flex h-10 items-center gap-2 rounded-lg bg-[#eff3f6] px-4 text-sm font-medium text-foreground hover:bg-[#e4e9f0] transition-colors focus:outline-none shrink-0"
-                  >
-                    <span className="hidden lg:inline">Бренды</span>
-                    <span className="lg:hidden">Бренд</span>
-                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" collisionPadding={16} className="header-brand-dropdown overflow-auto p-2 scrollbar-themed">
-                  <DropdownMenuItem
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      router.push(BRANDS_PATH);
-                    }}
-                    className="font-medium"
-                  >
-                    Все бренды
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <div className="header-brand-grid">
-                    {brandOptions.map((brand) => (
-                      <DropdownMenuItem
-                        key={brand.slug}
-                        onSelect={(e) => {
-                          e.preventDefault();
-                          router.push(`${BRANDS_PATH}/${brand.slug}`);
-                        }}
-                        className="py-2"
-                      >
-                        <BrandLogo
-                          name={brand.name}
-                          src={brand.logoSrc}
-                          size="sm"
-                          className="rounded-md"
-                          imgClassName="w-8 h-8"
-                        />
-                        <span className="min-w-0 truncate">{brand.name}</span>
-                      </DropdownMenuItem>
-                    ))}
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
+        <form
+          className="hidden md:flex flex-1 min-w-0 justify-center"
+          onSubmit={(e) => {
+            e.preventDefault();
+            runSearch();
+          }}
+        >
+          <div className="flex h-12 w-full max-w-2xl lg:max-w-3xl items-center rounded-xl border-2 border-primary bg-background px-1.5 gap-1">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="-mx-[3px] flex h-10 items-center gap-2 rounded-lg bg-[#eff3f6] px-4 text-sm font-medium text-foreground hover:bg-[#e4e9f0] transition-colors focus:outline-none shrink-0"
+                >
+                  <span className="hidden lg:inline">Бренды</span>
+                  <span className="lg:hidden">Бренд</span>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" collisionPadding={16} className="header-brand-dropdown overflow-auto p-2 scrollbar-themed">
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    router.push(BRANDS_PATH);
+                  }}
+                  className="font-medium"
+                >
+                  Все бренды
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <div className="header-brand-grid">
+                  {brandOptions.map((brand) => (
+                    <DropdownMenuItem
+                      key={brand.slug}
+                      onSelect={(e) => {
+                        e.preventDefault();
+                        router.push(`${BRANDS_PATH}/${brand.slug}`);
+                      }}
+                      className="py-2"
+                    >
+                      <BrandLogo
+                        name={brand.name}
+                        src={brand.logoSrc}
+                        size="sm"
+                        className="rounded-md"
+                        imgClassName="w-8 h-8"
+                      />
+                      <span className="min-w-0 truncate">{brand.name}</span>
+                    </DropdownMenuItem>
+                  ))}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-              <Input
-                placeholder="Искать на PonaTech..."
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                className={cn(
-                  'h-full flex-1 border-0 rounded-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0'
+            <Input
+              placeholder="Искать на PonaTech..."
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              className={cn(
+                'h-full flex-1 border-0 rounded-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0'
+              )}
+            />
+
+            <Button
+              type="submit"
+              size="icon"
+              className="-mx-[3px] h-10 w-14 rounded-lg bg-primary hover:bg-primary-dark text-white shrink-0"
+              aria-label="Поиск"
+            >
+              <Search className="h-5 w-5" />
+            </Button>
+          </div>
+        </form>
+
+        <div className="ml-auto flex items-center gap-3">
+          {isAuthenticated ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-9 px-2">
+                  <User className="h-5 w-5" />
+                  <ChevronDown className="h-4 w-4 opacity-70" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel className="max-w-full truncate">
+                  {user?.email ?? 'Профиль'}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/profile">Профиль</Link>
+                </DropdownMenuItem>
+                {isManager && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin/dashboard">Админ-панель</Link>
+                    </DropdownMenuItem>
+                  </>
                 )}
-              />
-
-              <Button
-                type="submit"
-                size="icon"
-                className="-mx-[3px] h-10 w-14 rounded-lg bg-primary hover:bg-primary-dark text-white shrink-0"
-                aria-label="Поиск"
-              >
-                <Search className="h-5 w-5" />
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logout} className="text-destructive">
+                  Выйти
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <div className="hidden sm:flex items-center gap-2">
+              <Button variant="ghost" asChild className="h-12">
+                <Link href="/login">Войти</Link>
+              </Button>
+              <Button asChild className="h-12">
+                <Link href="/register">Регистрация</Link>
               </Button>
             </div>
-          </form>
+          )}
 
-          <div className="ml-auto flex items-center gap-3">
-            {isAuthenticated ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-9 px-2">
-                    <User className="h-5 w-5" />
-                    <ChevronDown className="h-4 w-4 opacity-70" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuLabel className="max-w-full truncate">
-                    {user?.email ?? 'Профиль'}
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile">Профиль</Link>
-                  </DropdownMenuItem>
-                  {isManager && (
+          <Button variant="ghost" size="icon" asChild className="relative">
+            <Link href="/cart" aria-label="Корзина">
+              <ShoppingCart className="h-5 w-5" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-white text-[10px] font-semibold flex items-center justify-center">
+                  {cartBadge}
+                </span>
+              )}
+            </Link>
+          </Button>
+
+          <Button variant="secondary" asChild className="hidden md:flex h-12">
+            <Link href={REQUEST_PATH}>Оставить заявку</Link>
+          </Button>
+
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button type="button" variant="ghost" size="icon" className="md:hidden">
+                <Menu className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-full sm:w-80">
+              <SheetTitle className="sr-only">Меню навигации</SheetTitle>
+              <div className="flex flex-col gap-6 pt-6">
+                <Button asChild className="w-full">
+                  <Link href={CATALOG_PATH}>
+                    <LayoutGrid />
+                    Каталог
+                  </Link>
+                </Button>
+
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    runSearch({ closeMobileMenu: true });
+                  }}
+                >
+                  <Input
+                    placeholder="Искать на PonaTech..."
+                    className="h-10"
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                  />
+                </form>
+
+                <HeaderNavLinks
+                  className="flex flex-col gap-1"
+                  linkClassName="px-4 py-3 text-base font-medium rounded-md transition-colors hover:bg-muted"
+                  onNavigate={() => setIsMobileMenuOpen(false)}
+                />
+
+                <Button
+                  variant="outline"
+                  asChild
+                  className="w-full"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Link href="/cart">
+                    {cartCount > 0 ? `Корзина (${cartBadge})` : 'Корзина'}
+                  </Link>
+                </Button>
+
+                <div className="flex flex-col gap-2 pt-4 border-t">
+                  {isAuthenticated ? (
                     <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link href="/admin/dashboard">Админ-панель</Link>
-                      </DropdownMenuItem>
+                      <Button variant="outline" asChild className="w-full">
+                        <Link href="/profile">Профиль</Link>
+                      </Button>
+                      {isManager && (
+                        <Button variant="outline" asChild className="w-full">
+                          <Link href="/admin/dashboard">Админ-панель</Link>
+                        </Button>
+                      )}
+                      <Button variant="ghost" onClick={logout} className="w-full text-destructive">
+                        Выйти
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button variant="outline" asChild className="w-full">
+                        <Link href="/login">Войти</Link>
+                      </Button>
+                      <Button asChild className="w-full">
+                        <Link href="/register">Регистрация</Link>
+                      </Button>
                     </>
                   )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout} className="text-destructive">
-                    Выйти
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <div className="hidden sm:flex items-center gap-2">
-                <Button variant="ghost" asChild className="h-12">
-                  <Link href="/login">Войти</Link>
-                </Button>
-                <Button asChild className="h-12">
-                  <Link href="/register">Регистрация</Link>
+                </div>
+
+                <Button variant="secondary" asChild className="w-full">
+                  <Link href="/request">Оставить заявку</Link>
                 </Button>
               </div>
-            )}
-
-            <Button variant="ghost" size="icon" asChild className="relative">
-              <Link href="/cart" aria-label="Корзина">
-                <ShoppingCart className="h-5 w-5" />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-white text-[10px] font-semibold flex items-center justify-center">
-                    {cartBadge}
-                  </span>
-                )}
-              </Link>
-            </Button>
-
-            <Button variant="secondary" asChild className="hidden md:flex h-12">
-              <Link href={REQUEST_PATH}>Оставить заявку</Link>
-            </Button>
-
-            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-              <SheetTrigger asChild>
-                <Button type="button" variant="ghost" size="icon" className="md:hidden">
-                  <Menu className="h-6 w-6" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-full sm:w-80">
-                <SheetTitle className="sr-only">Меню навигации</SheetTitle>
-                <div className="flex flex-col gap-6 pt-6">
-                  <Button asChild className="w-full">
-                    <Link href={CATALOG_PATH}>
-                      <LayoutGrid />
-                      Каталог
-                    </Link>
-                  </Button>
-
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      runSearch({ closeMobileMenu: true });
-                    }}
-                  >
-                    <Input
-                      placeholder="Искать на PonaTech..."
-                      className="h-10"
-                      value={searchValue}
-                      onChange={(e) => setSearchValue(e.target.value)}
-                    />
-                  </form>
-
-                  <HeaderNavLinks
-                    className="flex flex-col gap-1"
-                    linkClassName="px-4 py-3 text-base font-medium rounded-md transition-colors hover:bg-muted"
-                    onNavigate={() => setIsMobileMenuOpen(false)}
-                  />
-
-                  <Button
-                    variant="outline"
-                    asChild
-                    className="w-full"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <Link href="/cart">
-                      {cartCount > 0 ? `Корзина (${cartBadge})` : 'Корзина'}
-                    </Link>
-                  </Button>
-
-                  <div className="flex flex-col gap-2 pt-4 border-t">
-                    {isAuthenticated ? (
-                      <>
-                        <Button variant="outline" asChild className="w-full">
-                          <Link href="/profile">Профиль</Link>
-                        </Button>
-                        {isManager && (
-                          <Button variant="outline" asChild className="w-full">
-                            <Link href="/admin/dashboard">Админ-панель</Link>
-                          </Button>
-                        )}
-                        <Button variant="ghost" onClick={logout} className="w-full text-destructive">
-                          Выйти
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Button variant="outline" asChild className="w-full">
-                          <Link href="/login">Войти</Link>
-                        </Button>
-                        <Button asChild className="w-full">
-                          <Link href="/register">Регистрация</Link>
-                        </Button>
-                      </>
-                    )}
-                  </div>
-
-                  <Button variant="secondary" asChild className="w-full">
-                    <Link href="/request">Оставить заявку</Link>
-                  </Button>
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
       </header>
-    </div>
+      </div>
+    </>
   );
 }

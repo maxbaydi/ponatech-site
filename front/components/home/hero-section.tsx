@@ -81,7 +81,7 @@ export function HeroSection() {
   const getLogo = (index: number) => LOGOS[logoOrder[index]];
 
   return (
-    <section className="relative w-full min-h-[600px] lg:min-h-[700px] flex items-center justify-center overflow-hidden bg-slate-900 py-12 md:py-24">
+    <section className="container-custom relative min-h-[600px] lg:min-h-[700px] flex items-center justify-center overflow-hidden bg-slate-900 py-12 md:py-24 rounded-3xl mt-4">
       {/* Background with Overlay */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -121,7 +121,7 @@ export function HeroSection() {
             {/* Main Title */}
             <div>
               <motion.h1
-                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight mb-2 animate-text-shimmer"
+                className="text-4xl sm:text-5xl md:text-6xl lg:text-[70px] font-bold leading-tight mb-2 animate-text-shimmer"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}

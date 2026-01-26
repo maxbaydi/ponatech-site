@@ -13,13 +13,13 @@ export function CtaSection() {
   const inView = useInView(ref, { once: true, margin: '-100px' });
 
   return (
-    <section className="py-12 sm:py-16 lg:py-24 bg-primary relative overflow-hidden" ref={ref}>
+    <section className="container-custom py-12 sm:py-16 lg:py-24 bg-primary relative overflow-hidden rounded-3xl mb-12 sm:mb-16 lg:mb-24" ref={ref}>
       <div className="absolute inset-0">
         <div className="absolute top-0 left-1/4 w-64 h-64 sm:w-80 sm:h-80 lg:w-96 lg:h-96 bg-white/5 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-64 h-64 sm:w-80 sm:h-80 lg:w-96 lg:h-96 bg-white/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="container-custom relative z-10">
+      <div className="relative z-10">
         <div className="max-w-3xl mx-auto text-center">
           <motion.h2
             className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6"
