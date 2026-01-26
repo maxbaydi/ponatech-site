@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma, ProductStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateProductDto, PaginatedResponse, ProductResponse, UpdateProductDto } from './dto/product.dto';
+import { appendProductAndFilters, applyProductSearchFilter } from './product-search.utils';
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 12;
@@ -61,13 +62,6 @@ export class ProductsRepository {
       where.status = status as ProductStatus;
     }
 
-    if (search) {
-      where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { sku: { contains: search, mode: 'insensitive' } },
-      ];
-    }
-
     if (minPrice !== undefined || maxPrice !== undefined) {
       where.price = {
         ...(minPrice !== undefined ? { gte: minPrice } : {}),
@@ -75,9 +69,8 @@ export class ProductsRepository {
       };
     }
 
-    if (attributeFilters.length > 0) {
-      where.AND = attributeFilters;
-    }
+    appendProductAndFilters(where, attributeFilters);
+    applyProductSearchFilter(where, search);
 
     const orderBy = this.buildOrderBy(sort);
     const skip = (page - 1) * limit;
@@ -204,12 +197,7 @@ export class ProductsRepository {
       where.brandId = { in: brandIds };
     }
 
-    if (search) {
-      where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { sku: { contains: search, mode: 'insensitive' } },
-      ];
-    }
+    applyProductSearchFilter(where, search);
 
     const orderBy = this.buildOrderBy(sort);
     const skip = (page - 1) * limit;

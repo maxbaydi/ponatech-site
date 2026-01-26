@@ -21,6 +21,7 @@ import {
 import { ExportProductsCsvDto, ImportProductsCsvDto, ImportProductsCsvResult, PRODUCT_CSV_COLUMNS } from './dto/products-csv.dto';
 import { slugify } from '../utils/slugify';
 import { getMainProductImage } from './product-image.utils';
+import { applyProductSearchFilter } from './product-search.utils';
 
 const CSV_REQUIRED_COLUMNS = ['name', 'article', 'price', 'brand'] as const;
 const DEFAULT_PRODUCT_CURRENCY = 'RUB';
@@ -572,13 +573,7 @@ export class ProductsService {
     if (brandId) {
       where.brandId = brandId;
     }
-    const search = dto.search?.trim();
-    if (search) {
-      where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { sku: { contains: search, mode: 'insensitive' } },
-      ];
-    }
+    applyProductSearchFilter(where, dto.search);
     return where;
   }
 
