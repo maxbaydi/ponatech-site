@@ -8,21 +8,20 @@ import { cn } from '@/lib/utils';
 
 interface CategoryGridItem {
   slug: string;
-  style: React.CSSProperties;
   size: 'lg' | 'md' | 'sm';
 }
 
 const GRID_CONFIG: CategoryGridItem[] = [
-  { slug: 'kontrollery-i-sistemy-upravleniya', style: { gridColumn: '1 / 3', gridRow: '1 / 3' }, size: 'lg' },
-  { slug: 'datchiki-i-izmeritelnye-pribory', style: { gridColumn: '3 / 4', gridRow: '1 / 2' }, size: 'sm' },
-  { slug: 'privodnaya-tehnika', style: { gridColumn: '4 / 5', gridRow: '1 / 2' }, size: 'sm' },
-  { slug: 'reduktory-i-mehanicheskaya-peredacha', style: { gridColumn: '5 / 7', gridRow: '1 / 2' }, size: 'md' },
-  { slug: 'pnevmatika-i-gidravlika', style: { gridColumn: '3 / 4', gridRow: '2 / 3' }, size: 'sm' },
-  { slug: 'promyshlennye-soediniteli-i-klemmy', style: { gridColumn: '4 / 5', gridRow: '2 / 3' }, size: 'sm' },
-  { slug: 'elektrotehnika-i-kommutacionnoe-oborudovanie', style: { gridColumn: '5 / 7', gridRow: '2 / 3' }, size: 'md' },
-  { slug: 'istochniki-pitaniya-i-ibp', style: { gridColumn: '1 / 2', gridRow: '3 / 4' }, size: 'sm' },
-  { slug: 'servery-shd-i-setevoe-oborudovanie', style: { gridColumn: '2 / 4', gridRow: '3 / 4' }, size: 'md' },
-  { slug: 'sistemy-videonablyudeniya-i-bezopasnosti', style: { gridColumn: '4 / 7', gridRow: '3 / 4' }, size: 'lg' },
+  { slug: 'kontrollery-i-sistemy-upravleniya', size: 'lg' },
+  { slug: 'datchiki-i-izmeritelnye-pribory', size: 'sm' },
+  { slug: 'privodnaya-tehnika', size: 'sm' },
+  { slug: 'reduktory-i-mehanicheskaya-peredacha', size: 'md' },
+  { slug: 'pnevmatika-i-gidravlika', size: 'sm' },
+  { slug: 'promyshlennye-soediniteli-i-klemmy', size: 'sm' },
+  { slug: 'elektrotehnika-i-kommutacionnoe-oborudovanie', size: 'md' },
+  { slug: 'istochniki-pitaniya-i-ibp', size: 'sm' },
+  { slug: 'servery-shd-i-setevoe-oborudovanie', size: 'md' },
+  { slug: 'sistemy-videonablyudeniya-i-bezopasnosti', size: 'lg' },
 ];
 
 const CATEGORY_IMAGES: Record<string, string | null> = {
@@ -51,13 +50,7 @@ const PLACEHOLDER_EMOJIS: Record<string, string> = {
   'sistemy-videonablyudeniya-i-bezopasnosti': '📹',
 };
 
-const IMG_SIZES: Record<CategoryGridItem['size'], string> = {
-  lg: 'w-20 h-20 sm:w-24 sm:h-24 text-4xl sm:text-5xl',
-  md: 'w-14 h-14 sm:w-16 sm:h-16 text-2xl sm:text-3xl',
-  sm: 'w-12 h-12 text-xl',
-};
-
-const isHorizontalCard = (slug: string, size: string) => 
+const isHorizontalCard = (slug: string, size: CategoryGridItem['size']) =>
   size === 'sm' || size === 'md' || slug === 'sistemy-videonablyudeniya-i-bezopasnosti';
 
 export function CategoriesSection() {
@@ -81,83 +74,52 @@ export function CategoriesSection() {
           Популярные категории
         </h2>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 auto-rows-[140px] sm:auto-rows-[130px] lg:auto-rows-[110px]">
-          {items.map((item, index) => (
-            <motion.div
-              key={item.slug}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: index * 0.05 }}
-              style={item.style}
-              className="hidden lg:block"
-            >
-              <Link href={item.apiId ? `/catalog?categoryId=${item.apiId}` : `/catalog`} className="block h-full group">
-                <div className={cn(
-                  'h-full bg-card rounded-2xl border border-border/50 p-3 sm:p-4 transition-all duration-300 hover:bg-primary hover:border-primary hover:-translate-y-1 overflow-hidden',
-                  isHorizontalCard(item.slug, item.size) ? 'flex flex-row items-center gap-3' : 'flex flex-col'
-                )}>
-                  <div className={cn(
-                    'flex items-center justify-center shrink-0',
-                    !isHorizontalCard(item.slug, item.size) && 'flex-1 mb-2'
-                  )}>
-                    <div className={cn('flex items-center justify-center rounded-xl transition-transform group-hover:scale-105', IMG_SIZES[item.size], !CATEGORY_IMAGES[item.slug] && 'bg-muted/50')}>
-                      {CATEGORY_IMAGES[item.slug] ? (
-                        <img src={CATEGORY_IMAGES[item.slug]!} alt={item.name} className="w-full h-full object-contain" />
-                      ) : (
-                        <span>{PLACEHOLDER_EMOJIS[item.slug]}</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className={cn(
-                      'font-semibold text-foreground group-hover:text-white transition-colors leading-tight mb-0.5',
-                      item.size === 'lg' ? 'text-sm sm:text-base' : 'text-xs sm:text-sm'
-                    )}>
-                      {item.name}
-                    </h3>
-                    <p className="text-xs text-muted-foreground group-hover:text-white/70 transition-colors">
-                      {item.brandSlugs.length} брендов
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
+        <div className="category-grid">
+          {items.map((item, index) => {
+            const isHorizontal = isHorizontalCard(item.slug, item.size);
 
-          {/* Mobile/Tablet: simple grid */}
-          {items.map((item, index) => (
-            <motion.div
-              key={`mobile-${item.slug}`}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: index * 0.05 }}
-              className="lg:hidden"
-            >
-              <Link href={item.apiId ? `/catalog?categoryId=${item.apiId}` : `/catalog`} className="block h-full group">
-                <div className="h-full bg-card rounded-2xl border border-border/50 p-3 sm:p-4 flex flex-col transition-all duration-300 hover:shadow-lg hover:border-primary/30 overflow-hidden">
-                  <div className="flex items-center justify-center mb-2 sm:mb-3">
-                    <div className={cn('w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center rounded-xl text-xl sm:text-2xl', !CATEGORY_IMAGES[item.slug] && 'bg-muted/50')}>
-                      {CATEGORY_IMAGES[item.slug] ? (
-                        <img src={CATEGORY_IMAGES[item.slug]!} alt={item.name} className="w-full h-full object-contain" />
-                      ) : (
-                        <span>{PLACEHOLDER_EMOJIS[item.slug]}</span>
-                      )}
+            return (
+              <motion.div
+                key={item.slug}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: index * 0.05 }}
+                data-category={item.slug}
+                data-size={item.size}
+                className="category-grid-item"
+              >
+                <Link href={item.apiId ? `/catalog?categoryId=${item.apiId}` : `/catalog`} className="block h-full">
+                  <div
+                    className={cn(
+                      'category-card',
+                      isHorizontal ? 'category-card--horizontal' : 'category-card--vertical'
+                    )}
+                  >
+                    <div className={cn('category-card-media', !isHorizontal && 'category-card-media--stacked')}>
+                      <div
+                        className={cn(
+                          'category-icon',
+                          `category-icon--${item.size}`,
+                          !CATEGORY_IMAGES[item.slug] && 'category-icon--placeholder'
+                        )}
+                      >
+                        {CATEGORY_IMAGES[item.slug] ? (
+                          <img src={CATEGORY_IMAGES[item.slug]!} alt={item.name} className="w-full h-full object-contain" />
+                        ) : (
+                          <span>{PLACEHOLDER_EMOJIS[item.slug]}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="category-card-body">
+                      <h3 className="category-title">{item.name}</h3>
+                      <p className="category-count">{item.brandSlugs.length} брендов</p>
                     </div>
                   </div>
-                  <div className="flex-1 flex flex-col justify-end">
-                    <h3 className="font-semibold text-xs sm:text-sm text-foreground group-hover:text-primary transition-colors leading-tight mb-0.5">
-                      {item.name}
-                    </h3>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground">
-                      {item.brandSlugs.length} брендов
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
+                </Link>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>

@@ -40,8 +40,6 @@ const FIRST_PAGE = '1';
 const HEADER_HEIGHT_CSS_VAR = '--size-header-height';
 const HEADER_HEIGHT_FALLBACK = '0px';
 const WINDOW_RESIZE_EVENT = 'resize';
-const HEADER_SURFACE_CLASS = 'container-custom bg-background';
-const HEADER_MAIN_CLASS = cn(HEADER_SURFACE_CLASS, 'rounded-b-2xl');
 
 type HeaderBrandOption = { name: string; slug: string; logoSrc?: string | null };
 
@@ -171,7 +169,7 @@ export function Header() {
         <div className="container-custom">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 py-2 text-xs text-muted-foreground">
             <HeaderNavLinks
-              className="hidden md:flex items-center gap-4"
+              className="hidden lg:flex items-center gap-4"
               linkClassName="hover:text-foreground transition-colors"
             />
 
@@ -200,7 +198,7 @@ export function Header() {
       </div>
 
       <div ref={headerRef} className="sticky top-0 z-50 w-full pointer-events-none">
-        <header className={cn(HEADER_MAIN_CLASS, "pointer-events-auto")}>
+        <header className="header-main pointer-events-auto">
         <div className="flex h-20 items-center gap-4">
           <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center">
@@ -223,7 +221,7 @@ export function Header() {
           </div>
 
         <form
-          className="hidden md:flex flex-1 min-w-0 justify-center"
+          className="hidden lg:flex flex-1 min-w-0 justify-center"
           onSubmit={(e) => {
             e.preventDefault();
             runSearch();
@@ -328,7 +326,7 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className="hidden sm:flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-2">
               <Button variant="ghost" asChild className="h-12">
                 <Link href="/login">Войти</Link>
               </Button>
@@ -349,13 +347,13 @@ export function Header() {
             </Link>
           </Button>
 
-          <Button variant="secondary" asChild className="hidden md:flex h-12">
+          <Button variant="secondary" asChild className="hidden lg:flex h-12">
             <Link href={REQUEST_PATH}>Оставить заявку</Link>
           </Button>
 
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button type="button" variant="ghost" size="icon" className="md:hidden">
+              <Button type="button" variant="ghost" size="icon" className="lg:hidden">
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>

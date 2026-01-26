@@ -47,6 +47,13 @@
   --size-header-brand-dropdown-gap: 0.25rem;
   --size-header-height: 0px;
   --size-catalog-filters-top-gap: 1.5rem;
+  --size-category-grid-row: 90px;
+  --size-category-grid-row-sm: 85px;
+  --size-category-grid-row-lg: 110px;
+  --size-category-grid-gap: 0.75rem;
+  --size-category-grid-gap-sm: 1rem;
+  --size-category-title-lines: 2;
+  --size-category-icon-scale-hover: 1.05;
   --size-section-padding-compact: 50px;
   --size-hero-content-max-w: 900px;
   --size-admin-shell-padding: 1rem;
@@ -273,6 +280,190 @@
 
   .container-custom {
     @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .header-main {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 bg-background border-b border-border;
+  }
+
+  @media (min-width: 1024px) {
+    .header-main {
+      border-bottom-width: 0;
+      border-bottom-left-radius: var(--radius-2xl);
+      border-bottom-right-radius: var(--radius-2xl);
+    }
+  }
+
+  .category-grid {
+    @apply grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--size-category-grid-gap);
+    grid-auto-rows: var(--size-category-grid-row);
+  }
+
+  @media (min-width: 640px) {
+    .category-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--size-category-grid-gap-sm);
+      grid-auto-rows: var(--size-category-grid-row-sm);
+    }
+  }
+
+  @media (min-width: 768px) {
+    .category-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .category-grid {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      grid-auto-rows: var(--size-category-grid-row-lg);
+      grid-template-areas:
+        "control control sensors drives reducer reducer"
+        "control control pneumo connectors electro electro"
+        "power server server security security security";
+    }
+
+    .category-grid-item[data-category='kontrollery-i-sistemy-upravleniya'] {
+      grid-area: control;
+    }
+
+    .category-grid-item[data-category='datchiki-i-izmeritelnye-pribory'] {
+      grid-area: sensors;
+    }
+
+    .category-grid-item[data-category='privodnaya-tehnika'] {
+      grid-area: drives;
+    }
+
+    .category-grid-item[data-category='reduktory-i-mehanicheskaya-peredacha'] {
+      grid-area: reducer;
+    }
+
+    .category-grid-item[data-category='pnevmatika-i-gidravlika'] {
+      grid-area: pneumo;
+    }
+
+    .category-grid-item[data-category='promyshlennye-soediniteli-i-klemmy'] {
+      grid-area: connectors;
+    }
+
+    .category-grid-item[data-category='elektrotehnika-i-kommutacionnoe-oborudovanie'] {
+      grid-area: electro;
+    }
+
+    .category-grid-item[data-category='istochniki-pitaniya-i-ibp'] {
+      grid-area: power;
+    }
+
+    .category-grid-item[data-category='servery-shd-i-setevoe-oborudovanie'] {
+      grid-area: server;
+    }
+
+    .category-grid-item[data-category='sistemy-videonablyudeniya-i-bezopasnosti'] {
+      grid-area: security;
+    }
+  }
+
+  .category-icon {
+    @apply flex items-center justify-center rounded-xl transition-transform;
+  }
+
+  .category-icon--lg,
+  .category-icon--md,
+  .category-icon--sm {
+    @apply w-12 h-12 sm:w-14 sm:h-14 text-xl sm:text-2xl;
+  }
+
+  @media (min-width: 1024px) {
+    .category-icon--lg {
+      @apply w-24 h-24 text-5xl;
+    }
+
+    .category-icon--md {
+      @apply w-16 h-16 text-3xl;
+    }
+
+    .category-icon--sm {
+      @apply w-12 h-12 text-xl;
+    }
+  }
+
+  .category-icon--placeholder {
+    @apply bg-muted/50;
+  }
+
+  .category-card {
+    @apply h-full bg-card rounded-2xl border border-border/50 p-3 sm:p-4 flex flex-row items-center gap-3 transition-all duration-300 overflow-hidden;
+  }
+
+  .category-card:hover {
+    @apply shadow-lg border-primary/30;
+  }
+
+  @media (min-width: 1024px) {
+    .category-card:hover {
+      @apply bg-primary border-primary -translate-y-1;
+    }
+
+    .category-card--vertical {
+      @apply flex-col;
+    }
+  }
+
+  .category-card-media {
+    @apply flex items-center justify-center shrink-0;
+  }
+
+  @media (min-width: 1024px) {
+    .category-card-media--stacked {
+      @apply flex-1 mb-2;
+    }
+  }
+
+  .category-card-body {
+    @apply min-w-0 flex-1;
+  }
+
+  .category-title {
+    @apply font-semibold text-foreground transition-colors leading-tight text-xs sm:text-sm;
+    display: -webkit-box;
+    -webkit-line-clamp: var(--size-category-title-lines);
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  @media (min-width: 1024px) {
+    .category-grid-item[data-size='lg'] .category-title {
+      @apply text-base;
+    }
+  }
+
+  .category-count {
+    @apply text-xs text-muted-foreground transition-colors whitespace-nowrap;
+  }
+
+  .category-card:hover .category-title {
+    @apply text-primary;
+  }
+
+  .category-card:hover .category-count {
+    @apply text-primary/70;
+  }
+
+  @media (min-width: 1024px) {
+    .category-card:hover .category-title {
+      @apply text-white;
+    }
+
+    .category-card:hover .category-count {
+      @apply text-white/70;
+    }
+  }
+
+  .category-card:hover .category-icon {
+    transform: scale(var(--size-category-icon-scale-hover));
   }
 
   .admin-shell {

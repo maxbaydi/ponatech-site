@@ -81,7 +81,7 @@ export function HeroSection() {
   const getLogo = (index: number) => LOGOS[logoOrder[index]];
 
   return (
-    <section className="container-custom relative min-h-[600px] lg:min-h-[700px] flex items-center justify-center overflow-hidden bg-slate-900 py-12 md:py-24 rounded-3xl mt-4">
+    <section className="relative w-full min-h-[600px] lg:min-h-[700px] flex items-center justify-center overflow-hidden bg-slate-900 py-12 md:py-24 lg:mt-4 lg:rounded-3xl lg:max-w-7xl lg:mx-auto">
       {/* Background with Overlay */}
       <div className="absolute inset-0 z-0">
         <Image
