@@ -167,7 +167,7 @@ export default function UsersPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Email</TableHead>
+                      <TableHead className="pl-4">Пользователь</TableHead>
                       <TableHead>Роль</TableHead>
                       <TableHead className="hidden sm:table-cell">Статус</TableHead>
                       <TableHead className="hidden md:table-cell">Дата регистрации</TableHead>
@@ -180,21 +180,26 @@ export default function UsersPage() {
                       const isCurrentUser = user.id === currentUser?.id;
                       return (
                         <TableRow key={user.id}>
-                          <TableCell>
+                          <TableCell className="pl-4">
                             <div className="flex flex-col gap-1 text-sm sm:text-base">
-                              <div className="font-medium break-all">
-                                <span>{user.email}</span>
+                              <div className="font-medium flex flex-col sm:flex-row sm:items-center sm:gap-1">
+                                {user.name && <span>{user.name}</span>}
+                                {user.name && user.company && (
+                                  <span className="hidden sm:inline text-muted-foreground/60">•</span>
+                                )}
+                                {user.company && <span>{user.company}</span>}
+                                {!user.name && !user.company && <span className="break-all">{user.email}</span>}
                                 {isCurrentUser && (
-                                  <span className="ml-2 text-xs text-muted-foreground">(вы)</span>
+                                  <span className="ml-1 text-xs text-muted-foreground">(вы)</span>
                                 )}
                               </div>
-                              {(user.name || user.company || user.phone) && (
-                                <div className="text-xs text-muted-foreground space-y-1">
-                                  {user.name && <div>{user.name}</div>}
-                                  {user.company && <div>{user.company}</div>}
-                                  {user.phone && <div>{user.phone}</div>}
-                                </div>
-                              )}
+                              <div className="text-xs text-muted-foreground flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:gap-1">
+                                {(user.name || user.company) && <span className="break-all">{user.email}</span>}
+                                {(user.name || user.company) && user.phone && (
+                                  <span className="hidden sm:inline text-muted-foreground/60">•</span>
+                                )}
+                                {user.phone && <span>{user.phone}</span>}
+                              </div>
                             </div>
                           </TableCell>
                           <TableCell>
