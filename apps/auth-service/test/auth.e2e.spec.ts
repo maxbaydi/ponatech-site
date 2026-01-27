@@ -21,6 +21,21 @@ const ensureSchema = (): void => {
   );
 };
 
+const buildTestDatabaseUrl = (schema: string): string => {
+  const baseUrl =
+    process.env.TEST_DATABASE_URL ??
+    'postgresql://ponatech:ponatech@localhost:5432/ponatech_catalog_test?schema=public';
+
+  try {
+    const url = new URL(baseUrl);
+    url.searchParams.set('schema', schema);
+    return url.toString();
+  } catch {
+    const separator = baseUrl.includes('?') ? '&' : '?';
+    return `${baseUrl}${separator}schema=${schema}`;
+  }
+};
+
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
   let authService: AuthService;
@@ -34,9 +49,7 @@ describe('AuthController (e2e)', () => {
     process.env.REFRESH_TOKEN_EXPIRES_IN = '30d';
     process.env.RATE_LIMIT_MAX = '1000';
     process.env.RATE_LIMIT_WINDOW_MS = '60000';
-    process.env.DATABASE_URL =
-      process.env.TEST_DATABASE_URL ??
-      'postgresql://ponatech:ponatech@localhost:5432/ponatech_catalog_test?schema=public';
+    process.env.DATABASE_URL = buildTestDatabaseUrl('auth_test');
 
     ensureSchema();
 
@@ -366,9 +379,7 @@ describe('Auth rate limiting', () => {
     process.env.REFRESH_TOKEN_EXPIRES_IN = '30d';
     process.env.RATE_LIMIT_MAX = '4';
     process.env.RATE_LIMIT_WINDOW_MS = '10000';
-    process.env.DATABASE_URL =
-      process.env.TEST_DATABASE_URL ??
-      'postgresql://ponatech:ponatech@localhost:5432/ponatech_catalog_test?schema=public';
+    process.env.DATABASE_URL = buildTestDatabaseUrl('auth_test');
 
     ensureSchema();
 

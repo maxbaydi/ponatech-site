@@ -23,6 +23,16 @@ import { RequestsService } from './requests/requests.service';
 import { SiteSettingsController } from './settings/settings.controller';
 import { SiteSettingsRepository } from './settings/settings.repository';
 import { SiteSettingsService } from './settings/settings.service';
+import { ChatController } from './chat/chat.controller';
+import { ChatSseController } from './chat/chat-sse.controller';
+import { ChatRepository } from './chat/chat.repository';
+import { ChatService } from './chat/chat.service';
+import { ChatGateway } from './chat/chat.gateway';
+import { ChatEventsService } from './chat/chat-events.service';
+import { ChatEventsRepository } from './chat/chat-events.repository';
+import { NotificationsController } from './notifications/notifications.controller';
+import { NotificationsRepository } from './notifications/notifications.repository';
+import { NotificationsService } from './notifications/notifications.service';
 
 @Module({
   imports: [PrismaModule, MediaModule, MinioModule],
@@ -34,6 +44,9 @@ import { SiteSettingsService } from './settings/settings.service';
     RequestsController,
     CartController,
     SiteSettingsController,
+    ChatController,
+    ChatSseController,
+    NotificationsController,
   ],
   providers: [
     BrandsRepository,
@@ -48,6 +61,13 @@ import { SiteSettingsService } from './settings/settings.service';
     CartService,
     SiteSettingsRepository,
     SiteSettingsService,
+    ChatRepository,
+    ChatEventsRepository,
+    ChatService,
+    ChatEventsService,
+    ChatGateway,
+    NotificationsRepository,
+    NotificationsService,
     JwtAuthGuard,
     RolesGuard,
   ],

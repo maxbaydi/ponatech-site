@@ -58,6 +58,14 @@
   --size-hero-content-max-w: 900px;
   --size-admin-shell-padding: 1rem;
   --size-admin-shell-padding-lg: 1.5rem;
+  --size-chat-shell-min-height: 32rem;
+  --size-chat-shell-offset: 13.75rem;
+  --size-chat-bubble-max-width: 85%;
+  --size-chat-attachment-name-max-width: 9.5rem;
+  --size-chat-attachment-preview-width: 12.5rem;
+  --size-chat-attachment-preview-height: 9.375rem;
+  --size-chat-input-min-height: 2.75rem;
+  --size-chat-input-max-height: 7.5rem;
   
   --font-sans: var(--font-onest), 'Onest', arial, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
@@ -481,6 +489,57 @@
     top: var(--size-admin-shell-padding);
   }
 
+  .admin-content {
+    padding: var(--size-admin-shell-padding);
+  }
+
+  .chat-shell {
+    height: calc(100vh - var(--size-chat-shell-offset));
+    min-height: var(--size-chat-shell-min-height);
+  }
+
+  .chat-text-container {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--color-muted-foreground) 35%, transparent) transparent;
+  }
+
+  .chat-text-container::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .chat-text-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .chat-text-container::-webkit-scrollbar-thumb {
+    background-color: color-mix(in srgb, var(--color-muted-foreground) 35%, transparent);
+    border-radius: var(--radius-full);
+  }
+
+  .chat-flex {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+
+  .chat-box {
+    max-width: var(--size-chat-bubble-max-width);
+  }
+
+  .chat-attachment-preview {
+    max-width: var(--size-chat-attachment-preview-width);
+    max-height: var(--size-chat-attachment-preview-height);
+  }
+
+  .chat-attachment-name {
+    max-width: var(--size-chat-attachment-name-max-width);
+  }
+
+  .chat-input-textarea {
+    min-height: var(--size-chat-input-min-height);
+    max-height: var(--size-chat-input-max-height);
+  }
+
   .catalog-filters-sticky {
     top: calc(var(--size-header-height) + var(--size-catalog-filters-top-gap));
   }
@@ -496,6 +555,10 @@
 
     .admin-sidebar-sticky {
       top: var(--size-admin-shell-padding-lg);
+    }
+
+    .admin-content {
+      padding: var(--size-admin-shell-padding-lg);
     }
   }
 

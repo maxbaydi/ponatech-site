@@ -236,7 +236,7 @@ export function DeletedProductsTable() {
 
   return (
     <>
-      <Card>
+      <Card className="border-0 shadow-none">
         <CardHeader className="pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="relative w-full sm:max-w-sm">

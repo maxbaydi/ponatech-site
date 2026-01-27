@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, SupplyRequestStatus } from '@prisma/client';
+import { ChatMessageSender, Prisma, SupplyRequestStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   CreateRequestDto,
@@ -59,10 +59,17 @@ export class RequestsRepository {
     });
   }
 
-  async findById(id: string): Promise<{ id: string; email: string } | null> {
+  async findById(id: string): Promise<{ id: string; email: string; status: SupplyRequestStatus } | null> {
     return this.prisma.supplyRequest.findUnique({
       where: { id },
-      select: { id: true, email: true },
+      select: { id: true, email: true, status: true },
+    });
+  }
+
+  async findWithNumber(id: string): Promise<{ id: string; requestNumber: string | null } | null> {
+    return this.prisma.supplyRequest.findUnique({
+      where: { id },
+      select: { id: true, requestNumber: true },
     });
   }
 
@@ -74,7 +81,8 @@ export class RequestsRepository {
   }
 
   async findAll(
-    filters?: GetRequestsQueryDto,
+    filters: GetRequestsQueryDto | undefined,
+    unreadSenderTypes: ChatMessageSender[],
   ): Promise<PaginatedResponse<SupplyRequestResponse>> {
     const page = this.normalizeNumber(filters?.page, DEFAULT_PAGE);
     const limit = this.normalizeNumber(filters?.limit, DEFAULT_LIMIT, MAX_LIMIT);
@@ -88,13 +96,28 @@ export class RequestsRepository {
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
+        include: {
+          _count: {
+            select: {
+              chatMessages: {
+                where: {
+                  isRead: false,
+                  senderType: { in: unreadSenderTypes },
+                },
+              },
+            },
+          },
+        },
       }),
     ]);
 
     const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
 
     return {
-      data,
+      data: data.map(({ _count, ...request }) => ({
+        ...request,
+        unreadCount: _count.chatMessages,
+      })),
       total,
       page,
       limit,
@@ -104,7 +127,8 @@ export class RequestsRepository {
 
   async findAllByEmail(
     email: string,
-    filters?: GetRequestsQueryDto,
+    filters: GetRequestsQueryDto | undefined,
+    unreadSenderTypes: ChatMessageSender[],
   ): Promise<PaginatedResponse<SupplyRequestResponse>> {
     const page = this.normalizeNumber(filters?.page, DEFAULT_PAGE);
     const limit = this.normalizeNumber(filters?.limit, DEFAULT_LIMIT, MAX_LIMIT);
@@ -119,13 +143,28 @@ export class RequestsRepository {
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
+        include: {
+          _count: {
+            select: {
+              chatMessages: {
+                where: {
+                  isRead: false,
+                  senderType: { in: unreadSenderTypes },
+                },
+              },
+            },
+          },
+        },
       }),
     ]);
 
     const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
 
     return {
-      data,
+      data: data.map(({ _count, ...request }) => ({
+        ...request,
+        unreadCount: _count.chatMessages,
+      })),
       total,
       page,
       limit,

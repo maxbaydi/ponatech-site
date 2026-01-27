@@ -10,6 +10,11 @@ import type {
   CartRecommendationsResponse,
   Category,
   ChangePasswordRequest,
+  ChatListItem,
+  ChatMessage,
+  ChatMessagesFilters,
+  ChatMessagesResponse,
+  ChatStats,
   CreateBrandRequest,
   CreateCategoryRequest,
   CreateProductRequest,
@@ -22,9 +27,14 @@ import type {
   MediaDownloadUrlsResponse,
   MediaFile,
   MediaFilesFilters,
+  Notification,
+  NotificationsFilters,
+  NotificationsResponse,
+  NotificationStats,
   PaginatedResponse,
   Product,
   ProductFilters,
+  SendMessageRequest,
   SupplyRequest,
   SupplyRequestAttachment,
   UpdateProductsBrandBatchRequest,
@@ -88,6 +98,14 @@ const REQUESTS_WITH_ATTACHMENTS_ENDPOINT = `${REQUESTS_ENDPOINT}/with-attachment
 const REQUEST_ATTACHMENTS_ENDPOINT = (id: string) => `${REQUESTS_ENDPOINT}/${id}/attachments`;
 const REQUEST_ATTACHMENTS_DOWNLOAD_ENDPOINT = (id: string) => `${REQUEST_ATTACHMENTS_ENDPOINT(id)}/download`;
 const USERS_STATS_ENDPOINT = '/auth/admin/users/stats';
+const CHAT_ENDPOINT = '/chat';
+const CHAT_MESSAGES_ENDPOINT = `${CHAT_ENDPOINT}/messages`;
+const CHAT_MESSAGES_WITH_ATTACHMENTS_ENDPOINT = `${CHAT_MESSAGES_ENDPOINT}/with-attachments`;
+const CHAT_LIST_ENDPOINT = `${CHAT_ENDPOINT}/list`;
+const CHAT_STATS_ENDPOINT = `${CHAT_ENDPOINT}/stats`;
+const CHAT_MARK_READ_ENDPOINT = (requestId: string) => `${CHAT_ENDPOINT}/mark-read/${requestId}`;
+const NOTIFICATIONS_ENDPOINT = '/notifications';
+const NOTIFICATIONS_STATS_ENDPOINT = `${NOTIFICATIONS_ENDPOINT}/stats`;
 
 class ApiClient {
   private catalogBaseUrl: string;
@@ -755,6 +773,77 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify({ ids }),
     });
+  }
+
+  async sendChatMessage(data: SendMessageRequest): Promise<ChatMessage> {
+    return this.request<ChatMessage>(CHAT_MESSAGES_ENDPOINT, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async sendChatMessageWithAttachments(
+    data: SendMessageRequest,
+    files: File[],
+  ): Promise<ChatMessage> {
+    const formData = new FormData();
+    formData.append('requestId', data.requestId);
+    formData.append('content', data.content);
+    files.forEach((file) => formData.append('files', file));
+    return this.requestForm<ChatMessage>(CHAT_MESSAGES_WITH_ATTACHMENTS_ENDPOINT, formData);
+  }
+
+  async getChatMessages(requestId: string, filters?: ChatMessagesFilters): Promise<ChatMessagesResponse> {
+    const params = new URLSearchParams();
+    if (filters?.page) params.append('page', String(filters.page));
+    if (filters?.limit) params.append('limit', String(filters.limit));
+    const query = params.toString();
+    return this.request<ChatMessagesResponse>(`${CHAT_MESSAGES_ENDPOINT}/${requestId}${query ? `?${query}` : ''}`);
+  }
+
+  async getChatList(includeRequestId?: string): Promise<ChatListItem[]> {
+    if (!includeRequestId) {
+      return this.request<ChatListItem[]>(CHAT_LIST_ENDPOINT);
+    }
+    const params = new URLSearchParams();
+    params.append('includeRequestId', includeRequestId);
+    const query = params.toString();
+    return this.request<ChatListItem[]>(`${CHAT_LIST_ENDPOINT}?${query}`);
+  }
+
+  async getChatStats(): Promise<ChatStats> {
+    return this.request<ChatStats>(CHAT_STATS_ENDPOINT);
+  }
+
+  async markChatAsRead(requestId: string): Promise<void> {
+    return this.request<void>(CHAT_MARK_READ_ENDPOINT(requestId), {
+      method: 'POST',
+    });
+  }
+
+  async getNotifications(filters?: NotificationsFilters): Promise<NotificationsResponse> {
+    const params = new URLSearchParams();
+    if (filters?.page) params.append('page', String(filters.page));
+    if (filters?.limit) params.append('limit', String(filters.limit));
+    if (filters?.unreadOnly) params.append('unreadOnly', 'true');
+    const query = params.toString();
+    return this.request<NotificationsResponse>(`${NOTIFICATIONS_ENDPOINT}${query ? `?${query}` : ''}`);
+  }
+
+  async markNotificationAsRead(id: string): Promise<void> {
+    return this.request<void>(`${NOTIFICATIONS_ENDPOINT}/read/${id}`, {
+      method: 'POST',
+    });
+  }
+
+  async markAllNotificationsAsRead(): Promise<void> {
+    return this.request<void>(`${NOTIFICATIONS_ENDPOINT}/read-all`, {
+      method: 'POST',
+    });
+  }
+
+  async getNotificationStats(): Promise<NotificationStats> {
+    return this.request<NotificationStats>(NOTIFICATIONS_STATS_ENDPOINT);
   }
 }
 

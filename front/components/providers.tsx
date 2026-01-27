@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 import { AuthProvider } from '@/lib/auth/auth-context';
 import { CartProvider } from '@/lib/cart-provider';
+import { ChatEventsProvider } from '@/lib/chat-events-provider';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -26,7 +27,9 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <CartProvider>{children}</CartProvider>
+        <ChatEventsProvider>
+          <CartProvider>{children}</CartProvider>
+        </ChatEventsProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

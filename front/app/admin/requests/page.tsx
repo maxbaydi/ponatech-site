@@ -1,7 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Search } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Search, MessageCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -28,7 +30,7 @@ import { REQUEST_STATUS_FILTER_ALL, type RequestStatusFilter } from '@/lib/reque
 
 const TITLE = 'Заявки';
 const DESCRIPTION = 'Запросы на поставку от клиентов';
-const SEARCH_PLACEHOLDER = 'Поиск по номеру, имени, email или телефону...';
+const SEARCH_PLACEHOLDER = 'Поиск по номеру, имени, email или названию компании, 0001_27012026';
 const STATUS_FILTER_PLACEHOLDER = 'Статус';
 const EMPTY_TEXT = 'Заявки не найдены';
 const ERROR_TEXT = 'Ошибка загрузки заявок';
@@ -43,6 +45,7 @@ const STATUS_LABEL = 'Статус';
 const COMPANY_LABEL = 'Компания';
 const REQUEST_LABEL = 'Запрос';
 const DETAILS_LABEL = 'Подробнее';
+const CHAT_LABEL = 'Чат';
 
 const DEFAULT_PAGE = 1;
 const PAGE_SIZE = 10;
@@ -52,6 +55,7 @@ const SKELETON_ROWS = 5;
 const EMPTY_REQUESTS: SupplyRequest[] = [];
 
 export default function RequestsPage() {
+  const router = useRouter();
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(DEFAULT_PAGE);
@@ -90,6 +94,10 @@ export default function RequestsPage() {
     setSelectedRequest(request);
   }, []);
 
+  const handleOpenChat = useCallback((request: SupplyRequest) => {
+    router.push(`/admin/chats?request=${request.id}`);
+  }, [router]);
+
   const handleSheetOpenChange = useCallback((open: boolean) => {
     if (!open) {
       setSelectedRequest(null);
@@ -122,16 +130,19 @@ export default function RequestsPage() {
         <p className="text-muted-foreground">{DESCRIPTION}</p>
       </div>
 
-      <Card>
+      <Card className="border-0 shadow-none">
         <CardHeader className="pb-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
             <div className="relative w-full lg:max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <Input
                 placeholder={SEARCH_PLACEHOLDER}
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
                 className="pl-10"
+                aria-label={SEARCH_PLACEHOLDER}
+                name="search"
+                autoComplete="off"
               />
             </div>
             <div className="w-full lg:max-w-[220px]">
@@ -166,52 +177,83 @@ export default function RequestsPage() {
                     key={request.id}
                     request={request}
                     onOpen={handleOpenRequest}
+                    onOpenChat={handleOpenChat}
                     descriptionPreviewLength={DESCRIPTION_PREVIEW_LENGTH}
                     detailsLabel={DETAILS_LABEL}
+                    chatLabel={CHAT_LABEL}
                   />
                 ))}
               </div>
               <div className="hidden md:block overflow-x-auto">
-                <Table>
+                <Table className="table-fixed">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[120px]">{NUMBER_LABEL}</TableHead>
-                      <TableHead className="w-[140px]">{DATE_LABEL}</TableHead>
-                      <TableHead className="w-[250px] max-w-[250px]">{CONTACT_LABEL}</TableHead>
-                      <TableHead className="w-[140px]">{STATUS_LABEL}</TableHead>
-                      <TableHead className="hidden xl:table-cell w-[250px]">{COMPANY_LABEL}</TableHead>
-                      <TableHead className="hidden lg:table-cell">{REQUEST_LABEL}</TableHead>
-                      <TableHead className="w-[120px]"></TableHead>
+                      <TableHead className="w-[100px] min-w-[80px] sm:w-[120px]">{NUMBER_LABEL}</TableHead>
+                      <TableHead className="w-[110px] min-w-[90px] sm:w-[140px]">{DATE_LABEL}</TableHead>
+                      <TableHead className="w-[200px] min-w-[160px] max-w-[250px] lg:w-[250px]">{CONTACT_LABEL}</TableHead>
+                      <TableHead className="w-[100px] min-w-[80px] sm:w-[140px]">{STATUS_LABEL}</TableHead>
+                      <TableHead className="hidden xl:table-cell w-[200px] min-w-[180px] 2xl:w-[250px]">{COMPANY_LABEL}</TableHead>
+                      <TableHead className="hidden lg:table-cell min-w-[180px] w-auto">{REQUEST_LABEL}</TableHead>
+                      <TableHead className="w-[180px] min-w-[160px]"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {requests.map((request) => (
-                      <TableRow key={request.id}>
-                        <TableCell className="text-sm font-medium">
+                    {requests.map((request) => {
+                      const unreadCount = request.unreadCount ?? 0;
+                      return (
+                        <TableRow key={request.id}>
+                        <TableCell className="text-sm font-medium w-[100px] min-w-[80px] sm:w-[120px]">
                           {formatRequestNumber(request.requestNumber, false)}
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
+                        <TableCell className="text-sm text-muted-foreground w-[110px] min-w-[90px] sm:w-[140px]">
                           {formatDate(request.createdAt)}
                         </TableCell>
-                        <TableCell className="w-[250px] max-w-[250px]">
+                        <TableCell className="w-[200px] min-w-[160px] max-w-[250px] lg:w-[250px]">
                           <RequestContact request={request} />
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="w-[100px] min-w-[80px] sm:w-[140px]">
                           <RequestStatusBadge status={request.status} />
                         </TableCell>
-                        <TableCell className="hidden xl:table-cell text-sm w-[250px]">
+                        <TableCell className="hidden xl:table-cell text-sm w-[200px] min-w-[180px] 2xl:w-[250px]">
                           {request.company || EMPTY_COMPANY}
                         </TableCell>
-                        <TableCell className="hidden lg:table-cell text-sm text-muted-foreground max-h-[80px] overflow-hidden">
-                          {truncate(request.description, DESCRIPTION_PREVIEW_LENGTH)}
+                        <TableCell className="hidden lg:table-cell text-sm text-muted-foreground min-w-0 align-top py-1.5">
+                          <div className="max-h-[4rem] overflow-hidden">
+                            <span className="line-clamp-3 block min-w-0 break-words">
+                              {truncate(request.description, DESCRIPTION_PREVIEW_LENGTH)}
+                            </span>
+                          </div>
                         </TableCell>
-                        <TableCell>
-                          <Button variant="outline" size="sm" onClick={() => handleOpenRequest(request)}>
-                            {DETAILS_LABEL}
-                          </Button>
+                        <TableCell className="w-[180px] min-w-[160px] align-top py-1.5">
+                          <div className="flex flex-wrap gap-1.5 items-center">
+                            <Button variant="outline" size="sm" onClick={() => handleOpenRequest(request)} className="shrink-0">
+                              {DETAILS_LABEL}
+                            </Button>
+                            <div className="relative inline-block shrink-0">
+                              {unreadCount > 0 && (
+                                <Badge
+                                  variant="destructive"
+                                  className="absolute -top-1.5 -right-1 min-w-5 h-5 px-1 z-10"
+                                >
+                                  {unreadCount}
+                                </Badge>
+                              )}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleOpenChat(request)}
+                                className="shrink-0"
+                                aria-label={CHAT_LABEL}
+                              >
+                                <MessageCircle className="h-4 w-4 lg:mr-1" aria-hidden="true" />
+                                <span className="hidden lg:inline">{CHAT_LABEL}</span>
+                              </Button>
+                            </div>
+                          </div>
                         </TableCell>
                       </TableRow>
-                    ))}
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>

@@ -273,6 +273,7 @@ export interface SupplyRequest {
   description: string;
   status: SupplyRequestStatus;
   requestNumber: string | null;
+  unreadCount?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -410,4 +411,95 @@ export interface MediaIdsRequest {
 export interface MediaDownloadUrlsResponse {
   files: Array<{ id: string; url: string; filename: string }>;
   missingIds?: string[];
+}
+
+export type ChatMessageSenderType = 'CUSTOMER' | 'MANAGER' | 'SYSTEM';
+export type NotificationType = 'NEW_MESSAGE' | 'STATUS_CHANGE' | 'NEW_REQUEST';
+
+export interface ChatMessageAttachment {
+  id: string;
+  messageId: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  url: string;
+  createdAt: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  requestId: string;
+  senderType: ChatMessageSenderType;
+  senderId?: string;
+  senderName?: string;
+  content: string;
+  isRead: boolean;
+  createdAt: string;
+  attachments: ChatMessageAttachment[];
+}
+
+export interface ChatListItem {
+  requestId: string;
+  requestNumber: string;
+  customerName: string;
+  customerEmail: string;
+  customerCompany?: string;
+  lastMessage: string;
+  lastMessageAt: string;
+  unreadCount: number;
+  status: SupplyRequestStatus;
+}
+
+export interface ChatMessagesResponse {
+  data: ChatMessage[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface ChatStats {
+  totalChats: number;
+  unreadChats: number;
+}
+
+export interface SendMessageRequest {
+  requestId: string;
+  content: string;
+}
+
+export interface ChatMessagesFilters {
+  page?: number;
+  limit?: number;
+}
+
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  requestId?: string;
+  requestNumber?: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface NotificationsResponse {
+  data: Notification[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  unreadCount: number;
+}
+
+export interface NotificationsFilters {
+  page?: number;
+  limit?: number;
+  unreadOnly?: boolean;
+}
+
+export interface NotificationStats {
+  total: number;
+  unread: number;
 }

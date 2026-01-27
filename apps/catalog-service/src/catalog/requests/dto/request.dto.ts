@@ -75,6 +75,7 @@ export interface SupplyRequestResponse {
   description: string;
   status: SupplyRequestStatus;
   requestNumber: string | null;
+  unreadCount?: number;
   createdAt: Date;
   updatedAt: Date;
 }

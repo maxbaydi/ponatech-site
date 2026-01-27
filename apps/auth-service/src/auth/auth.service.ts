@@ -8,8 +8,8 @@ import { UpdateProfileDto } from './dto/profile.dto';
 import { DEFAULT_USERS_PAGE, DEFAULT_USERS_PAGE_LIMIT, DEFAULT_USERS_STATS_DAYS, MIN_STATS_DAYS } from './auth.constants';
 import { Role } from './role.enum';
 
-const INVALID_PASSWORD_MESSAGE = 'Неверный текущий пароль';
-const PASSWORD_MATCH_MESSAGE = 'Новый пароль должен отличаться от текущего';
+const INVALID_PASSWORD_MESSAGE = '???????? ??????? ??????';
+const PASSWORD_MATCH_MESSAGE = '????? ?????? ?????? ?????????? ?? ????????';
 const USER_ALREADY_EXISTS_MESSAGE = 'User already exists';
 const USER_NOT_FOUND_MESSAGE = 'User not found';
 const INVALID_CREDENTIALS_MESSAGE = 'Invalid credentials';

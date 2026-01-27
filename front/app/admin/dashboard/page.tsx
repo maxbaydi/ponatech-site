@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { ClipboardList, Package, UserPlus } from 'lucide-react';
+import { ClipboardList, MessageCircle, Package, Bell, UserPlus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { BadgeProps } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useChatStats } from '@/lib/hooks/use-chat';
+import { useNotificationStats } from '@/lib/hooks/use-notifications';
 import { useProducts } from '@/lib/hooks/use-products';
 import { useSupplyRequestsStats } from '@/lib/hooks/use-supply-requests';
 import { useUsersStats } from '@/lib/hooks/use-users';
@@ -16,9 +18,16 @@ const REQUESTS_TITLE = 'Новые заявки';
 const USERS_TITLE = 'Новые пользователи';
 const PRODUCTS_TITLE = 'Всего товаров';
 const PRODUCTS_DESCRIPTION = 'В каталоге';
+const CHATS_TITLE = 'Чаты';
+const CHATS_DESCRIPTION_TOTAL = (n: number) => `Всего чатов: ${n}`;
+const CHATS_BADGE_UNREAD = 'Непрочитанные';
+const NOTIFICATIONS_TITLE = 'Уведомления';
+const NOTIFICATIONS_DESCRIPTION_TOTAL = (n: number) => `Всего: ${n}`;
+const NOTIFICATIONS_BADGE_UNREAD = 'Непрочитанные';
 const ACTIONS_TITLE = 'Быстрые действия';
-const ACTIONS_DESCRIPTION = 'Переход к работе с заявками';
-const ACTIONS_LABEL = 'Перейти к заявкам';
+const ACTIONS_DESCRIPTION = 'Переход к работе с заявками и чатами';
+const ACTIONS_REQUESTS_LABEL = 'К заявкам';
+const ACTIONS_CHATS_LABEL = 'К чатам';
 const REQUESTS_ATTENTION_LABEL = 'Требуют внимания';
 const REQUESTS_CLEAR_LABEL = 'Новых нет';
 const PERIOD_PREFIX = 'За последние';
@@ -69,15 +78,27 @@ export default function DashboardPage() {
   const { data: allProductsPage } = useProducts({ page: PRODUCTS_COUNT_PAGE, limit: PRODUCTS_COUNT_LIMIT });
   const { data: requestsStats } = useSupplyRequestsStats();
   const { data: usersStats } = useUsersStats();
+  const { data: chatStats } = useChatStats();
+  const { data: notificationStats } = useNotificationStats();
 
   const totalProducts = allProductsPage?.total ?? EMPTY_COUNT;
   const newRequests = requestsStats?.newRequests ?? EMPTY_COUNT;
   const newUsers = usersStats?.newUsers ?? EMPTY_COUNT;
   const requestsPeriodDays = requestsStats?.periodDays ?? DEFAULT_STATS_DAYS;
   const usersPeriodDays = usersStats?.periodDays ?? DEFAULT_STATS_DAYS;
+  const totalChats = chatStats?.totalChats ?? EMPTY_COUNT;
+  const unreadChats = chatStats?.unreadChats ?? EMPTY_COUNT;
+  const notificationsTotal = notificationStats?.total ?? EMPTY_COUNT;
+  const notificationsUnread = notificationStats?.unread ?? EMPTY_COUNT;
   const requestsBadge: StatBadge = newRequests > EMPTY_COUNT
     ? { label: REQUESTS_ATTENTION_LABEL, variant: BADGE_VARIANT_ATTENTION }
     : { label: REQUESTS_CLEAR_LABEL, variant: BADGE_VARIANT_OK };
+  const chatsBadge: StatBadge | undefined = unreadChats > EMPTY_COUNT
+    ? { label: CHATS_BADGE_UNREAD, variant: BADGE_VARIANT_ATTENTION }
+    : undefined;
+  const notificationsBadge: StatBadge | undefined = notificationsUnread > EMPTY_COUNT
+    ? { label: NOTIFICATIONS_BADGE_UNREAD, variant: BADGE_VARIANT_ATTENTION }
+    : undefined;
 
   const statsCards: StatCardProps[] = [
     {
@@ -98,6 +119,20 @@ export default function DashboardPage() {
       value: totalProducts,
       icon: <Package className="h-4 w-4 text-muted-foreground" />,
       description: PRODUCTS_DESCRIPTION,
+    },
+    {
+      title: CHATS_TITLE,
+      value: unreadChats,
+      icon: <MessageCircle className="h-4 w-4 text-muted-foreground" />,
+      description: CHATS_DESCRIPTION_TOTAL(totalChats),
+      badge: chatsBadge,
+    },
+    {
+      title: NOTIFICATIONS_TITLE,
+      value: notificationsUnread,
+      icon: <Bell className="h-4 w-4 text-muted-foreground" />,
+      description: NOTIFICATIONS_DESCRIPTION_TOTAL(notificationsTotal),
+      badge: notificationsBadge,
     },
   ];
 
@@ -127,9 +162,12 @@ export default function DashboardPage() {
             <CardTitle>{ACTIONS_TITLE}</CardTitle>
             <CardDescription>{ACTIONS_DESCRIPTION}</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-wrap gap-2">
             <Button asChild>
-              <Link href="/admin/requests">{ACTIONS_LABEL}</Link>
+              <Link href="/admin/requests">{ACTIONS_REQUESTS_LABEL}</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/admin/chats">{ACTIONS_CHATS_LABEL}</Link>
             </Button>
           </CardContent>
         </Card>

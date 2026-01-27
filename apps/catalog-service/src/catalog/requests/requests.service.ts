@@ -1,5 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Readable } from 'stream';
+import { ChatMessageSender } from '@prisma/client';
 import {
   CreateRequestDto,
   GetRequestsQueryDto,
@@ -20,20 +21,48 @@ import {
   getAttachmentExtension,
   isAllowedAttachmentType,
 } from './request-attachments.constants';
+import { ChatService } from '../chat/chat.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 type AttachmentRecord = Awaited<ReturnType<RequestsRepository['findAttachmentsByRequestId']>>[number];
 type RequestUser = RequestWithUser['user'];
 type RequestAttachmentArchiveEntry = { id: string; originalName: string; stream: Readable };
+
+const MANAGER_UNREAD_SENDERS = [ChatMessageSender.CUSTOMER];
+const CUSTOMER_UNREAD_SENDERS = [ChatMessageSender.MANAGER, ChatMessageSender.SYSTEM];
 
 @Injectable()
 export class RequestsService {
   constructor(
     private readonly requestsRepository: RequestsRepository,
     private readonly minioService: MinioService,
+    private readonly chatService: ChatService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async create(dto: CreateRequestDto): Promise<RequestResponse> {
-    return this.requestsRepository.create(dto);
+    const result = await this.requestsRepository.create(dto);
+    await this.notifyNewRequest(result.id, dto);
+    return result;
+  }
+
+  private async notifyNewRequest(requestId: string, dto: CreateRequestDto): Promise<void> {
+    try {
+      const request = await this.requestsRepository.findById(requestId);
+      if (!request) return;
+
+      const fullRequest = await this.requestsRepository.findWithNumber(requestId);
+      const requestNumber = fullRequest?.requestNumber ?? `#${requestId.slice(0, 8)}`;
+
+      await this.notificationsService.notifyNewRequest(
+        requestId,
+        requestNumber,
+        dto.name,
+        dto.email,
+      );
+    } catch {
+      // Non-critical, don't fail request creation
+    }
   }
 
   async createWithAttachments(
@@ -44,7 +73,9 @@ export class RequestsService {
     this.validateAttachments(uploadFiles);
 
     if (uploadFiles.length === 0) {
-      return this.requestsRepository.create(dto);
+      const result = await this.requestsRepository.create(dto);
+      await this.notifyNewRequest(result.id, dto);
+      return result;
     }
 
     const uploads: Array<{
@@ -71,7 +102,7 @@ export class RequestsService {
         });
       }
 
-      return await this.requestsRepository.createWithAttachments(
+      const result = await this.requestsRepository.createWithAttachments(
         dto,
         uploads.map((upload) => ({
           filename: upload.key,
@@ -81,6 +112,8 @@ export class RequestsService {
           url: upload.url,
         })),
       );
+      await this.notifyNewRequest(result.id, dto);
+      return result;
     } catch (error) {
       await Promise.allSettled(uploads.map((upload) => this.minioService.delete(upload.key)));
       throw error;
@@ -88,14 +121,16 @@ export class RequestsService {
   }
 
   async findAll(filters?: GetRequestsQueryDto): Promise<PaginatedResponse<SupplyRequestResponse>> {
-    return this.requestsRepository.findAll(filters);
+    return this.requestsRepository.findAll(filters, MANAGER_UNREAD_SENDERS);
   }
 
   async findAllByEmail(
     email: string,
     filters?: GetRequestsQueryDto,
+    isManager = false,
   ): Promise<PaginatedResponse<SupplyRequestResponse>> {
-    return this.requestsRepository.findAllByEmail(email, filters);
+    const unreadSenders = isManager ? MANAGER_UNREAD_SENDERS : CUSTOMER_UNREAD_SENDERS;
+    return this.requestsRepository.findAllByEmail(email, filters, unreadSenders);
   }
 
   async getStats(): Promise<SupplyRequestStatsResponse> {
@@ -103,7 +138,30 @@ export class RequestsService {
   }
 
   async updateStatus(id: string, dto: UpdateRequestStatusDto): Promise<SupplyRequestResponse> {
-    return this.requestsRepository.updateStatus(id, dto.status);
+    const request = await this.requestsRepository.findById(id);
+    if (!request) {
+      throw new NotFoundException('Request not found');
+    }
+
+    const oldStatus = request.status;
+    const result = await this.requestsRepository.updateStatus(id, dto.status);
+
+    if (oldStatus !== dto.status) {
+      const requestNumber = result.requestNumber ?? `#${result.id.slice(0, 8)}`;
+      const statusMessage = this.notificationsService.getStatusChangeMessage(dto.status);
+
+      await Promise.all([
+        this.chatService.sendSystemMessage(id, statusMessage),
+        this.notificationsService.notifyStatusChange(
+          id,
+          requestNumber,
+          result.email,
+          dto.status,
+        ),
+      ]);
+    }
+
+    return result;
   }
 
   async getAttachments(

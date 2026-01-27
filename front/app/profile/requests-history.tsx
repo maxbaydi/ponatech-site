@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Search } from 'lucide-react';
+import { Search, MessageCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -19,10 +20,12 @@ import { formatDate } from '@/lib/utils';
 import { formatRequestNumber } from '@/lib/requests/request-number';
 import { RequestStatusBadge } from '@/components/requests/request-status-badge';
 import { RequestsHistorySheet } from './requests-history-sheet';
+import { RequestChat } from '@/components/chat';
 
 const EMPTY_TEXT = 'У вас пока нет заявок';
 const ERROR_TEXT = 'Не удалось загрузить заявки';
 const DETAILS_LABEL = 'Подробнее';
+const CHAT_LABEL = 'Чат';
 const NUMBER_LABEL = '№';
 const DATE_LABEL = 'Дата';
 const STATUS_LABEL = 'Статус';
@@ -31,7 +34,7 @@ const PAGE_LABEL = 'Страница';
 const TOTAL_LABEL = 'Всего';
 const PREV_LABEL = 'Назад';
 const NEXT_LABEL = 'Вперёд';
-const SEARCH_PLACEHOLDER = 'Поиск по номеру заявки...';
+const SEARCH_PLACEHOLDER = 'Поиск по номеру заявки… например, 0001_27012026';
 const TABLE_ARIA_LABEL = 'История заявок';
 const SEARCH_ARIA_LABEL = 'Поиск по номеру заявки';
 
@@ -46,6 +49,7 @@ export function RequestsHistory() {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(DEFAULT_PAGE);
   const [selectedRequest, setSelectedRequest] = useState<SupplyRequest | null>(null);
+  const [chatRequest, setChatRequest] = useState<SupplyRequest | null>(null);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -78,17 +82,25 @@ export function RequestsHistory() {
       setSelectedRequest(null);
     }
   };
+  const handleOpenChat = (request: SupplyRequest) => setChatRequest(request);
+  const handleChatOpenChange = (open: boolean) => {
+    if (!open) {
+      setChatRequest(null);
+    }
+  };
 
   return (
     <div className="space-y-4">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
         <Input
           placeholder={SEARCH_PLACEHOLDER}
           value={searchInput}
           onChange={(event) => setSearchInput(event.target.value)}
           className="pl-10"
           aria-label={SEARCH_ARIA_LABEL}
+          name="search"
+          autoComplete="off"
         />
       </div>
 
@@ -105,18 +117,37 @@ export function RequestsHistory() {
       ) : requests.length > 0 ? (
         <>
           <div className="space-y-3 md:hidden">
-            {requests.map((request) => (
-              <div key={request.id} className="rounded-lg border p-4 space-y-3">
-                <div className="flex items-center justify-between gap-3 text-sm">
-                  <span className="font-medium">{formatRequestNumber(request.requestNumber, false)}</span>
-                  <RequestStatusBadge status={request.status} />
+            {requests.map((request) => {
+              const unreadCount = request.unreadCount ?? 0;
+              return (
+                <div key={request.id} className="rounded-lg border p-4 space-y-3">
+                  <div className="flex items-center justify-between gap-3 text-sm">
+                    <span className="font-medium">{formatRequestNumber(request.requestNumber, false)}</span>
+                    <RequestStatusBadge status={request.status} />
+                  </div>
+                  <div className="text-xs text-muted-foreground">{formatDate(request.createdAt)}</div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => handleOpen(request)}>
+                      {DETAILS_LABEL}
+                    </Button>
+                    <div className="relative inline-block">
+                      {unreadCount > 0 && (
+                        <Badge
+                          variant="destructive"
+                          className="absolute -top-1.5 -right-1 min-w-5 h-5 px-1 z-10"
+                        >
+                          {unreadCount}
+                        </Badge>
+                      )}
+                      <Button variant="outline" size="sm" onClick={() => handleOpenChat(request)}>
+                        <MessageCircle className="mr-1 h-4 w-4" aria-hidden="true" />
+                        <span>{CHAT_LABEL}</span>
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-xs text-muted-foreground">{formatDate(request.createdAt)}</div>
-                <Button variant="outline" size="sm" onClick={() => handleOpen(request)}>
-                  {DETAILS_LABEL}
-                </Button>
-              </div>
-            ))}
+              );
+            })}
           </div>
           <div className="hidden md:block overflow-x-auto">
             <Table aria-label={TABLE_ARIA_LABEL}>
@@ -129,24 +160,43 @@ export function RequestsHistory() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {requests.map((request) => (
-                  <TableRow key={request.id}>
-                    <TableCell className="text-sm font-medium">
-                      {formatRequestNumber(request.requestNumber, false)}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {formatDate(request.createdAt)}
-                    </TableCell>
-                    <TableCell>
-                      <RequestStatusBadge status={request.status} />
-                    </TableCell>
-                    <TableCell>
-                      <Button variant="outline" size="sm" onClick={() => handleOpen(request)}>
-                        {DETAILS_LABEL}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {requests.map((request) => {
+                  const unreadCount = request.unreadCount ?? 0;
+                  return (
+                    <TableRow key={request.id}>
+                      <TableCell className="text-sm font-medium">
+                        {formatRequestNumber(request.requestNumber, false)}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {formatDate(request.createdAt)}
+                      </TableCell>
+                      <TableCell>
+                        <RequestStatusBadge status={request.status} />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" onClick={() => handleOpen(request)}>
+                            {DETAILS_LABEL}
+                          </Button>
+                          <div className="relative inline-block">
+                            {unreadCount > 0 && (
+                              <Badge
+                                variant="destructive"
+                                className="absolute -top-1.5 -right-1 min-w-5 h-5 px-1 z-10"
+                              >
+                                {unreadCount}
+                              </Badge>
+                            )}
+                            <Button variant="outline" size="sm" onClick={() => handleOpenChat(request)}>
+                              <MessageCircle className="mr-1 h-4 w-4" aria-hidden="true" />
+                              <span>{CHAT_LABEL}</span>
+                            </Button>
+                          </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
@@ -187,6 +237,12 @@ export function RequestsHistory() {
         request={selectedRequest}
         open={selectedRequest !== null}
         onOpenChange={handleSheetOpenChange}
+      />
+
+      <RequestChat
+        request={chatRequest}
+        open={chatRequest !== null}
+        onOpenChange={handleChatOpenChange}
       />
     </div>
   );

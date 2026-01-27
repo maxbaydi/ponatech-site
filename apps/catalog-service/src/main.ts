@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { AllExceptionsFilter, AppLogger, LoggingInterceptor, RequestContextInterceptor } from '@ponatech/common';
 import { AppModule } from './app.module';
 import { CATALOG_PROTO_PACKAGE } from './catalog/grpc/catalog.grpc';
+import { RedisIoAdapter } from './config/redis-io.adapter';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
@@ -23,6 +24,13 @@ async function bootstrap(): Promise<void> {
 
   const grpcPort = configService.getOrThrow<number>('CATALOG_GRPC_PORT');
   const httpPort = configService.getOrThrow<number>('CATALOG_HTTP_PORT');
+  const redisUrl = configService.get<string>('REDIS_URL');
+
+  if (redisUrl) {
+    const redisIoAdapter = new RedisIoAdapter(app);
+    await redisIoAdapter.connectToRedis(redisUrl);
+    app.useWebSocketAdapter(redisIoAdapter);
+  }
 
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.GRPC,

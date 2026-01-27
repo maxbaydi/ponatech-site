@@ -71,6 +71,8 @@ model User {
   tokenVersion  Int            @default(0)
   refreshTokens RefreshToken[]
   cart          Cart?
+  chatMessages  ChatMessage[]
+  notifications Notification[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -185,18 +187,20 @@ model ProductImage {
 }
 
 model SupplyRequest {
-  id          String   @id @default(uuid())
-  name        String
-  email       String
-  phone       String
-  company     String?
-  description String   @db.Text
-  status      SupplyRequestStatus @default(NEW)
-  sequenceNumber Int @default(autoincrement())
-  requestNumber  String? @unique
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  attachments SupplyRequestAttachment[]
+  id             String                    @id @default(uuid())
+  name           String
+  email          String
+  phone          String
+  company        String?
+  description    String                    @db.Text
+  status         SupplyRequestStatus       @default(NEW)
+  sequenceNumber Int                       @default(autoincrement())
+  requestNumber  String?                   @unique
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+  attachments    SupplyRequestAttachment[]
+  chatMessages   ChatMessage[]
+  notifications  Notification[]
 
   @@map("supply_requests")
 }
@@ -225,4 +229,92 @@ model SiteSetting {
   updatedAt       DateTime @updatedAt
 
   @@map("site_settings")
+}
+
+enum ChatMessageSender {
+  CUSTOMER
+  MANAGER
+  SYSTEM
+}
+
+enum ChatEventType {
+  NEW_MESSAGE
+  MESSAGE_READ
+  NOTIFICATION
+}
+
+model ChatMessage {
+  id          String            @id @default(uuid())
+  requestId   String
+  request     SupplyRequest     @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  senderType  ChatMessageSender
+  senderId    String?
+  sender      User?             @relation(fields: [senderId], references: [id], onDelete: SetNull)
+  content     String            @db.Text
+  isRead      Boolean           @default(false)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  attachments ChatMessageAttachment[]
+
+  @@index([requestId])
+  @@index([senderId])
+  @@index([createdAt])
+  @@map("chat_messages")
+}
+
+model ChatEventQueue {
+  id        Int           @id @default(autoincrement())
+  type      ChatEventType
+  requestId String?
+  userId    String?
+  email     String?
+  payload   Json
+  createdAt DateTime      @default(now())
+
+  @@index([requestId])
+  @@index([userId])
+  @@index([email])
+  @@index([createdAt])
+  @@map("chat_event_queue")
+}
+
+model ChatMessageAttachment {
+  id           String      @id @default(uuid())
+  messageId    String
+  message      ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String
+  createdAt    DateTime    @default(now())
+
+  @@index([messageId])
+  @@map("chat_message_attachments")
+}
+
+enum NotificationType {
+  NEW_MESSAGE
+  STATUS_CHANGE
+  NEW_REQUEST
+}
+
+model Notification {
+  id          String           @id @default(uuid())
+  userId      String?
+  user        User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email       String?
+  type        NotificationType
+  title       String
+  message     String           @db.Text
+  requestId   String?
+  request     SupplyRequest?   @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  isRead      Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+
+  @@index([userId])
+  @@index([email])
+  @@index([requestId])
+  @@index([isRead])
+  @@map("notifications")
 }

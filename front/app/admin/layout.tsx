@@ -18,6 +18,7 @@ import {
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
+  MessageCircle,
   type LucideIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,8 +26,11 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/s
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth/auth-context';
+import { NotificationsDropdown } from '@/components/notifications';
+import { useChatStats } from '@/lib/hooks/use-chat';
 
 type AdminNavItem = {
   icon: LucideIcon;
@@ -39,6 +43,7 @@ type AdminSidebarProps = {
   onNavClick?: () => void;
   compact?: boolean;
   onToggleCompact?: () => void;
+  chatUnreadCount?: number;
 };
 
 const NAV_ITEMS: AdminNavItem[] = [
@@ -47,6 +52,7 @@ const NAV_ITEMS: AdminNavItem[] = [
   { icon: Building2, label: 'Бренды', href: '/admin/manage-brands' },
   { icon: FolderTree, label: 'Категории', href: '/admin/manage-categories' },
   { icon: ClipboardList, label: 'Заявки', href: '/admin/requests' },
+  { icon: MessageCircle, label: 'Чаты', href: '/admin/chats' },
   { icon: ImageIcon, label: 'Медиабиблиотека', href: '/admin/media' },
 ];
 
@@ -60,7 +66,13 @@ const COMPACT_EXPAND_LABEL = 'Развернуть меню';
 const BACK_TO_SITE_LABEL = 'На сайт';
 const LOGOUT_LABEL = 'Выйти';
 
-function AdminSidebar({ className, onNavClick, compact = false, onToggleCompact }: AdminSidebarProps) {
+function AdminSidebar({
+  className,
+  onNavClick,
+  compact = false,
+  onToggleCompact,
+  chatUnreadCount = 0,
+}: AdminSidebarProps) {
   const pathname = usePathname();
   const { user, logout, isAdmin, isSuperAdmin } = useAuth();
   const toggleLabel = compact ? COMPACT_EXPAND_LABEL : COMPACT_COLLAPSE_LABEL;
@@ -71,6 +83,7 @@ function AdminSidebar({ className, onNavClick, compact = false, onToggleCompact 
 
   const renderNavItem = (item: AdminNavItem) => {
     const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+    const showChatBadge = item.href === '/admin/chats' && chatUnreadCount > 0;
     if (!compact) {
       return (
         <Link
@@ -85,7 +98,12 @@ function AdminSidebar({ className, onNavClick, compact = false, onToggleCompact 
           )}
         >
           <item.icon className="h-4 w-4" />
-          <span className="truncate">{item.label}</span>
+          <span className="truncate flex-1">{item.label}</span>
+          {showChatBadge && (
+            <Badge variant="destructive" className="min-w-5 h-5 px-1">
+              {chatUnreadCount}
+            </Badge>
+          )}
         </Link>
       );
     }
@@ -96,11 +114,16 @@ function AdminSidebar({ className, onNavClick, compact = false, onToggleCompact 
         onClick={handleNavClick}
         aria-current={isActive ? 'page' : undefined}
         className={cn(
-          'flex h-10 w-10 items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+          'relative flex h-10 w-10 items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
           isActive ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
         )}
       >
         <item.icon className="h-4 w-4" />
+        {showChatBadge && (
+          <Badge variant="destructive" className="absolute -top-1 -right-1 min-w-4 h-4 px-1">
+            {chatUnreadCount}
+          </Badge>
+        )}
         <span className="sr-only">{item.label}</span>
       </Link>
     );
@@ -217,6 +240,7 @@ function AdminSidebar({ className, onNavClick, compact = false, onToggleCompact 
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, isManager } = useAuth();
+  const { data: chatStats } = useChatStats({ enabled: isAuthenticated && isManager });
   const router = useRouter();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isCompact, setIsCompact] = useState(false);
@@ -273,7 +297,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             isCompact ? 'w-16' : 'w-64'
           )}
         >
-          <AdminSidebar compact={isCompact} onToggleCompact={handleToggleCompact} />
+          <AdminSidebar
+            compact={isCompact}
+            onToggleCompact={handleToggleCompact}
+            chatUnreadCount={chatStats?.unreadChats ?? 0}
+          />
         </aside>
 
         <div className="flex-1 flex flex-col min-w-0 gap-4">
@@ -286,13 +314,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </SheetTrigger>
               <SheetContent side="left" className="w-full sm:w-64 p-0">
                 <SheetTitle className="sr-only">Меню администратора</SheetTitle>
-                <AdminSidebar compact={false} onNavClick={() => setSheetOpen(false)} />
+                <AdminSidebar
+                  compact={false}
+                  onNavClick={() => setSheetOpen(false)}
+                  chatUnreadCount={chatStats?.unreadChats ?? 0}
+                />
               </SheetContent>
             </Sheet>
-            <span className="ml-2 font-semibold truncate">Админ-панель</span>
+            <span className="ml-2 font-semibold truncate flex-1">Админ-панель</span>
+            <NotificationsDropdown />
           </header>
 
-          <main className="flex-1 rounded-2xl bg-muted/30 p-4 lg:p-6">{children}</main>
+          <header className="hidden lg:flex h-14 items-center justify-between rounded-2xl border bg-background px-4 shadow-sm shrink-0">
+            <span className="font-semibold">Админ-панель</span>
+            <NotificationsDropdown />
+          </header>
+
+          <div className="flex flex-1 min-h-0 flex-col admin-content">{children}</div>
         </div>
       </div>
     </div>

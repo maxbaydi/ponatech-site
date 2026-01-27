@@ -8,6 +8,8 @@ const SUPPLY_REQUESTS_QUERY_KEY = 'supplyRequests';
 const SUPPLY_REQUESTS_STATS_QUERY_KEY = 'supplyRequestsStats';
 const MY_SUPPLY_REQUESTS_QUERY_KEY = 'mySupplyRequests';
 
+export { SUPPLY_REQUESTS_QUERY_KEY, SUPPLY_REQUESTS_STATS_QUERY_KEY, MY_SUPPLY_REQUESTS_QUERY_KEY };
+
 export function useSupplyRequests(filters?: SupplyRequestsFilters) {
   return useQuery({
     queryKey: [SUPPLY_REQUESTS_QUERY_KEY, filters],

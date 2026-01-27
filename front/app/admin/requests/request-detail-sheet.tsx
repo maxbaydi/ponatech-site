@@ -20,14 +20,14 @@ const CONTACT_LABEL = 'Контакт';
 const REQUEST_NUMBER_LABEL = 'Номер заявки';
 const COMPANY_LABEL = 'Компания';
 const STATUS_LABEL = 'Статус';
-const REQUEST_LABEL = 'Текст заявки';
+const REQUEST_LABEL = 'Текст запроса';
 const ATTACHMENTS_LABEL = 'Файлы';
-const ATTACHMENTS_EMPTY_LABEL = 'Файлы не прикреплены.';
-const ATTACHMENTS_LOADING_LABEL = 'Загрузка файлов...';
+const ATTACHMENTS_EMPTY_LABEL = 'Файлов не прикреплено.';
+const ATTACHMENTS_LOADING_LABEL = 'Загрузка файлов';
 const ATTACHMENTS_DOWNLOAD_ALL_LABEL = 'Скачать все';
 const ATTACHMENTS_OPEN_LABEL = 'Открыть';
 const ATTACHMENTS_DOWNLOAD_LABEL = 'Скачать';
-const COPY_LABEL = 'Скопировать всё';
+const COPY_LABEL = 'Копировать всё';
 const COPIED_LABEL = 'Скопировано';
 const COPY_RESET_DELAY_MS = 1800;
 
@@ -36,7 +36,7 @@ const COPY_NUMBER_LABEL = 'Номер заявки';
 const COPY_EMAIL_LABEL = 'Email';
 const COPY_PHONE_LABEL = 'Телефон';
 const COPY_COMPANY_LABEL = 'Компания';
-const COPY_MESSAGE_LABEL = 'Запрос';
+const COPY_MESSAGE_LABEL = 'Сообщение';
 
 interface RequestDetailSheetProps {
   request: SupplyRequest | null;
