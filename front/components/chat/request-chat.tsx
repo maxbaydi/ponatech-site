@@ -58,7 +58,7 @@ export function RequestChat({ request, open, onOpenChange }: RequestChatProps) {
       const isManager = ['ADMIN', 'SUPER_ADMIN', 'MANAGER'].includes(user.role);
 
       if (isManager) {
-        return message.senderType === 'MANAGER';
+        return message.senderType === 'MANAGER' && !!message.senderId && message.senderId === user.id;
       }
 
       return message.senderType === 'CUSTOMER';

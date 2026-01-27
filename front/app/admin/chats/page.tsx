@@ -12,6 +12,7 @@ import { RequestStatusBadge } from '@/components/requests/request-status-badge';
 import { ChatMessagesList } from '@/components/chat/chat-messages-list';
 import { ChatInput } from '@/components/chat/chat-input';
 import { useChatList, useChatMessages, useSendMessage, useMarkChatAsRead, useChatStats } from '@/lib/hooks/use-chat';
+import { useAuth } from '@/lib/auth/auth-context';
 import { cn } from '@/lib/utils';
 import type { ChatListItem, ChatMessage } from '@/lib/api/types';
 
@@ -39,6 +40,7 @@ export default function AdminChatsPage() {
   const { data: messagesData, isLoading: isLoadingMessages } = useChatMessages(selectedChatId ?? undefined);
   const sendMessage = useSendMessage();
   const markAsRead = useMarkChatAsRead();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (requestParam) {
@@ -115,7 +117,13 @@ export default function AdminChatsPage() {
   };
 
   const isCurrentUserSender = (message: ChatMessage): boolean => {
-    return message.senderType === 'MANAGER';
+    if (message.senderType !== 'MANAGER') {
+      return false;
+    }
+    if (!message.senderId || !user?.id) {
+      return false;
+    }
+    return message.senderId === user.id;
   };
 
   const isMissingChat = !!selectedChatId && !selectedChat && !isLoadingChats;
