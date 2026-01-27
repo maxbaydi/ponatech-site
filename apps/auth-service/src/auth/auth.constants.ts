@@ -1,0 +1,9 @@
+export const DEFAULT_USERS_PAGE = 1;
+export const DEFAULT_USERS_PAGE_LIMIT = 20;
+export const DEFAULT_USERS_STATS_DAYS = 7;
+export const MIN_STATS_DAYS = 1;
+export const PASSWORD_MIN_LENGTH = 8;
+export const PROFILE_NAME_MIN_LENGTH = 2;
+export const PROFILE_PHONE_MIN_LENGTH = 10;
+export const PROFILE_COMPANY_MIN_LENGTH = 2;
+export const USER_SEARCH_QUERY_MODE = 'insensitive';

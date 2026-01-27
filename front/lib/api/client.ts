@@ -13,6 +13,7 @@ import type {
   CreateBrandRequest,
   CreateCategoryRequest,
   CreateProductRequest,
+  CreateUserRequest,
   DeletedProductFilters,
   ExportProductsCsvRequest,
   ImportProductsCsvRequest,
@@ -43,7 +44,9 @@ import type {
   UpdateProfileRequest,
   UpdateProductRequest,
   UpdateCartItemRequest,
+  UpdateUserPasswordRequest,
   UpdateUserRoleRequest,
+  UpdateUserRequest,
   UploadFromUrlRequest,
   User,
   UsersFilters,
@@ -637,6 +640,31 @@ class ApiClient {
     return this.request<UsersResponse>(`/auth/admin/users${query ? `?${query}` : ''}`);
   }
 
+  async getUser(id: string): Promise<User> {
+    return this.request<User>(`/auth/admin/users/${id}`);
+  }
+
+  async createUser(data: CreateUserRequest): Promise<User> {
+    return this.request<User>('/auth/admin/users', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateUser(userId: string, data: UpdateUserRequest): Promise<User> {
+    return this.request<User>(`/auth/admin/users/${userId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateUserPassword(userId: string, data: UpdateUserPasswordRequest): Promise<User> {
+    return this.request<User>(`/auth/admin/users/${userId}/password`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
   async getUsersStats(): Promise<UsersStats> {
     return this.request<UsersStats>(USERS_STATS_ENDPOINT);
   }
@@ -657,6 +685,12 @@ class ApiClient {
   async logoutUserAll(userId: string): Promise<void> {
     return this.request<void>(`/auth/admin/users/${userId}/logout-all`, {
       method: 'POST',
+    });
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    return this.request<void>(`/auth/admin/users/${userId}`, {
+      method: 'DELETE',
     });
   }
 

@@ -1,7 +1,6 @@
 import { IsEmail, IsString, MinLength } from 'class-validator';
+import { PASSWORD_MIN_LENGTH } from '../auth.constants';
 import { Role } from '../role.enum';
-
-const PASSWORD_MIN_LENGTH = 8;
 
 export class RegisterDto {
   @IsEmail()

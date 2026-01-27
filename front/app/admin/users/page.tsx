@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, MoreHorizontal, UserX, LogOut, Shield } from 'lucide-react';
+import { LogOut, MoreHorizontal, Pencil, Plus, Search, Shield, Trash2, UserCheck, UserX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -27,17 +28,28 @@ import {
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/lib/auth/auth-context';
-import { useUsers, useUpdateUserRole, useDeactivateUser, useLogoutUserAll } from '@/lib/hooks/use-users';
+import {
+  useDeactivateUser,
+  useDeleteUser,
+  useLogoutUserAll,
+  useUpdateUser,
+  useUpdateUserRole,
+  useUsers,
+} from '@/lib/hooks/use-users';
 import type { UserRole } from '@/lib/api/types';
-
-const ROLE_BADGES: Record<UserRole, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
-  SUPER_ADMIN: { label: 'Супер-админ', variant: 'destructive' },
-  ADMIN: { label: 'Администратор', variant: 'default' },
-  MANAGER: { label: 'Менеджер', variant: 'secondary' },
-  CUSTOMER: { label: 'Покупатель', variant: 'outline' },
-};
-
-const ROLES: UserRole[] = ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'CUSTOMER'];
+import { ROLE_BADGES, ROLES } from './users.constants';
+const USERS_PAGE_LIMIT = 20;
+const SEARCH_DEBOUNCE_MS = 500;
+const DATE_LOCALE = 'ru-RU';
+const DATE_OPTIONS: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
+const SKELETON_ROWS = 5;
+const SEARCH_PLACEHOLDER = 'Поиск по email, имени, телефону или компании...';
+const ADD_USER_LABEL = 'Добавить пользователя';
+const EDIT_USER_LABEL = 'Редактировать';
+const DELETE_USER_LABEL = 'Удалить';
+const ACTIVATE_USER_LABEL = 'Активировать';
+const CONFIRM_ACTIVATE_MESSAGE = 'Активировать пользователя? Он сможет войти в систему.';
+const CONFIRM_DELETE_MESSAGE = 'Удалить пользователя? Действие необратимо.';
 
 export default function UsersPage() {
   const { isAdmin, user: currentUser } = useAuth();
@@ -46,9 +58,15 @@ export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
 
-  const { data, isLoading, error } = useUsers({ search: searchQuery || undefined, page, limit: 20 });
+  const { data, isLoading, error } = useUsers({
+    search: searchQuery || undefined,
+    page,
+    limit: USERS_PAGE_LIMIT,
+  });
   const updateRole = useUpdateUserRole();
+  const updateUser = useUpdateUser();
   const deactivate = useDeactivateUser();
+  const deleteUser = useDeleteUser();
   const logoutAll = useLogoutUserAll();
 
   useEffect(() => {
@@ -61,7 +79,7 @@ export default function UsersPage() {
     const timeout = setTimeout(() => {
       setSearchQuery(searchInput.trim());
       setPage(1);
-    }, 500);
+    }, SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(timeout);
   }, [searchInput]);
 
@@ -77,9 +95,21 @@ export default function UsersPage() {
     }
   };
 
+  const handleActivate = async (userId: string) => {
+    if (confirm(CONFIRM_ACTIVATE_MESSAGE)) {
+      await updateUser.mutateAsync({ userId, data: { isActive: true } });
+    }
+  };
+
   const handleLogoutAll = async (userId: string) => {
     if (confirm('Завершить все сессии пользователя?')) {
       await logoutAll.mutateAsync(userId);
+    }
+  };
+
+  const handleDelete = async (userId: string) => {
+    if (confirm(CONFIRM_DELETE_MESSAGE)) {
+      await deleteUser.mutateAsync(userId);
     }
   };
 
@@ -88,18 +118,22 @@ export default function UsersPage() {
   }
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
+    return new Date(dateStr).toLocaleDateString(DATE_LOCALE, DATE_OPTIONS);
   };
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Пользователи</h1>
-        <p className="text-muted-foreground">Управление пользователями системы</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold">Пользователи</h1>
+          <p className="text-muted-foreground">Управление пользователями системы</p>
+        </div>
+        <Button asChild className="w-full sm:w-auto">
+          <Link href="/admin/users/new">
+            <Plus className="mr-2 h-4 w-4" />
+            {ADD_USER_LABEL}
+          </Link>
+        </Button>
       </div>
 
       <Card>
@@ -108,7 +142,7 @@ export default function UsersPage() {
             <div className="relative w-full sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Поиск по email..."
+                placeholder={SEARCH_PLACEHOLDER}
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="pl-10"
@@ -119,7 +153,7 @@ export default function UsersPage() {
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-4 space-y-4">
-              {Array.from({ length: 5 }).map((_, i) => (
+              {Array.from({ length: SKELETON_ROWS }).map((_, i) => (
                 <Skeleton key={i} className="h-12 w-full" />
               ))}
             </div>
@@ -147,10 +181,19 @@ export default function UsersPage() {
                       return (
                         <TableRow key={user.id}>
                           <TableCell>
-                            <div className="font-medium min-w-[150px] text-sm sm:text-base">
-                              <span className="break-all">{user.email}</span>
-                              {isCurrentUser && (
-                                <span className="ml-2 text-xs text-muted-foreground">(вы)</span>
+                            <div className="flex flex-col gap-1 text-sm sm:text-base">
+                              <div className="font-medium break-all">
+                                <span>{user.email}</span>
+                                {isCurrentUser && (
+                                  <span className="ml-2 text-xs text-muted-foreground">(вы)</span>
+                                )}
+                              </div>
+                              {(user.name || user.company || user.phone) && (
+                                <div className="text-xs text-muted-foreground space-y-1">
+                                  {user.name && <div>{user.name}</div>}
+                                  {user.company && <div>{user.company}</div>}
+                                  {user.phone && <div>{user.phone}</div>}
+                                </div>
                               )}
                             </div>
                           </TableCell>
@@ -179,6 +222,13 @@ export default function UsersPage() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
+                                <DropdownMenuItem asChild>
+                                  <Link href={`/admin/users/${user.id}/edit`}>
+                                    <Pencil className="mr-2 h-4 w-4" />
+                                    {EDIT_USER_LABEL}
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
                                 <DropdownMenuSub>
                                   <DropdownMenuSubTrigger>
                                     <Shield className="mr-2 h-4 w-4" />
@@ -202,7 +252,7 @@ export default function UsersPage() {
                                   <LogOut className="mr-2 h-4 w-4" />
                                   Завершить все сессии
                                 </DropdownMenuItem>
-                                {user.isActive && (
+                                {user.isActive ? (
                                   <DropdownMenuItem
                                     onClick={() => handleDeactivate(user.id)}
                                     className="text-destructive"
@@ -210,7 +260,20 @@ export default function UsersPage() {
                                     <UserX className="mr-2 h-4 w-4" />
                                     Деактивировать
                                   </DropdownMenuItem>
+                                ) : (
+                                  <DropdownMenuItem onClick={() => handleActivate(user.id)}>
+                                    <UserCheck className="mr-2 h-4 w-4" />
+                                    {ACTIVATE_USER_LABEL}
+                                  </DropdownMenuItem>
                                 )}
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => handleDelete(user.id)}
+                                  className="text-destructive"
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  {DELETE_USER_LABEL}
+                                </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>

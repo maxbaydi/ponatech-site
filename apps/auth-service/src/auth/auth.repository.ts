@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { Prisma, User, UserRole } from '@prisma/client';
 import { createHash, createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import { DEFAULT_USERS_PAGE, DEFAULT_USERS_PAGE_LIMIT, USER_SEARCH_QUERY_MODE } from './auth.constants';
 import { Role } from './role.enum';
 
 export interface AuthenticatedUser {
@@ -19,6 +20,16 @@ interface JwtPayload {
   ver: number;
   iat: number;
   exp: number;
+}
+
+interface CreateUserInput {
+  email: string;
+  password: string;
+  role: Role;
+  name?: string | null;
+  phone?: string | null;
+  company?: string | null;
+  isActive?: boolean;
 }
 
 const ACCESS_TOKEN_DEFAULT_TTL = 3600;
@@ -49,16 +60,31 @@ export class AuthRepository {
     return this.accessTokenTtlSeconds;
   }
 
-  async createUser(email: string, password: string, role: Role): Promise<UserRecord> {
-    const normalizedEmail = normalizeEmail(email);
+  async createUser(data: CreateUserInput): Promise<UserRecord> {
+    const normalizedEmail = normalizeEmail(data.email);
+    const createData: Prisma.UserCreateInput = {
+      email: normalizedEmail,
+      passwordHash: this.hashPassword(data.password),
+      role: data.role as unknown as UserRole,
+    };
 
-    return this.prisma.user.create({
-      data: {
-        email: normalizedEmail,
-        passwordHash: this.hashPassword(password),
-        role: role as unknown as UserRole,
-      },
-    });
+    if (data.name !== undefined) {
+      createData.name = data.name;
+    }
+
+    if (data.phone !== undefined) {
+      createData.phone = data.phone;
+    }
+
+    if (data.company !== undefined) {
+      createData.company = data.company;
+    }
+
+    if (data.isActive !== undefined) {
+      createData.isActive = data.isActive;
+    }
+
+    return this.prisma.user.create({ data: createData });
   }
 
   async findUserByEmail(email: string): Promise<UserRecord | null> {
@@ -74,12 +100,20 @@ export class AuthRepository {
     limit?: number;
     search?: string;
   }): Promise<{ users: UserRecord[]; total: number }> {
-    const page = options?.page ?? 1;
-    const limit = options?.limit ?? 20;
+    const page = options?.page ?? DEFAULT_USERS_PAGE;
+    const limit = options?.limit ?? DEFAULT_USERS_PAGE_LIMIT;
     const skip = (page - 1) * limit;
 
-    const where: Prisma.UserWhereInput = options?.search
-      ? { email: { contains: options.search, mode: 'insensitive' } }
+    const search = options?.search?.trim();
+    const where: Prisma.UserWhereInput = search
+      ? {
+          OR: [
+            { email: { contains: search, mode: USER_SEARCH_QUERY_MODE } },
+            { name: { contains: search, mode: USER_SEARCH_QUERY_MODE } },
+            { phone: { contains: search, mode: USER_SEARCH_QUERY_MODE } },
+            { company: { contains: search, mode: USER_SEARCH_QUERY_MODE } },
+          ],
+        }
       : {};
 
     const [users, total] = await this.prisma.$transaction([
@@ -194,21 +228,9 @@ export class AuthRepository {
   }
 
   async updateUserRole(userId: string, role: Role): Promise<UserRecord> {
-    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      const user = await tx.user.update({
-        where: { id: userId },
-        data: {
-          role: role as unknown as UserRole,
-          tokenVersion: { increment: 1 },
-        },
-      });
-
-      await tx.refreshToken.updateMany({
-        where: { userId, revokedAt: null },
-        data: { revokedAt: new Date() },
-      });
-
-      return user;
+    return this.updateUserWithTokenRevocation(userId, {
+      role: role as unknown as UserRole,
+      tokenVersion: { increment: 1 },
     });
   }
 
@@ -223,59 +245,42 @@ export class AuthRepository {
   }
 
   async updateUserPassword(userId: string, newPassword: string): Promise<UserRecord> {
-    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      const user = await tx.user.update({
-        where: { id: userId },
-        data: {
-          passwordHash: this.hashPassword(newPassword),
-          tokenVersion: { increment: 1 },
-        },
-      });
-
-      await tx.refreshToken.updateMany({
-        where: { userId, revokedAt: null },
-        data: { revokedAt: new Date() },
-      });
-
-      return user;
+    return this.updateUserWithTokenRevocation(userId, {
+      passwordHash: this.hashPassword(newPassword),
+      tokenVersion: { increment: 1 },
     });
   }
 
   async deactivateUser(userId: string): Promise<UserRecord> {
-    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      const user = await tx.user.update({
-        where: { id: userId },
-        data: {
-          isActive: false,
-          tokenVersion: { increment: 1 },
-        },
-      });
-
-      await tx.refreshToken.updateMany({
-        where: { userId, revokedAt: null },
-        data: { revokedAt: new Date() },
-      });
-
-      return user;
+    return this.updateUserWithTokenRevocation(userId, {
+      isActive: false,
+      tokenVersion: { increment: 1 },
     });
   }
 
   async logoutAll(userId: string): Promise<UserRecord> {
-    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      const user = await tx.user.update({
-        where: { id: userId },
-        data: {
-          tokenVersion: { increment: 1 },
-        },
-      });
-
-      await tx.refreshToken.updateMany({
-        where: { userId, revokedAt: null },
-        data: { revokedAt: new Date() },
-      });
-
-      return user;
+    return this.updateUserWithTokenRevocation(userId, {
+      tokenVersion: { increment: 1 },
     });
+  }
+
+  async updateUserAdmin(
+    userId: string,
+    data: Prisma.UserUpdateInput,
+    revokeTokens: boolean,
+  ): Promise<UserRecord> {
+    if (revokeTokens) {
+      return this.updateUserWithTokenRevocation(userId, data);
+    }
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data,
+    });
+  }
+
+  async deleteUser(userId: string): Promise<UserRecord> {
+    return this.prisma.user.delete({ where: { id: userId } });
   }
 
   async validateToken(token: string): Promise<AuthenticatedUser | null> {
@@ -389,9 +394,28 @@ export class AuthRepository {
       return null;
     }
   }
+
+  private async updateUserWithTokenRevocation(
+    userId: string,
+    data: Prisma.UserUpdateInput,
+  ): Promise<UserRecord> {
+    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const user = await tx.user.update({
+        where: { id: userId },
+        data,
+      });
+
+      await tx.refreshToken.updateMany({
+        where: { userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+
+      return user;
+    });
+  }
 }
 
-const normalizeEmail = (email: string): string => email.trim().toLowerCase();
+export const normalizeEmail = (email: string): string => email.trim().toLowerCase();
 
 const base64UrlEncode = (input: string): string => Buffer.from(input).toString('base64url');
 

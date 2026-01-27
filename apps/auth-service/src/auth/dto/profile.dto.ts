@@ -1,31 +1,24 @@
 import { Transform } from 'class-transformer';
 import { IsOptional, IsString, MinLength } from 'class-validator';
-
-const emptyToNull = ({ value }: { value: unknown }): unknown => {
-  if (typeof value !== 'string') {
-    return value;
-  }
-
-  const trimmed = value.trim();
-  return trimmed.length === 0 ? null : trimmed;
-};
+import { PROFILE_COMPANY_MIN_LENGTH, PROFILE_NAME_MIN_LENGTH, PROFILE_PHONE_MIN_LENGTH } from '../auth.constants';
+import { emptyToNull } from './transform.utils';
 
 export class UpdateProfileDto {
   @IsOptional()
   @Transform(emptyToNull)
   @IsString()
-  @MinLength(2)
+  @MinLength(PROFILE_NAME_MIN_LENGTH)
   name?: string | null;
 
   @IsOptional()
   @Transform(emptyToNull)
   @IsString()
-  @MinLength(10)
+  @MinLength(PROFILE_PHONE_MIN_LENGTH)
   phone?: string | null;
 
   @IsOptional()
   @Transform(emptyToNull)
   @IsString()
-  @MinLength(2)
+  @MinLength(PROFILE_COMPANY_MIN_LENGTH)
   company?: string | null;
 }

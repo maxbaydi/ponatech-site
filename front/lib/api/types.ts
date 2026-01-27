@@ -351,6 +351,29 @@ export interface UpdateUserRoleRequest {
   role: UserRole;
 }
 
+export interface CreateUserRequest {
+  email: string;
+  password: string;
+  role?: UserRole;
+  name?: string | null;
+  phone?: string | null;
+  company?: string | null;
+  isActive?: boolean;
+}
+
+export interface UpdateUserRequest {
+  email?: string;
+  role?: UserRole;
+  name?: string | null;
+  phone?: string | null;
+  company?: string | null;
+  isActive?: boolean;
+}
+
+export interface UpdateUserPasswordRequest {
+  password: string;
+}
+
 export interface MediaFile {
   id: string;
   filename: string;

@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing';
+import { AppLogger } from '@ponatech/common';
 import { AuthGrpcController } from './auth.controller';
 import { AuthRepository, AuthenticatedUser } from './auth.repository';
 import { AuthService } from './auth.service';
@@ -18,6 +19,16 @@ describe('AuthService validateToken', () => {
           provide: AuthRepository,
           useValue: {
             validateToken: jest.fn<Promise<AuthenticatedUser | null>, [string]>(),
+          },
+        },
+        {
+          provide: AppLogger,
+          useValue: {
+            log: jest.fn(),
+            error: jest.fn(),
+            warn: jest.fn(),
+            debug: jest.fn(),
+            verbose: jest.fn(),
           },
         },
       ],
