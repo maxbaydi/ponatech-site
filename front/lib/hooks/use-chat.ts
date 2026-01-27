@@ -11,9 +11,12 @@ import type {
   ChatMessagesFilters,
   ChatMessagesResponse,
   ChatStats,
+  PaginatedResponse,
+  SupplyRequest,
   SendMessageRequest,
   UserRole,
 } from '@/lib/api/types';
+import { MY_SUPPLY_REQUESTS_QUERY_KEY, SUPPLY_REQUESTS_QUERY_KEY } from '@/lib/hooks/use-supply-requests';
 
 const CHAT_KEYS = {
   all: ['chat'] as const,
@@ -136,8 +139,16 @@ export function useMarkChatAsRead() {
     mutationFn: (requestId: string) => apiClient.markChatAsRead(requestId),
     onMutate: async (requestId) => {
       await queryClient.cancelQueries({ queryKey: CHAT_KEYS.lists() });
+      await queryClient.cancelQueries({ queryKey: [SUPPLY_REQUESTS_QUERY_KEY] });
+      await queryClient.cancelQueries({ queryKey: [MY_SUPPLY_REQUESTS_QUERY_KEY] });
       const previousLists = queryClient.getQueriesData<ChatListItem[]>({
         queryKey: CHAT_KEYS.lists(),
+      });
+      const previousSupplyRequests = queryClient.getQueriesData<PaginatedResponse<SupplyRequest>>({
+        queryKey: [SUPPLY_REQUESTS_QUERY_KEY],
+      });
+      const previousMyRequests = queryClient.getQueriesData<PaginatedResponse<SupplyRequest>>({
+        queryKey: [MY_SUPPLY_REQUESTS_QUERY_KEY],
       });
 
       queryClient.setQueriesData<ChatListItem[]>(
@@ -150,10 +161,25 @@ export function useMarkChatAsRead() {
             : current
       );
 
-      return { previousLists };
+      queryClient.setQueriesData<PaginatedResponse<SupplyRequest>>(
+        { queryKey: [SUPPLY_REQUESTS_QUERY_KEY] },
+        (current) => updateRequestsUnreadCount(current, requestId)
+      );
+      queryClient.setQueriesData<PaginatedResponse<SupplyRequest>>(
+        { queryKey: [MY_SUPPLY_REQUESTS_QUERY_KEY] },
+        (current) => updateRequestsUnreadCount(current, requestId)
+      );
+
+      return { previousLists, previousSupplyRequests, previousMyRequests };
     },
     onError: (_error, _requestId, context) => {
       context?.previousLists?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
+      context?.previousSupplyRequests?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
+      context?.previousMyRequests?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
     },
@@ -161,6 +187,8 @@ export function useMarkChatAsRead() {
       queryClient.invalidateQueries({ queryKey: CHAT_KEYS.messagesByRequest(requestId) });
       queryClient.invalidateQueries({ queryKey: CHAT_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: CHAT_KEYS.stats() });
+      queryClient.invalidateQueries({ queryKey: [SUPPLY_REQUESTS_QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [MY_SUPPLY_REQUESTS_QUERY_KEY] });
     },
   });
 }
@@ -290,4 +318,20 @@ const mergeFetchedMessages = (
     total,
     totalPages,
   };
+};
+
+const updateRequestsUnreadCount = (
+  current: PaginatedResponse<SupplyRequest> | undefined,
+  requestId: string
+): PaginatedResponse<SupplyRequest> | undefined => {
+  if (!current) return current;
+  let changed = false;
+  const data = current.data.map((request) => {
+    if (request.id !== requestId) return request;
+    if ((request.unreadCount ?? 0) === 0) return request;
+    changed = true;
+    return { ...request, unreadCount: 0 };
+  });
+  if (!changed) return current;
+  return { ...current, data };
 };

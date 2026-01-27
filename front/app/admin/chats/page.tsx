@@ -124,7 +124,7 @@ export default function AdminChatsPage() {
     <section className="flex h-full min-h-0 flex-1 flex-col gap-4 overflow-hidden sm:flex-row sm:gap-6">
       <div
         className={cn(
-          'flex w-full min-h-0 flex-col gap-2 sm:w-56 lg:w-72 2xl:w-80',
+          'flex w-full min-h-0 flex-col gap-1.5 px-1.5 sm:w-56 lg:w-72 2xl:w-80',
           selectedChatId && 'hidden sm:flex',
           !selectedChatId && 'flex-1 sm:flex-initial'
         )}
@@ -143,7 +143,7 @@ export default function AdminChatsPage() {
           <label
             className={cn(
               'focus-within:ring-1 focus-within:ring-ring focus-within:outline-hidden',
-              'flex h-10 w-full items-center space-x-0 rounded-md border border-border ps-2'
+              'flex h-10 w-full items-center gap-0 space-x-0 rounded-md border border-border ps-2.5'
             )}
           >
             <Search size={15} className="me-2 stroke-slate-500" />
@@ -260,7 +260,7 @@ export default function AdminChatsPage() {
               <ChatInput
                 onSend={handleSend}
                 disabled={sendMessage.isPending}
-                placeholder="Введите ответ клиенту… например, уточните детали запроса"
+                placeholder="Введите ответ клиенту…"
               />
             </div>
           </>

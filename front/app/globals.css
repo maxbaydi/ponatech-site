@@ -490,7 +490,7 @@
   }
 
   .admin-content {
-    padding: var(--size-admin-shell-padding);
+    padding: 8px;
   }
 
   .chat-shell {
@@ -558,7 +558,7 @@
     }
 
     .admin-content {
-      padding: var(--size-admin-shell-padding-lg);
+      padding: 8px;
     }
   }
 

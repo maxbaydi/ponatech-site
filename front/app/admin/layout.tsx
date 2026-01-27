@@ -289,8 +289,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="admin-shell flex flex-col gap-4 lg:flex-row lg:gap-6">
+    <div className="h-screen flex flex-col bg-background overflow-hidden">
+      <div className="admin-shell flex flex-1 min-h-0 flex-col gap-4 lg:flex-row lg:gap-6">
         <aside
           className={cn(
             'admin-sidebar-frame admin-sidebar-sticky hidden lg:flex flex-col rounded-2xl border bg-background shadow-sm overflow-hidden self-start transition-all duration-200',
@@ -304,7 +304,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           />
         </aside>
 
-        <div className="flex-1 flex flex-col min-w-0 gap-4">
+        <div className="flex flex-1 min-h-0 min-w-0 flex-col gap-4">
           <header className="flex h-14 items-center gap-2 rounded-2xl border bg-background px-4 shadow-sm lg:hidden">
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
               <SheetTrigger asChild>

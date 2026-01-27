@@ -194,7 +194,7 @@ export default function RequestsPage() {
                       <TableHead className="w-[100px] min-w-[80px] sm:w-[140px]">{STATUS_LABEL}</TableHead>
                       <TableHead className="hidden xl:table-cell w-[200px] min-w-[180px] 2xl:w-[250px]">{COMPANY_LABEL}</TableHead>
                       <TableHead className="hidden lg:table-cell min-w-[180px] w-auto">{REQUEST_LABEL}</TableHead>
-                      <TableHead className="w-[180px] min-w-[160px]"></TableHead>
+                      <TableHead className="w-[190px] min-w-[160px]"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -224,8 +224,8 @@ export default function RequestsPage() {
                             </span>
                           </div>
                         </TableCell>
-                        <TableCell className="w-[180px] min-w-[160px] align-top py-1.5">
-                          <div className="flex flex-wrap gap-1.5 items-center">
+                        <TableCell className="w-[190px] min-w-[160px] align-middle py-1.5 h-20">
+                          <div className="flex flex-col sm:flex-row flex-wrap justify-center text-center gap-1.5 items-center w-full max-w-[175px] min-w-0 min-h-10 p-0.5 m-0.5">
                             <Button variant="outline" size="sm" onClick={() => handleOpenRequest(request)} className="shrink-0">
                               {DETAILS_LABEL}
                             </Button>
