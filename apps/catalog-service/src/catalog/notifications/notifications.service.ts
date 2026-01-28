@@ -8,6 +8,7 @@ import type {
   NotificationStatsResponse,
   PaginatedNotificationsResponse,
 } from './dto/notification.dto';
+import { ChatEventsService } from '../chat/chat-events.service';
 
 type RequestUser = RequestWithUser['user'];
 
@@ -34,7 +35,10 @@ const STATUS_MESSAGES: Record<SupplyRequestStatus, { title: string; message: str
 
 @Injectable()
 export class NotificationsService {
-  constructor(private readonly notificationsRepository: NotificationsRepository) {}
+  constructor(
+    private readonly notificationsRepository: NotificationsRepository,
+    private readonly chatEventsService: ChatEventsService,
+  ) {}
 
   async getNotifications(
     user: RequestUser,
@@ -44,7 +48,18 @@ export class NotificationsService {
       throw new ForbiddenException('Unauthorized');
     }
 
-    return this.notificationsRepository.getByUserId(user.userId, query);
+    const isManager = MANAGER_ROLES.includes(user.role as Role);
+
+    if (isManager) {
+      return this.notificationsRepository.getByUserId(user.userId, query);
+    }
+
+    const email = user.email?.trim();
+    if (!email) {
+      throw new ForbiddenException('User email required');
+    }
+
+    return this.notificationsRepository.getByEmail(email, query);
   }
 
   async markAsRead(notificationId: string, user: RequestUser): Promise<void> {
@@ -52,7 +67,19 @@ export class NotificationsService {
       throw new ForbiddenException('Unauthorized');
     }
 
-    await this.notificationsRepository.markAsRead(notificationId, user.userId);
+    const isManager = MANAGER_ROLES.includes(user.role as Role);
+
+    if (isManager) {
+      await this.notificationsRepository.markAsRead(notificationId, user.userId);
+      return;
+    }
+
+    const email = user.email?.trim();
+    if (!email) {
+      throw new ForbiddenException('User email required');
+    }
+
+    await this.notificationsRepository.markAsReadByEmail(notificationId, email);
   }
 
   async markAllAsRead(user: RequestUser): Promise<void> {
@@ -60,7 +87,19 @@ export class NotificationsService {
       throw new ForbiddenException('Unauthorized');
     }
 
-    await this.notificationsRepository.markAllAsRead(user.userId);
+    const isManager = MANAGER_ROLES.includes(user.role as Role);
+
+    if (isManager) {
+      await this.notificationsRepository.markAllAsRead(user.userId);
+      return;
+    }
+
+    const email = user.email?.trim();
+    if (!email) {
+      throw new ForbiddenException('User email required');
+    }
+
+    await this.notificationsRepository.markAllAsReadByEmail(email);
   }
 
   async getStats(user: RequestUser): Promise<NotificationStatsResponse> {
@@ -68,7 +107,18 @@ export class NotificationsService {
       throw new ForbiddenException('Unauthorized');
     }
 
-    return this.notificationsRepository.getStats(user.userId);
+    const isManager = MANAGER_ROLES.includes(user.role as Role);
+
+    if (isManager) {
+      return this.notificationsRepository.getStats(user.userId);
+    }
+
+    const email = user.email?.trim();
+    if (!email) {
+      throw new ForbiddenException('User email required');
+    }
+
+    return this.notificationsRepository.getStatsByEmail(email);
   }
 
   async notifyStatusChange(
@@ -80,13 +130,15 @@ export class NotificationsService {
     const statusInfo = STATUS_MESSAGES[newStatus];
     const title = `${statusInfo.title} (${requestNumber})`;
 
-    await this.notificationsRepository.create({
+    const notification = await this.notificationsRepository.create({
       email: customerEmail,
       type: NotificationType.STATUS_CHANGE,
       title,
       message: statusInfo.message,
       requestId,
     });
+
+    await this.chatEventsService.emitNotification(notification, undefined, customerEmail);
   }
 
   async notifyNewMessage(
@@ -112,13 +164,15 @@ export class NotificationsService {
         requestId,
       );
     } else {
-      await this.notificationsRepository.create({
+      const notification = await this.notificationsRepository.create({
         email: recipientEmail,
         type: NotificationType.NEW_MESSAGE,
         title,
         message,
         requestId,
       });
+
+      await this.chatEventsService.emitNotification(notification, undefined, recipientEmail);
     }
   }
 

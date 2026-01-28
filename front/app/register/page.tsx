@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,8 +10,11 @@ import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth } from '@/lib/auth/auth-context';
+import { buildAuthRedirectHref, resolveNextPath } from '@/lib/auth/login-redirect';
+import { clearGuestRequest, getGuestRequest, isGuestRequestEmailMatch } from '@/lib/requests/guest-request';
 
 const PASSWORD_PLACEHOLDER = 'Минимум 8 символов';
 
@@ -32,11 +35,40 @@ const registerSchema = z
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
+  return (
+    <Suspense fallback={<RegisterPageFallback />}>
+      <RegisterPageContent />
+    </Suspense>
+  );
+}
+
+function RegisterPageFallback() {
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2 text-center">
+        <Skeleton className="h-6 w-40 mx-auto" />
+        <Skeleton className="h-4 w-64 mx-auto" />
+      </div>
+      <div className="space-y-3">
+        <Skeleton className="h-4 w-16" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-4 w-16" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-4 w-28" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    </div>
+  );
+}
+
+function RegisterPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { register } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [guestRequest] = useState(() => getGuestRequest());
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -48,12 +80,32 @@ export default function RegisterPage() {
     },
   });
 
+  const nextPath = useMemo(
+    () => resolveNextPath(searchParams.get('next')),
+    [searchParams]
+  );
+
+  const loginHref = useMemo(
+    () => buildAuthRedirectHref('/login', nextPath),
+    [nextPath]
+  );
+
+  useEffect(() => {
+    if (!guestRequest) return;
+    const current = form.getValues('email');
+    if (current) return;
+    form.setValue('email', guestRequest.email, { shouldDirty: false });
+  }, [form, guestRequest]);
+
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
     setError('');
     try {
       await register({ email: data.email, password: data.password });
-      router.push('/profile');
+      if (guestRequest && isGuestRequestEmailMatch(guestRequest, data.email)) {
+        clearGuestRequest();
+      }
+      router.push(nextPath ?? '/profile');
     } catch (err: unknown) {
       const apiErr = err as { message?: string; fieldErrors?: Record<string, string> } | null;
       const message = apiErr?.message || 'Ошибка при регистрации. Попробуйте ещё раз.';
@@ -71,6 +123,10 @@ export default function RegisterPage() {
     }
   };
 
+  const emailValue = form.watch('email');
+  const showEmailMismatch =
+    !!guestRequest && !!emailValue && !isGuestRequestEmailMatch(guestRequest, emailValue);
+
   return (
     <div>
       <div className="text-center mb-8">
@@ -80,6 +136,16 @@ export default function RegisterPage() {
 
       {error && (
         <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>
+      )}
+      {guestRequest && (
+        <div className="mb-4 p-3 rounded-lg bg-muted text-muted-foreground text-sm">
+          Для доступа к чату и истории заявок используйте email: <span className="font-medium">{guestRequest.email}</span>
+        </div>
+      )}
+      {showEmailMismatch && (
+        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+          Введённый email отличается от email в заявке. История и чат могут быть недоступны.
+        </div>
       )}
 
       <Form {...form}>
@@ -198,7 +264,7 @@ export default function RegisterPage() {
 
       <p className="text-center text-sm text-muted-foreground mt-6">
         Уже есть аккаунт?{' '}
-        <Link href="/login" className="text-primary hover:underline font-medium">
+        <Link href={loginHref} className="text-primary hover:underline font-medium">
           Войти
         </Link>
       </p>

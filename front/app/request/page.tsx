@@ -1,23 +1,40 @@
 'use client';
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Send, CheckCircle2, Package, Shield, Truck, Loader2, Paperclip, X, FileText, Image as ImageIcon } from 'lucide-react';
+import {
+  Send,
+  CheckCircle2,
+  Package,
+  Shield,
+  Truck,
+  Loader2,
+  Paperclip,
+  X,
+  FileText,
+  MessageCircle,
+  ClipboardList,
+  Image as ImageIcon,
+} from 'lucide-react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { apiClient } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/auth-context';
+import { buildLoginRedirectUrl } from '@/lib/auth/login-redirect';
 import { buildCartDescription, useCartStore } from '@/lib/cart';
 import { formatFileSize } from '@/lib/utils';
+import { buildProfileNotificationHref, PROFILE_VIEW_CHAT, PROFILE_VIEW_DETAILS } from '@/lib/requests/profile-navigation';
+import { saveGuestRequest } from '@/lib/requests/guest-request';
 import {
   REQUEST_ATTACHMENT_ACCEPT,
   REQUEST_ATTACHMENT_MAX_FILES,
@@ -41,6 +58,11 @@ const REMOVE_ATTACHMENT_LABEL = 'Удалить файл';
 const SUBMIT_BUTTON_LABEL = 'Отправить заявку';
 const SUBMITTING_LABEL = 'Отправляем заявку...';
 const SUBMITTING_FILES_LABEL = 'Загрузка файлов...';
+const SUBMIT_SUCCESS_TITLE = 'Заявка отправлена';
+const SUBMIT_SUCCESS_MESSAGE = 'Мы получили заявку и скоро начнем ее обрабатывать.';
+const SUBMIT_SUCCESS_HELP = 'Если хотите что-то уточнить или дополнить, напишите нам в чат по заявке.';
+const SUBMIT_SUCCESS_HISTORY = 'Также вы можете открыть историю заявок и посмотреть детали.';
+const SUBMIT_SUCCESS_LOGIN_NOTE = 'Чтобы открыть чат и историю заявок, войдите или зарегистрируйтесь.';
 
 const countPhoneDigits = (value: string): number => value.replace(/\D/g, '').length;
 
@@ -92,13 +114,16 @@ const FEATURES = [
 ];
 
 function RequestForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const cartItems = useCartStore((state) => state.items);
   const clearCart = useCartStore((state) => state.clear);
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState('');
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
+  const [submittedRequestId, setSubmittedRequestId] = useState<string | null>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [attachmentsError, setAttachmentsError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -242,18 +267,36 @@ function RequestForm() {
     setAttachmentsError('');
   }, []);
 
+  const handleOpenChat = useCallback(() => {
+    if (!submittedRequestId) return;
+    const href = buildProfileNotificationHref({ requestId: submittedRequestId, view: PROFILE_VIEW_CHAT });
+    router.push(isAuthenticated ? href : buildLoginRedirectUrl(href));
+    setSuccessDialogOpen(false);
+  }, [isAuthenticated, router, submittedRequestId]);
+
+  const handleOpenHistory = useCallback(() => {
+    if (!submittedRequestId) return;
+    const href = buildProfileNotificationHref({ requestId: submittedRequestId, view: PROFILE_VIEW_DETAILS });
+    router.push(isAuthenticated ? href : buildLoginRedirectUrl(href));
+    setSuccessDialogOpen(false);
+  }, [isAuthenticated, router, submittedRequestId]);
+
   const onSubmit = async (data: RequestFormData) => {
     setIsSubmitting(true);
     setSubmitError('');
     setSubmitSuccess('');
     try {
-      if (attachments.length > 0) {
-        await apiClient.createSupplyRequestWithAttachments(data, attachments);
-      } else {
-        await apiClient.createSupplyRequest(data);
-      }
+      const response =
+        attachments.length > 0
+          ? await apiClient.createSupplyRequestWithAttachments(data, attachments)
+          : await apiClient.createSupplyRequest(data);
       await clearCart();
-      setSubmitSuccess('Спасибо! Заявка получена. Мы свяжемся с вами как только запрос будет обработан.');
+      if (!isAuthenticated) {
+        saveGuestRequest({ requestId: response.id, email: data.email, createdAt: response.createdAt });
+      }
+      setSubmittedRequestId(response.id);
+      setSuccessDialogOpen(true);
+      setSubmitSuccess('Спасибо! Заявка отправлена и уже в обработке. Мы свяжемся с вами, как только подготовим ответ.');
       form.reset(initialValues);
       setAttachments([]);
       setAttachmentsError('');
@@ -299,6 +342,45 @@ function RequestForm() {
         <CardDescription>Заполните форму, и мы подготовим коммерческое предложение</CardDescription>
       </CardHeader>
       <CardContent>
+        <Dialog open={successDialogOpen} onOpenChange={setSuccessDialogOpen}>
+          <DialogContent>
+            <DialogHeader className="space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="mt-1 flex h-10 w-10 items-center justify-center rounded-full bg-secondary/10 text-secondary">
+                  <CheckCircle2 className="h-5 w-5" />
+                </div>
+                <div className="space-y-2">
+                  <DialogTitle>{SUBMIT_SUCCESS_TITLE}</DialogTitle>
+                  <DialogDescription className="space-y-2">
+                    <span className="block">{SUBMIT_SUCCESS_MESSAGE}</span>
+                    <span className="block">{SUBMIT_SUCCESS_HELP}</span>
+                    <span className="block">{SUBMIT_SUCCESS_HISTORY}</span>
+                  </DialogDescription>
+                </div>
+              </div>
+              {!isAuthenticated && (
+                <div className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
+                  {SUBMIT_SUCCESS_LOGIN_NOTE}
+                </div>
+              )}
+            </DialogHeader>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleOpenHistory}
+                disabled={!submittedRequestId}
+              >
+                <ClipboardList className="mr-2 h-4 w-4" />
+                История заявок
+              </Button>
+              <Button type="button" onClick={handleOpenChat} disabled={!submittedRequestId}>
+                <MessageCircle className="mr-2 h-4 w-4" />
+                Открыть чат
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         {submitError && (
           <div className="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{submitError}</div>
         )}

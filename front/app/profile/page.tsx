@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -13,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth } from '@/lib/auth/auth-context';
 import { isApiError } from '@/lib/api/errors';
+import { getProfileTab, PROFILE_TAB_PARAM, type ProfileTab } from '@/lib/requests/profile-navigation';
 import { RequestsHistory } from './requests-history';
 
 const ROLE_LABELS: Record<string, { label: string; color: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
@@ -65,6 +67,9 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function ProfilePage() {
   const { user, updateProfile, changePassword } = useAuth();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get(PROFILE_TAB_PARAM);
+  const [activeTab, setActiveTab] = useState<ProfileTab>(() => getProfileTab(tabParam));
   const [isLoading, setIsLoading] = useState(false);
   const [isProfileSaving, setIsProfileSaving] = useState(false);
   const [profileError, setProfileError] = useState('');
@@ -89,6 +94,14 @@ export default function ProfilePage() {
       confirmPassword: '',
     },
   });
+
+  useEffect(() => {
+    setActiveTab(getProfileTab(tabParam));
+  }, [tabParam]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(getProfileTab(value));
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -242,7 +255,7 @@ export default function ProfilePage() {
           </div>
 
           <div className="lg:col-span-2">
-            <Tabs defaultValue="profile">
+            <Tabs value={activeTab} onValueChange={handleTabChange}>
               <TabsList className="flex flex-wrap h-auto justify-start">
                 <TabsTrigger value="profile" className="w-full sm:w-auto">Профиль</TabsTrigger>
                 <TabsTrigger value="security" className="w-full sm:w-auto">Безопасность</TabsTrigger>

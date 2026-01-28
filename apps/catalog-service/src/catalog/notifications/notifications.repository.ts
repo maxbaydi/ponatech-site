@@ -164,6 +164,17 @@ export class NotificationsRepository {
     });
   }
 
+  async markAsReadByEmail(notificationId: string, email: string): Promise<void> {
+    await this.prisma.notification.updateMany({
+      where: {
+        id: notificationId,
+        userId: null,
+        email: { equals: email, mode: 'insensitive' },
+      },
+      data: { isRead: true },
+    });
+  }
+
   async markAllAsRead(userId: string): Promise<void> {
     await this.prisma.notification.updateMany({
       where: {
@@ -174,10 +185,35 @@ export class NotificationsRepository {
     });
   }
 
+  async markAllAsReadByEmail(email: string): Promise<void> {
+    await this.prisma.notification.updateMany({
+      where: {
+        userId: null,
+        email: { equals: email, mode: 'insensitive' },
+        isRead: false,
+      },
+      data: { isRead: true },
+    });
+  }
+
   async getStats(userId: string): Promise<NotificationStatsResponse> {
     const [total, unread] = await Promise.all([
       this.prisma.notification.count({ where: { userId } }),
       this.prisma.notification.count({ where: { userId, isRead: false } }),
+    ]);
+
+    return { total, unread };
+  }
+
+  async getStatsByEmail(email: string): Promise<NotificationStatsResponse> {
+    const whereClause = {
+      userId: null,
+      email: { equals: email, mode: 'insensitive' as const },
+    };
+
+    const [total, unread] = await Promise.all([
+      this.prisma.notification.count({ where: whereClause }),
+      this.prisma.notification.count({ where: { ...whereClause, isRead: false } }),
     ]);
 
     return { total, unread };

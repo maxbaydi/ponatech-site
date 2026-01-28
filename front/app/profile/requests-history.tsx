@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Search, MessageCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,14 @@ import { useMySupplyRequests } from '@/lib/hooks/use-supply-requests';
 import { formatDate } from '@/lib/utils';
 import { formatRequestNumber } from '@/lib/requests/request-number';
 import { RequestStatusBadge } from '@/components/requests/request-status-badge';
+import {
+  getProfileNotificationView,
+  PROFILE_REQUEST_NUMBER_PARAM,
+  PROFILE_REQUEST_PARAM,
+  PROFILE_VIEW_CHAT,
+  PROFILE_VIEW_DETAILS,
+  PROFILE_VIEW_PARAM,
+} from '@/lib/requests/profile-navigation';
 import { RequestsHistorySheet } from './requests-history-sheet';
 import { RequestChat } from '@/components/chat';
 
@@ -45,11 +54,20 @@ const SEARCH_DEBOUNCE_MS = 400;
 const EMPTY_REQUESTS: SupplyRequest[] = [];
 
 export function RequestsHistory() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(DEFAULT_PAGE);
   const [selectedRequest, setSelectedRequest] = useState<SupplyRequest | null>(null);
   const [chatRequest, setChatRequest] = useState<SupplyRequest | null>(null);
+  const lastRequestedRef = useRef<string | null>(null);
+  const lastOpenedRef = useRef<string | null>(null);
+
+  const requestIdParam = searchParams.get(PROFILE_REQUEST_PARAM);
+  const requestNumberParam = searchParams.get(PROFILE_REQUEST_NUMBER_PARAM);
+  const viewParam = getProfileNotificationView(searchParams.get(PROFILE_VIEW_PARAM));
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -59,6 +77,24 @@ export function RequestsHistory() {
 
     return () => clearTimeout(timeout);
   }, [searchInput]);
+
+  useEffect(() => {
+    if (!requestNumberParam) return;
+    if (lastRequestedRef.current === requestNumberParam) return;
+    lastRequestedRef.current = requestNumberParam;
+    setSearchInput(requestNumberParam);
+    setSearchQuery(requestNumberParam);
+    setPage(DEFAULT_PAGE);
+  }, [requestNumberParam]);
+
+  useEffect(() => {
+    if (!requestIdParam || requestNumberParam) return;
+    if (!searchInput && !searchQuery && page === DEFAULT_PAGE) return;
+    lastRequestedRef.current = null;
+    setSearchInput('');
+    setSearchQuery('');
+    setPage(DEFAULT_PAGE);
+  }, [page, requestIdParam, requestNumberParam, searchInput, searchQuery]);
 
   const filters = useMemo(
     () => ({
@@ -76,16 +112,64 @@ export function RequestsHistory() {
   const canGoPrev = page > DEFAULT_PAGE;
   const canGoNext = page < totalPages;
 
+  useEffect(() => {
+    if (!viewParam) return;
+    const targetKey = requestIdParam ?? requestNumberParam;
+    if (!targetKey) return;
+    const key = `${viewParam}:${targetKey}`;
+    if (lastOpenedRef.current === key) return;
+
+    const targetRequest = requests.find((request) => {
+      if (requestIdParam) {
+        return request.id === requestIdParam;
+      }
+      return request.requestNumber === requestNumberParam;
+    });
+
+    if (!targetRequest) return;
+
+    lastOpenedRef.current = key;
+
+    if (viewParam === PROFILE_VIEW_CHAT) {
+      setSelectedRequest(null);
+      setChatRequest(targetRequest);
+    } else if (viewParam === PROFILE_VIEW_DETAILS) {
+      setChatRequest(null);
+      setSelectedRequest(targetRequest);
+    }
+  }, [requests, requestIdParam, requestNumberParam, viewParam]);
+
+  const clearNotificationParams = useCallback(() => {
+    if (
+      !searchParams.has(PROFILE_VIEW_PARAM) &&
+      !searchParams.has(PROFILE_REQUEST_PARAM) &&
+      !searchParams.has(PROFILE_REQUEST_NUMBER_PARAM)
+    ) {
+      return;
+    }
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete(PROFILE_VIEW_PARAM);
+    params.delete(PROFILE_REQUEST_PARAM);
+    params.delete(PROFILE_REQUEST_NUMBER_PARAM);
+    const query = params.toString();
+    lastOpenedRef.current = null;
+    lastRequestedRef.current = null;
+    router.replace(query ? `${pathname}?${query}` : pathname);
+  }, [pathname, router, searchParams]);
+
   const handleOpen = (request: SupplyRequest) => setSelectedRequest(request);
   const handleSheetOpenChange = (open: boolean) => {
     if (!open) {
       setSelectedRequest(null);
+      clearNotificationParams();
     }
   };
   const handleOpenChat = (request: SupplyRequest) => setChatRequest(request);
   const handleChatOpenChange = (open: boolean) => {
     if (!open) {
       setChatRequest(null);
+      clearNotificationParams();
     }
   };
 

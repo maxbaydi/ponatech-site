@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -13,6 +13,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth } from '@/lib/auth/auth-context';
+import { buildAuthRedirectHref, resolveNextPath } from '@/lib/auth/login-redirect';
+import { clearGuestRequest, getGuestRequest, isGuestRequestEmailMatch } from '@/lib/requests/guest-request';
 
 const loginSchema = z.object({
   email: z.string().email('Введите корректный email'),
@@ -55,6 +57,7 @@ function LoginPageContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [guestRequest] = useState(() => getGuestRequest());
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -65,12 +68,31 @@ function LoginPageContent() {
     },
   });
 
+  const nextPath = useMemo(
+    () => resolveNextPath(searchParams.get('next')),
+    [searchParams]
+  );
+
+  const registerHref = useMemo(
+    () => buildAuthRedirectHref('/register', nextPath),
+    [nextPath]
+  );
+
+  useEffect(() => {
+    if (!guestRequest) return;
+    const current = form.getValues('email');
+    if (current) return;
+    form.setValue('email', guestRequest.email, { shouldDirty: false });
+  }, [form, guestRequest]);
+
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     setError('');
     try {
       await login({ email: data.email, password: data.password });
-      const nextPath = resolveNextPath(searchParams.get('next'));
+      if (guestRequest && isGuestRequestEmailMatch(guestRequest, data.email)) {
+        clearGuestRequest();
+      }
       router.push(nextPath ?? '/profile');
     } catch (err: unknown) {
       const apiErr = err as { message?: string; fieldErrors?: Record<string, string> } | null;
@@ -89,6 +111,10 @@ function LoginPageContent() {
     }
   };
 
+  const emailValue = form.watch('email');
+  const showEmailMismatch =
+    !!guestRequest && !!emailValue && !isGuestRequestEmailMatch(guestRequest, emailValue);
+
   return (
     <div>
       <div className="text-center mb-8">
@@ -98,6 +124,16 @@ function LoginPageContent() {
 
       {error && (
         <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>
+      )}
+      {guestRequest && (
+        <div className="mb-4 p-3 rounded-lg bg-muted text-muted-foreground text-sm">
+          Для доступа к чату и истории заявок используйте email: <span className="font-medium">{guestRequest.email}</span>
+        </div>
+      )}
+      {showEmailMismatch && (
+        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+          Введённый email отличается от email в заявке. История и чат могут быть недоступны.
+        </div>
       )}
 
       <Form {...form}>
@@ -176,17 +212,10 @@ function LoginPageContent() {
 
       <p className="text-center text-sm text-muted-foreground mt-6">
         Нет аккаунта?{' '}
-        <Link href="/register" className="text-primary hover:underline font-medium">
+        <Link href={registerHref} className="text-primary hover:underline font-medium">
           Зарегистрироваться
         </Link>
       </p>
     </div>
   );
 }
-
-const resolveNextPath = (next: string | null): string | null => {
-  if (!next) return null;
-  if (!next.startsWith('/')) return null;
-  if (next.startsWith('//')) return null;
-  return next;
-};

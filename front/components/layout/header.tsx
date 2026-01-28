@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { HeaderSearch } from '@/components/layout/header-search';
+import { NotificationsDropdown } from '@/components/notifications/notifications-dropdown';
 import { useAuth } from '@/lib/auth/auth-context';
 import { SITE_CONTACTS } from '@/lib/site-contacts';
 import { getCartItemsCount, useCartStore } from '@/lib/cart';
@@ -82,6 +83,7 @@ export function Header() {
   const headerRef = useRef<HTMLDivElement | null>(null);
 
   const { user, isAuthenticated, logout, isManager } = useAuth();
+  const isCustomer = user?.role === 'CUSTOMER';
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const cartCount = useCartStore((state) => getCartItemsCount(state.items));
@@ -204,7 +206,9 @@ export function Header() {
 
         <div className="ml-auto flex items-center gap-3">
           {isAuthenticated ? (
-            <DropdownMenu>
+            <>
+              {isCustomer && <NotificationsDropdown mode="client" />}
+              <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-9 px-2">
                   <User className="h-5 w-5" />
@@ -232,7 +236,8 @@ export function Header() {
                   Выйти
                 </DropdownMenuItem>
               </DropdownMenuContent>
-            </DropdownMenu>
+              </DropdownMenu>
+            </>
           ) : (
             <div className="hidden lg:flex items-center gap-2">
               <Button variant="ghost" asChild className="h-12">

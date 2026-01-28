@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Readable } from 'stream';
-import { ChatMessageSender } from '@prisma/client';
+import { ChatMessageSender, SupplyRequestStatus } from '@prisma/client';
 import {
   CreateRequestDto,
   GetRequestsQueryDto,
@@ -53,13 +53,17 @@ export class RequestsService {
 
       const fullRequest = await this.requestsRepository.findWithNumber(requestId);
       const requestNumber = fullRequest?.requestNumber ?? `#${requestId.slice(0, 8)}`;
+      const statusMessage = this.notificationsService.getStatusChangeMessage(SupplyRequestStatus.NEW);
 
-      await this.notificationsService.notifyNewRequest(
-        requestId,
-        requestNumber,
-        dto.name,
-        dto.email,
-      );
+      await Promise.all([
+        this.chatService.sendSystemMessage(requestId, statusMessage),
+        this.notificationsService.notifyNewRequest(
+          requestId,
+          requestNumber,
+          dto.name,
+          dto.email,
+        ),
+      ]);
     } catch {
       // Non-critical, don't fail request creation
     }
