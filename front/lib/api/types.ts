@@ -194,6 +194,8 @@ export type ProductCsvColumn =
   | 'brand'
   | 'category';
 
+export type ImportProductsCsvStrategy = 'replace' | 'update';
+
 export interface ImportProductsCsvResult {
   total: number;
   created: number;
@@ -212,6 +214,8 @@ export interface ExportProductsCsvRequest {
 export interface ImportProductsCsvRequest {
   status?: ProductStatus;
   updateBySku?: boolean;
+  columns?: ProductCsvColumn[];
+  mergeStrategy?: ImportProductsCsvStrategy;
 }
 
 export interface CreateBrandRequest {

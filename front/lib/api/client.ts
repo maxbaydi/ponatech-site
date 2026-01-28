@@ -451,6 +451,12 @@ class ApiClient {
     formData.append('file', file);
     if (opts?.status) formData.append('status', opts.status);
     if (opts?.updateBySku !== undefined) formData.append('updateBySku', String(opts.updateBySku));
+    if (opts?.columns && opts.columns.length > 0) {
+      formData.append('columns', JSON.stringify(opts.columns));
+    }
+    if (opts?.mergeStrategy) {
+      formData.append('mergeStrategy', opts.mergeStrategy);
+    }
     return this.requestForm<ImportProductsCsvResult>('/products/import-csv', formData);
   }
 

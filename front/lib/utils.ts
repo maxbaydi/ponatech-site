@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatPrice(price: number | string, currency = 'RUB'): string {
-  const numPrice = typeof price === 'string' ? parseFloat(price) : price;
+  const numPrice = parsePriceValue(price);
   return new Intl.NumberFormat('ru-RU', {
     style: 'currency',
     currency,
@@ -14,6 +14,35 @@ export function formatPrice(price: number | string, currency = 'RUB'): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(numPrice);
+}
+
+export function parsePriceValue(value: number | string): number {
+  if (typeof value === 'number') return value;
+  const trimmed = value.trim();
+  if (!trimmed) return NaN;
+
+  const compact = trimmed.replace(/[\s\u00A0\u202F]/g, '');
+  if (!compact) return NaN;
+
+  const lastComma = compact.lastIndexOf(',');
+  const lastDot = compact.lastIndexOf('.');
+  let normalized = compact;
+
+  if (lastComma !== -1 && lastDot !== -1) {
+    if (lastComma > lastDot) {
+      normalized = compact.replace(/\./g, '').replace(',', '.');
+    } else {
+      normalized = compact.replace(/,/g, '');
+    }
+  } else if (lastComma !== -1) {
+    if (compact.indexOf(',') !== lastComma) {
+      normalized = compact.replace(/,/g, '');
+    } else {
+      normalized = compact.replace(',', '.');
+    }
+  }
+
+  return Number(normalized);
 }
 
 export function formatDate(date: Date | string): string {

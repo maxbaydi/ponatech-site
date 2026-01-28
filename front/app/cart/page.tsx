@@ -15,7 +15,7 @@ import { ProductCard } from '@/components/catalog';
 import { getCartItemsCount, useCartStore } from '@/lib/cart';
 import { useCartRecommendations } from '@/lib/hooks/use-cart-recommendations';
 import { useProducts } from '@/lib/hooks/use-products';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice, parsePriceValue } from '@/lib/utils';
 import { useDisplayCurrency } from '@/lib/hooks/use-site-settings';
 import type { Product, ProductStatus } from '@/lib/api/types';
 
@@ -350,10 +350,10 @@ export default function CartPage() {
   const totalItems = useMemo(() => getCartItemsCount(items), [items]);
   const totals = useMemo(() => {
     const sum = items.reduce((acc, item) => {
-      const price = Number(item.price);
+      const price = parsePriceValue(item.price);
       return Number.isFinite(price) ? acc + price * item.quantity : acc;
     }, 0);
-    const hasPrice = items.some((item) => Number.isFinite(Number(item.price)));
+    const hasPrice = items.some((item) => Number.isFinite(parsePriceValue(item.price)));
     return { sum, hasPrice };
   }, [items]);
 
@@ -488,9 +488,10 @@ export default function CartPage() {
                                   />
                                 </TableCell>
                                 <TableCell className="hidden lg:table-cell text-sm">
-                                  {Number.isFinite(Number(item.price))
-                                    ? formatPrice(Number(item.price), displayCurrency)
-                                    : '—'}
+                                  {(() => {
+                                    const price = parsePriceValue(item.price);
+                                    return Number.isFinite(price) ? formatPrice(price, displayCurrency) : '—';
+                                  })()}
                                 </TableCell>
                                 <TableCell className="text-right">
                                   <RemoveItemButton

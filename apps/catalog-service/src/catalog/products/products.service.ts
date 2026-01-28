@@ -18,7 +18,13 @@ import {
   ProductResponse,
   UpdateProductDto,
 } from './dto/product.dto';
-import { ExportProductsCsvDto, ImportProductsCsvDto, ImportProductsCsvResult, PRODUCT_CSV_COLUMNS } from './dto/products-csv.dto';
+import {
+  ExportProductsCsvDto,
+  ImportProductsCsvDto,
+  ImportProductsCsvResult,
+  ImportProductsCsvStrategy,
+  PRODUCT_CSV_COLUMNS,
+} from './dto/products-csv.dto';
 import { slugify } from '../utils/slugify';
 import { getMainProductImage } from './product-image.utils';
 import { applyProductSearchFilter } from './product-search.utils';
@@ -27,6 +33,7 @@ const CSV_REQUIRED_COLUMNS = ['name', 'article', 'price', 'brand'] as const;
 const DEFAULT_PRODUCT_CURRENCY = 'RUB';
 const DEFAULT_PRODUCT_STATUS: ProductStatus = ProductStatus.DRAFT;
 const DEFAULT_IMPORT_STATUS: ProductStatus = ProductStatus.PUBLISHED;
+const DEFAULT_IMPORT_MERGE_STRATEGY: ImportProductsCsvStrategy = 'replace';
 const DEFAULT_BRAND_SLUG_BASE = 'brand';
 const DEFAULT_CATEGORY_SLUG_BASE = 'category';
 
@@ -35,6 +42,7 @@ const MAX_EXPORT_LIMIT = 50_000;
 const PRODUCT_MAIN_IMAGE_ORDER = 0;
 
 type CsvRow = Record<string, unknown>;
+type ProductCsvColumn = (typeof PRODUCT_CSV_COLUMNS)[number];
 
 @Injectable()
 export class ProductsService {
@@ -167,6 +175,8 @@ export class ProductsService {
     const text = buffer.toString('utf8');
     const status = opts?.status ?? DEFAULT_IMPORT_STATUS;
     const updateBySku = opts?.updateBySku !== 'false';
+    const mergeStrategy = opts?.mergeStrategy ?? DEFAULT_IMPORT_MERGE_STRATEGY;
+    const requestedColumns = opts?.columns;
     const result: ImportProductsCsvResult = {
       total: 0,
       created: 0,
@@ -179,6 +189,7 @@ export class ProductsService {
 
     await new Promise<void>((resolve, reject) => {
       const parser = parseString(text, { headers: true, trim: true, ignoreEmpty: true });
+      let importColumns: ProductCsvColumn[] | null = null;
       let inFlight = 0;
       let ended = false;
       let rejected = false;
@@ -198,10 +209,10 @@ export class ProductsService {
       parser.on('error', safeReject);
 
       parser.on('headers', (headers: string[]) => {
-        const normalized = new Set(headers.map((h) => String(h).trim()));
-        const missing = CSV_REQUIRED_COLUMNS.filter((col) => !normalized.has(col));
-        if (missing.length > 0) {
-          safeReject(new BadRequestException(`Missing CSV columns: ${missing.join(', ')}`));
+        try {
+          importColumns = this.normalizeImportColumns(headers, requestedColumns);
+        } catch (error) {
+          safeReject(error);
           parser.destroy();
         }
       });
@@ -214,7 +225,8 @@ export class ProductsService {
         inFlight += 1;
 
         parser.pause();
-        this.upsertFromCsvRow(row, { status, updateBySku })
+        const columnSet = new Set(importColumns ?? PRODUCT_CSV_COLUMNS);
+        this.upsertFromCsvRow(row, { status, updateBySku, mergeStrategy, columns: columnSet })
           .then((outcome) => {
             if (outcome === 'created') result.created += 1;
             if (outcome === 'updated') result.updated += 1;
@@ -358,58 +370,147 @@ export class ProductsService {
 
   private async upsertFromCsvRow(
     row: CsvRow,
-    opts: { status: ProductStatus; updateBySku: boolean },
+    opts: {
+      status: ProductStatus;
+      updateBySku: boolean;
+      mergeStrategy: ImportProductsCsvStrategy;
+      columns: Set<ProductCsvColumn>;
+    },
   ): Promise<'created' | 'updated'> {
-    const id = this.normalizeString(row.id);
-    const name = this.requireString(row.name, 'name');
-    const article = this.requireString(row.article, 'article');
-    const price = this.requireNumber(row.price, 'price');
-    const description = this.normalizeString(row.description);
-    const rawCharacteristics = this.normalizeString(row.characteristics);
-    const parsedSpecs = this.parseSpecsFromCsv(rawCharacteristics);
-    const characteristics = parsedSpecs.hasSpecs ? null : rawCharacteristics;
-    const brandName = this.requireString(row.brand, 'brand');
-    const categoryValue = this.normalizeString(row.category);
-    const imgUrl = this.normalizeString(row.img);
+    const hasColumn = (column: ProductCsvColumn) => opts.columns.has(column);
 
-    const brandId = await this.getOrCreateBrandId(brandName);
-    const categoryId = categoryValue ? await this.getOrCreateCategoryId(categoryValue) : undefined;
-    
-    const mediaFile = imgUrl ? await this.uploadImageToMediaLibrary(imgUrl, name) : null;
+    const normalizedRow = this.normalizeCsvRow(row);
+
+    const id = hasColumn('id') ? this.normalizeString(normalizedRow.id) : undefined;
+    const name = hasColumn('name') ? this.requireString(normalizedRow.name, 'name') : undefined;
+    const article = hasColumn('article') ? this.requireString(normalizedRow.article, 'article') : undefined;
+    const price = hasColumn('price') ? this.requireNumber(normalizedRow.price, 'price') : undefined;
+    const description = hasColumn('description') ? this.normalizeString(normalizedRow.description) : undefined;
+    const rawCharacteristics = hasColumn('characteristics')
+      ? this.normalizeString(normalizedRow.characteristics)
+      : undefined;
+    const parsedSpecs = hasColumn('characteristics') ? this.parseSpecsFromCsv(rawCharacteristics) : { hasSpecs: false };
+    const characteristics = hasColumn('characteristics')
+      ? parsedSpecs.hasSpecs
+        ? null
+        : rawCharacteristics
+      : undefined;
+    const brandName = hasColumn('brand') ? this.requireString(normalizedRow.brand, 'brand') : undefined;
+    const categoryValue = hasColumn('category') ? this.normalizeString(normalizedRow.category) : undefined;
+    const imgUrl = hasColumn('img') ? this.normalizeString(normalizedRow.img) : undefined;
+
+    const existingSelect: Prisma.ProductSelect = {
+      id: true,
+      title: true,
+      sku: true,
+      price: true,
+      description: true,
+      characteristics: true,
+      specs: true,
+      brandId: true,
+      categoryId: true,
+      status: true,
+      images: {
+        where: { isMain: true },
+        orderBy: { order: 'asc' },
+        take: 1,
+        select: { url: true },
+      },
+    };
 
     const existingById = id
       ? await this.prisma.product.findFirst({
           where: { id, deletedAt: null },
-          select: { id: true, slug: true, categoryId: true },
+          select: existingSelect,
         })
       : null;
 
-    if (existingById) {
-      const data: Prisma.ProductUncheckedUpdateInput = {
-        title: name,
-        sku: article,
-        price,
-        description,
-        characteristics,
-        specs: parsedSpecs.specs,
-        brandId,
-      };
+    const existingBySku =
+      !existingById && opts.updateBySku && article
+        ? await this.prisma.product.findFirst({
+            where: { sku: article, deletedAt: null },
+            select: existingSelect,
+          })
+        : null;
 
-      if (categoryId) {
+    const existing = existingById ?? existingBySku;
+    const matchedBySku = !existingById && !!existingBySku;
+
+    const brandId = brandName ? await this.getOrCreateBrandId(brandName) : undefined;
+    const categoryId = categoryValue ? await this.getOrCreateCategoryId(categoryValue) : undefined;
+
+    if (existing) {
+      let data: Prisma.ProductUncheckedUpdateInput = {};
+
+      if (hasColumn('name') && name !== undefined) {
+        data.title = name;
+      }
+
+      if (hasColumn('article') && article !== undefined) {
+        data.sku = article;
+      }
+
+      if (hasColumn('price') && price !== undefined) {
+        data.price = price;
+      }
+
+      if (hasColumn('description') && description !== undefined) {
+        data.description = description;
+      }
+
+      if (hasColumn('characteristics')) {
+        if (parsedSpecs.hasSpecs) {
+          data.characteristics = null;
+          data.specs = parsedSpecs.specs;
+        } else if (rawCharacteristics !== undefined) {
+          data.characteristics = rawCharacteristics;
+        }
+      }
+
+      if (hasColumn('brand') && brandId) {
+        data.brandId = brandId;
+      }
+
+      if (hasColumn('category') && categoryId) {
         data.categoryId = categoryId;
       }
 
+      if (matchedBySku) {
+        data.status = opts.status;
+      }
+
+      let mediaFile: { id: string; url: string } | null = null;
+      if (imgUrl) {
+        const existingImageUrl = existing.images?.[0]?.url;
+        if (!(opts.mergeStrategy === 'update' && existingImageUrl === imgUrl)) {
+          const alt = name ?? existing.title;
+          mediaFile = await this.uploadImageToMediaLibrary(imgUrl, alt);
+        }
+      }
+
+      if (opts.mergeStrategy === 'update') {
+        data = this.filterChangedImportData(existing, data);
+      }
+
+      const hasDataUpdates = Object.keys(data).length > 0;
+
+      if (!hasDataUpdates && !mediaFile) {
+        return 'updated';
+      }
+
       await this.prisma.$transaction(async (tx) => {
-        await tx.product.update({ where: { id: existingById.id }, data });
+        if (hasDataUpdates) {
+          await tx.product.update({ where: { id: existing.id }, data });
+        }
         if (mediaFile) {
-          await tx.productImage.deleteMany({ where: { productId: existingById.id } });
+          await tx.productImage.deleteMany({ where: { productId: existing.id } });
           await tx.productImage.create({
             data: {
               url: mediaFile.url,
               order: 0,
               isMain: true,
-              productId: existingById.id,
-              alt: name,
+              productId: existing.id,
+              alt: name ?? existing.title,
               mediaFileId: mediaFile.id,
             },
           });
@@ -419,50 +520,18 @@ export class ProductsService {
       return 'updated';
     }
 
-    if (opts.updateBySku) {
-      const existingBySku = await this.prisma.product.findFirst({
-        where: { sku: article, deletedAt: null },
-        select: { id: true },
-      });
+    const missingRequired = CSV_REQUIRED_COLUMNS.filter((column) => !hasColumn(column));
+    if (missingRequired.length > 0) {
+      throw new BadRequestException(`Missing CSV columns: ${missingRequired.join(', ')}`);
+    }
 
-      if (existingBySku) {
-        const data: Prisma.ProductUncheckedUpdateInput = {
-          title: name,
-          price,
-          description,
-          characteristics,
-          specs: parsedSpecs.specs,
-          brandId,
-          status: opts.status,
-        };
-
-        if (categoryId) {
-          data.categoryId = categoryId;
-        }
-
-        await this.prisma.$transaction(async (tx) => {
-          await tx.product.update({ where: { id: existingBySku.id }, data });
-          if (mediaFile) {
-            await tx.productImage.deleteMany({ where: { productId: existingBySku.id } });
-            await tx.productImage.create({
-              data: {
-                url: mediaFile.url,
-                order: 0,
-                isMain: true,
-                productId: existingBySku.id,
-                alt: name,
-                mediaFileId: mediaFile.id,
-              },
-            });
-          }
-        });
-
-        return 'updated';
-      }
+    if (!name || !article || price === undefined || !brandId) {
+      throw new BadRequestException('Missing required product fields');
     }
 
     const slug = await this.buildUniqueProductSlug(name, article);
     const productId = id || undefined;
+    const mediaFile = imgUrl ? await this.uploadImageToMediaLibrary(imgUrl, name) : null;
 
     await this.prisma.$transaction(async (tx) => {
       const created = await tx.product.create({
@@ -587,6 +656,44 @@ export class ProductsService {
     return filtered.length > 0 ? filtered : [...PRODUCT_CSV_COLUMNS];
   }
 
+  private normalizeImportColumns(headers: string[], requested?: ProductCsvColumn[]): ProductCsvColumn[] {
+    const normalizedHeaders = headers.map((header) => this.normalizeCsvHeader(String(header)));
+    const headerSet = new Set(normalizedHeaders);
+    const available = PRODUCT_CSV_COLUMNS.filter((column) => headerSet.has(column));
+
+    if (requested) {
+      const normalizedRequested = Array.from(
+        new Set(requested.map((column) => this.normalizeCsvHeader(String(column))) as ProductCsvColumn[]),
+      );
+      if (normalizedRequested.length === 0) {
+        throw new BadRequestException('No import columns selected');
+      }
+      const missing = normalizedRequested.filter((column) => !headerSet.has(column));
+      if (missing.length > 0) {
+        throw new BadRequestException(`Missing CSV columns: ${missing.join(', ')}`);
+      }
+      return normalizedRequested;
+    }
+
+    if (available.length === 0) {
+      throw new BadRequestException('No import columns selected');
+    }
+
+    return available;
+  }
+
+  private normalizeCsvHeader(value: string): string {
+    return value.replace(/^\uFEFF/, '').trim();
+  }
+
+  private normalizeCsvRow(row: CsvRow): CsvRow {
+    return Object.entries(row).reduce<CsvRow>((acc, [key, value]) => {
+      const normalizedKey = this.normalizeCsvHeader(key);
+      acc[normalizedKey] = value;
+      return acc;
+    }, {});
+  }
+
   private normalizeString(value: unknown): string | undefined {
     if (value === undefined || value === null) return undefined;
     const text = String(value).trim();
@@ -654,6 +761,99 @@ export class ProductsService {
     return { hasSpecs: false };
   }
 
+  private filterChangedImportData(
+    existing: {
+      title: string;
+      sku: string;
+      price: unknown;
+      description: string | null;
+      characteristics: string | null;
+      specs: unknown;
+      brandId: string;
+      categoryId: string | null;
+      status: ProductStatus;
+    },
+    data: Prisma.ProductUncheckedUpdateInput,
+  ): Prisma.ProductUncheckedUpdateInput {
+    const next: Prisma.ProductUncheckedUpdateInput = {};
+
+    if (data.title !== undefined && data.title !== existing.title) {
+      next.title = data.title;
+    }
+
+    if (data.sku !== undefined && data.sku !== existing.sku) {
+      next.sku = data.sku;
+    }
+
+    if (data.price !== undefined && !this.isSameNumber(existing.price, data.price)) {
+      next.price = data.price;
+    }
+
+    if (data.description !== undefined && (data.description ?? null) !== (existing.description ?? null)) {
+      next.description = data.description;
+    }
+
+    if (data.characteristics !== undefined && (data.characteristics ?? null) !== (existing.characteristics ?? null)) {
+      next.characteristics = data.characteristics;
+    }
+
+    if (data.specs !== undefined && !this.areSpecsEqual(existing.specs, data.specs)) {
+      next.specs = data.specs;
+    }
+
+    if (data.brandId !== undefined && data.brandId !== existing.brandId) {
+      next.brandId = data.brandId;
+    }
+
+    if (data.categoryId !== undefined && data.categoryId !== existing.categoryId) {
+      next.categoryId = data.categoryId;
+    }
+
+    if (data.status !== undefined && data.status !== existing.status) {
+      next.status = data.status;
+    }
+
+    return next;
+  }
+
+  private areSpecsEqual(left: unknown, right: unknown): boolean {
+    return this.normalizeSpecsValue(left) === this.normalizeSpecsValue(right);
+  }
+
+  private normalizeSpecsValue(value: unknown): string {
+    const normalize = (input: unknown): unknown => {
+      if (Array.isArray(input)) {
+        return input.map((item) => normalize(item));
+      }
+      if (input && typeof input === 'object') {
+        const entries = Object.entries(input as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b));
+        const sorted: Record<string, unknown> = {};
+        entries.forEach(([key, val]) => {
+          sorted[key] = normalize(val);
+        });
+        return sorted;
+      }
+      return input;
+    };
+
+    const serialized = JSON.stringify(normalize(value));
+    return serialized === undefined ? 'undefined' : serialized;
+  }
+
+  private isSameNumber(left: unknown, right: unknown): boolean {
+    const leftNum = this.toFiniteNumber(left);
+    const rightNum = this.toFiniteNumber(right);
+    if (leftNum === null || rightNum === null) {
+      return false;
+    }
+    return Math.abs(leftNum - rightNum) < 1e-9;
+  }
+
+  private toFiniteNumber(value: unknown): number | null {
+    const num = typeof value === 'number' ? value : Number(value);
+    return Number.isFinite(num) ? num : null;
+  }
+
   private requireString(value: unknown, field: string): string {
     const text = this.normalizeString(value);
     if (!text) {
@@ -664,11 +864,39 @@ export class ProductsService {
 
   private requireNumber(value: unknown, field: string): number {
     const text = this.normalizeString(value);
-    const parsed = text ? Number(text) : NaN;
+    const parsed = text ? this.parseCsvNumber(text) : NaN;
     if (!Number.isFinite(parsed)) {
       throw new BadRequestException(`Invalid ${field}`);
     }
     return parsed;
+  }
+
+  private parseCsvNumber(raw: string): number {
+    const trimmed = raw.trim();
+    if (!trimmed) return NaN;
+
+    const compact = trimmed.replace(/[\s\u00A0\u202F]/g, '');
+    if (!compact) return NaN;
+
+    const lastComma = compact.lastIndexOf(',');
+    const lastDot = compact.lastIndexOf('.');
+    let normalized = compact;
+
+    if (lastComma !== -1 && lastDot !== -1) {
+      if (lastComma > lastDot) {
+        normalized = compact.replace(/\./g, '').replace(',', '.');
+      } else {
+        normalized = compact.replace(/,/g, '');
+      }
+    } else if (lastComma !== -1) {
+      if (compact.indexOf(',') !== lastComma) {
+        normalized = compact.replace(/,/g, '');
+      } else {
+        normalized = compact.replace(',', '.');
+      }
+    }
+
+    return Number(normalized);
   }
 
   private toCsvErrorMessage(error: unknown): string {
