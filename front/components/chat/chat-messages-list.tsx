@@ -49,7 +49,7 @@ export function ChatMessagesList({
         <div className="chat-text-container relative -me-4 flex min-h-0 flex-1 flex-col overflow-y-hidden">
           <div
             ref={scrollRef}
-            className="flex min-h-0 w-full flex-1 flex-col gap-4 overflow-y-auto py-2 pe-4 pb-4"
+            className="flex min-h-0 w-full flex-1 flex-col gap-4 overflow-y-auto scrollbar-invisible py-2 pe-4 pb-4"
             role="log"
             aria-relevant="additions"
             aria-live="polite"

@@ -326,7 +326,7 @@ export function RequestDetailsClient({ requestNumber }: RequestDetailsClientProp
   const messages = messagesData?.data ?? [];
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 gap-6 overflow-y-auto scrollbar-themed">
+    <div className="flex flex-col flex-1 min-h-0 gap-6 overflow-y-auto scrollbar-invisible">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between shrink-0">
         <div className="space-y-3">
           <Button asChild variant="ghost" size="sm" className="w-fit">
@@ -335,12 +335,16 @@ export function RequestDetailsClient({ requestNumber }: RequestDetailsClientProp
               {BACK_LABEL}
             </Link>
           </Button>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-end gap-2">
             <h1 className="text-2xl font-bold">{PAGE_TITLE}</h1>
-            <span className="text-muted-foreground">
+            <span className="text-2xl font-bold text-muted-foreground">
               {formatRequestNumber(request.requestNumber, false)}
             </span>
-            {statusValue && <RequestStatusBadge status={statusValue} />}
+            {statusValue && (
+              <span className="self-center">
+                <RequestStatusBadge status={statusValue} />
+              </span>
+            )}
             {unreadCount > 0 && (
               <Badge variant="destructive">{unreadCount} новых</Badge>
             )}
@@ -351,7 +355,10 @@ export function RequestDetailsClient({ requestNumber }: RequestDetailsClientProp
               <span>Создана {formatDate(request.createdAt)}</span>
             </div>
             {request.updatedAt && (
-              <span>Обновлена {formatDate(request.updatedAt)}</span>
+              <>
+                <span aria-hidden="true">|</span>
+                <span>Обновлена {formatDate(request.updatedAt)}</span>
+              </>
             )}
           </div>
         </div>
@@ -371,7 +378,7 @@ export function RequestDetailsClient({ requestNumber }: RequestDetailsClientProp
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 min-w-0 grid gap-6 lg:grid-cols-3 lg:items-stretch">
+      <div className="min-w-0 grid gap-6 lg:grid-cols-3 lg:items-stretch">
         <div className="space-y-6 lg:col-span-2 min-h-0">
           <Card>
             <CardHeader>
@@ -448,8 +455,8 @@ export function RequestDetailsClient({ requestNumber }: RequestDetailsClientProp
           </Card>
         </div>
 
-        <div className="flex flex-col min-h-0 lg:sticky lg:top-4 lg:self-start">
-          <Card id="chat" className="admin-request-chat flex flex-col flex-1 min-h-0 overflow-hidden">
+        <div className="flex flex-col min-h-0">
+          <Card id="chat" className="admin-request-chat flex flex-col min-h-0 overflow-hidden lg:sticky lg:top-4">
             <CardHeader className="shrink-0">
               <CardTitle className="flex items-center gap-2">
                 <MessageCircle className="h-5 w-5" aria-hidden="true" />
@@ -463,15 +470,6 @@ export function RequestDetailsClient({ requestNumber }: RequestDetailsClientProp
               <CardDescription>{CHAT_DESCRIPTION}</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-1 flex-col min-h-0 p-0 overflow-hidden">
-              <div className="shrink-0 space-y-2 px-6 pb-3 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <Hash className="h-4 w-4" aria-hidden="true" />
-                  <span>{formatRequestNumber(request.requestNumber, false)}</span>
-                </div>
-                <div>{request.email}</div>
-                {request.company && <div>{request.company}</div>}
-              </div>
-
               <ChatMessagesList
                 messages={messages}
                 isLoading={messagesLoading}
