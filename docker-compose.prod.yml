@@ -79,6 +79,20 @@ services:
     networks:
       - ponatech-network
 
+  migrate:
+    image: ghcr.io/maxbaydi/ponatech-catalog:${IMAGE_TAG:-latest}
+    container_name: ponatech-migrate
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["node", "node_modules/prisma/build/index.js", "migrate", "deploy", "--schema", "prisma/schema.prisma"]
+    restart: "no"
+    networks:
+      - ponatech-network
+
   auth-service:
     image: ghcr.io/maxbaydi/ponatech-auth:${IMAGE_TAG:-latest}
     container_name: ponatech-auth-service
@@ -99,6 +113,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     restart: unless-stopped
     networks:
       - ponatech-network
@@ -129,6 +145,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       minio:
         condition: service_started
       auth-service:

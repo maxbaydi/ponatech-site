@@ -5,11 +5,13 @@ export type SupplyRequestStatus = 'NEW' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELL
 
 export interface SiteSettings {
   displayCurrency: DisplayCurrency;
+  telegramBotTokenSet?: boolean;
   updatedAt?: string;
 }
 
 export interface UpdateSiteSettingsRequest {
-  displayCurrency: DisplayCurrency;
+  displayCurrency?: DisplayCurrency;
+  telegramBotToken?: string | null;
 }
 
 export interface Brand {
@@ -75,6 +77,8 @@ export interface AuthUser {
   name?: string | null;
   phone?: string | null;
   company?: string | null;
+  telegramChatId?: string | null;
+  telegramNotificationsEnabled?: boolean;
 }
 
 export interface User extends AuthUser {
@@ -97,6 +101,8 @@ export interface UpdateProfileRequest {
   name?: string | null;
   phone?: string | null;
   company?: string | null;
+  telegramChatId?: string | null;
+  telegramNotificationsEnabled?: boolean;
 }
 
 export interface ChangePasswordRequest {

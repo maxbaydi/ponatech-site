@@ -54,9 +54,9 @@ const NAV_ITEMS: AdminNavItem[] = [
   { icon: ClipboardList, label: 'Заявки', href: '/admin/requests' },
   { icon: MessageCircle, label: 'Чаты', href: '/admin/chats' },
   { icon: ImageIcon, label: 'Медиабиблиотека', href: '/admin/media' },
+  { icon: Settings, label: 'Настройки', href: '/admin/settings' },
 ];
 
-const SUPER_ADMIN_NAV_ITEMS: AdminNavItem[] = [{ icon: Settings, label: 'Настройки', href: '/admin/settings' }];
 
 const ADMIN_NAV_ITEMS: AdminNavItem[] = [{ icon: Users, label: 'Пользователи', href: '/admin/users' }];
 
@@ -74,7 +74,7 @@ function AdminSidebar({
   chatUnreadCount = 0,
 }: AdminSidebarProps) {
   const pathname = usePathname();
-  const { user, logout, isAdmin, isSuperAdmin } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const toggleLabel = compact ? COMPACT_EXPAND_LABEL : COMPACT_COLLAPSE_LABEL;
 
   const handleNavClick = () => {
@@ -182,7 +182,6 @@ function AdminSidebar({
           <nav className={cn('flex flex-col gap-1', compact && 'items-center')}>
             {NAV_ITEMS.map((item) => renderNavItem(item))}
 
-            {isSuperAdmin && SUPER_ADMIN_NAV_ITEMS.map((item) => renderNavItem(item))}
 
             {isAdmin && (
               <>
@@ -330,7 +329,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <NotificationsDropdown />
           </header>
 
-          <div className="flex flex-1 min-h-0 flex-col admin-content">{children}</div>
+          <div className="flex flex-1 min-h-0 flex-col admin-content w-full max-w-[1248px] mx-auto">{children}</div>
         </div>
       </div>
     </div>

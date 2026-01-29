@@ -41,6 +41,8 @@ export interface AuthUserResponse {
   name?: string | null;
   phone?: string | null;
   company?: string | null;
+  telegramChatId?: string | null;
+  telegramNotificationsEnabled?: boolean;
 }
 
 export interface AuthTokensResponse {

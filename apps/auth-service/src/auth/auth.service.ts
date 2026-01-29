@@ -348,6 +348,8 @@ export class AuthService {
         name: user.name ?? null,
         phone: user.phone ?? null,
         company: user.company ?? null,
+        telegramChatId: user.telegramChatId ?? null,
+        telegramNotificationsEnabled: user.telegramNotificationsEnabled ?? false,
       },
     };
   }
@@ -416,6 +418,8 @@ type ProfileUpdateInput = {
   name?: string | null;
   phone?: string | null;
   company?: string | null;
+  telegramChatId?: string | null;
+  telegramNotificationsEnabled?: boolean;
 };
 
 const normalizeProfileUpdate = (dto: ProfileUpdateInput): ProfileUpdateInput => {
@@ -431,6 +435,14 @@ const normalizeProfileUpdate = (dto: ProfileUpdateInput): ProfileUpdateInput => 
 
   if (dto.company !== undefined) {
     update.company = normalizeOptionalString(dto.company);
+  }
+
+  if (dto.telegramChatId !== undefined) {
+    update.telegramChatId = normalizeOptionalString(dto.telegramChatId);
+  }
+
+  if (dto.telegramNotificationsEnabled !== undefined) {
+    update.telegramNotificationsEnabled = dto.telegramNotificationsEnabled;
   }
 
   return update;

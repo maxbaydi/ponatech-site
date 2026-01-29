@@ -9,6 +9,7 @@ import type {
   PaginatedNotificationsResponse,
 } from './dto/notification.dto';
 import { ChatEventsService } from '../chat/chat-events.service';
+import { TelegramNotificationsService } from './telegram-notifications.service';
 
 type RequestUser = RequestWithUser['user'];
 
@@ -38,6 +39,7 @@ export class NotificationsService {
   constructor(
     private readonly notificationsRepository: NotificationsRepository,
     private readonly chatEventsService: ChatEventsService,
+    private readonly telegramNotificationsService: TelegramNotificationsService,
   ) {}
 
   async getNotifications(
@@ -147,14 +149,17 @@ export class NotificationsService {
     recipientEmail: string,
     isForManager: boolean,
     senderName?: string,
+    messageContent?: string,
   ): Promise<void> {
     const title = isForManager
       ? `Новое сообщение по заявке ${requestNumber}`
       : `Ответ по заявке ${requestNumber}`;
 
+    const contentPreview = formatMessagePreview(messageContent);
+
     const message = isForManager
-      ? `Клиент ${senderName ?? recipientEmail} отправил сообщение по заявке.`
-      : 'Менеджер ответил на ваше сообщение.';
+      ? buildManagerMessage(senderName ?? recipientEmail, contentPreview)
+      : buildCustomerMessage(contentPreview);
 
     if (isForManager) {
       await this.notificationsRepository.createForManagers(
@@ -163,6 +168,12 @@ export class NotificationsService {
         message,
         requestId,
       );
+
+      await this.telegramNotificationsService.notifyManagersNewMessage({
+        requestNumber,
+        senderName: senderName ?? recipientEmail,
+        content: messageContent ?? '',
+      });
     } else {
       const notification = await this.notificationsRepository.create({
         email: recipientEmail,
@@ -191,9 +202,39 @@ export class NotificationsService {
       message,
       requestId,
     );
+
+    await this.telegramNotificationsService.notifyManagersNewRequest({
+      requestNumber,
+      customerName,
+      customerEmail,
+    });
   }
 
   getStatusChangeMessage(status: SupplyRequestStatus): string {
     return STATUS_MESSAGES[status].message;
   }
 }
+
+
+const MESSAGE_PREVIEW_LIMIT = 240;
+
+const formatMessagePreview = (content?: string): string | null => {
+  const trimmed = (content ?? '').trim();
+  if (!trimmed) return null;
+  if (trimmed.length <= MESSAGE_PREVIEW_LIMIT) return trimmed;
+  return `${trimmed.slice(0, MESSAGE_PREVIEW_LIMIT - 1)}...`;
+};
+
+const buildManagerMessage = (sender: string, content: string | null): string => {
+  if (!content) {
+    return `Клиент ${sender} отправил сообщение по заявке.`;
+  }
+  return `Клиент ${sender} написал: ${content}`;
+};
+
+const buildCustomerMessage = (content: string | null): string => {
+  if (!content) {
+    return 'Менеджер ответил на ваше сообщение.';
+  }
+  return `Менеджер ответил: ${content}`;
+};

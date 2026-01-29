@@ -73,6 +73,25 @@ export class NotificationsRepository {
     });
   }
 
+  async getTelegramRecipientsForManagers(): Promise<Array<{ userId: string; chatId: string }>> {
+    const managers = await this.prisma.user.findMany({
+      where: {
+        role: { in: ['MANAGER', 'ADMIN', 'SUPER_ADMIN'] },
+        isActive: true,
+        telegramNotificationsEnabled: true,
+        telegramChatId: { not: null },
+      },
+      select: { id: true, telegramChatId: true },
+    });
+
+    return managers
+      .map((manager) => ({
+        userId: manager.id,
+        chatId: manager.telegramChatId?.trim() ?? '',
+      }))
+      .filter((manager) => manager.chatId.length > 0);
+  }
+
   async getByUserId(
     userId: string,
     query: GetNotificationsQueryDto,

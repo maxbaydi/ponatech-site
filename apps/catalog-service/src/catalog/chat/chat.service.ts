@@ -69,7 +69,7 @@ export class ChatService {
       const normalizedMessage = this.normalizeMessageUrls(message);
 
       await this.chatEventsService.emitNewMessage(normalizedMessage, request.email);
-      await this.safeNotifyNewMessage(request, isManager);
+      await this.safeNotifyNewMessage(request, isManager, content);
 
       return normalizedMessage;
     } catch (error) {
@@ -256,6 +256,7 @@ export class ChatService {
   private async safeNotifyNewMessage(
     request: { id: string; email: string; requestNumber: string | null; sequenceNumber: number; name: string },
     isManager: boolean,
+    messageContent?: string,
   ): Promise<void> {
     try {
       const requestNumber =
@@ -266,6 +267,8 @@ export class ChatService {
           requestNumber,
           request.email,
           false,
+          undefined,
+          messageContent,
         );
       } else {
         const senderName = request.name ?? request.email;
@@ -275,6 +278,7 @@ export class ChatService {
           request.email,
           true,
           senderName,
+          messageContent,
         );
       }
     } catch {

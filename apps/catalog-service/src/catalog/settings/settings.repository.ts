@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { SiteSetting } from '@prisma/client';
+import type { Prisma, SiteSetting } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 
 const DEFAULT_SITE_SETTINGS_KEY = 'default';
@@ -26,11 +26,32 @@ export class SiteSettingsRepository {
     });
   }
 
-  async updateDisplayCurrency(displayCurrency: string): Promise<SiteSetting> {
+  async updateSettings(data: {
+    displayCurrency?: string;
+    telegramBotToken?: string | null;
+  }): Promise<SiteSetting> {
+    const updateData: Prisma.SiteSettingUpdateInput = {};
+
+    if (data.displayCurrency !== undefined) {
+      updateData.displayCurrency = data.displayCurrency;
+    }
+
+    if (data.telegramBotToken !== undefined) {
+      updateData.telegramBotToken = data.telegramBotToken;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return this.getSettings();
+    }
+
     return this.prisma.siteSetting.upsert({
       where: { key: DEFAULT_SITE_SETTINGS_KEY },
-      update: { displayCurrency },
-      create: { key: DEFAULT_SITE_SETTINGS_KEY, displayCurrency },
+      update: updateData,
+      create: {
+        key: DEFAULT_SITE_SETTINGS_KEY,
+        displayCurrency: data.displayCurrency ?? DEFAULT_DISPLAY_CURRENCY,
+        telegramBotToken: data.telegramBotToken ?? null,
+      },
     });
   }
 }

@@ -13,13 +13,17 @@ export class SiteSettingsService {
   }
 
   async updateSettings(dto: UpdateSiteSettingsDto): Promise<SiteSettingsResponse> {
-    const settings = await this.siteSettingsRepository.updateDisplayCurrency(dto.displayCurrency);
+    const settings = await this.siteSettingsRepository.updateSettings({
+      displayCurrency: dto.displayCurrency,
+      telegramBotToken: dto.telegramBotToken,
+    });
     return this.toResponse(settings);
   }
 
   private toResponse(settings: SiteSetting): SiteSettingsResponse {
     return {
       displayCurrency: settings.displayCurrency as SiteSettingsResponse['displayCurrency'],
+      telegramBotTokenSet: !!settings.telegramBotToken,
       updatedAt: settings.updatedAt,
     };
   }

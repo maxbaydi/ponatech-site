@@ -33,6 +33,7 @@ import { ChatEventsRepository } from './chat/chat-events.repository';
 import { NotificationsController } from './notifications/notifications.controller';
 import { NotificationsRepository } from './notifications/notifications.repository';
 import { NotificationsService } from './notifications/notifications.service';
+import { TelegramNotificationsService } from './notifications/telegram-notifications.service';
 
 @Module({
   imports: [PrismaModule, MediaModule, MinioModule],
@@ -68,6 +69,7 @@ import { NotificationsService } from './notifications/notifications.service';
     ChatGateway,
     NotificationsRepository,
     NotificationsService,
+    TelegramNotificationsService,
     JwtAuthGuard,
     RolesGuard,
   ],

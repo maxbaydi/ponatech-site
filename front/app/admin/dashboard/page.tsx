@@ -50,13 +50,14 @@ interface StatCardProps {
   icon: React.ReactNode;
   description?: string;
   badge?: StatBadge;
+  cardClassName?: string;
 }
 
 const formatPeriodLabel = (days: number): string => `${PERIOD_PREFIX} ${days} ${PERIOD_SUFFIX}`;
 
-function StatCard({ title, value, icon, description, badge }: StatCardProps) {
+function StatCard({ title, value, icon, description, badge, cardClassName }: StatCardProps) {
   return (
-    <Card>
+    <Card className={cardClassName}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         {icon}
@@ -137,13 +138,13 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div>
+    <div className="max-w-[1076px] p-[6px]">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">{PAGE_TITLE}</h1>
         <p className="text-muted-foreground">{PAGE_DESCRIPTION}</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="flex flex-wrap gap-4 items-center">
         {statsCards.map((card) => (
           <StatCard
             key={card.title}
@@ -152,6 +153,7 @@ export default function DashboardPage() {
             icon={card.icon}
             description={card.description}
             badge={card.badge}
+            cardClassName={card.title === REQUESTS_TITLE ? 'w-[200px] min-w-[200px] h-[160px]' : 'min-w-[200px] h-[160px]'}
           />
         ))}
       </div>

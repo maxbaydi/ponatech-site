@@ -39,7 +39,16 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async me(
     @Req() request: Request,
-  ): Promise<{ id: string; email: string; role: string; name?: string | null; phone?: string | null; company?: string | null }> {
+  ): Promise<{
+    id: string;
+    email: string;
+    role: string;
+    name?: string | null;
+    phone?: string | null;
+    company?: string | null;
+    telegramChatId?: string | null;
+    telegramNotificationsEnabled?: boolean;
+  }> {
     const userId = (request as RequestWithUser).user?.userId;
 
     if (!userId) {
@@ -55,6 +64,8 @@ export class AuthController {
       name: user.name ?? null,
       phone: user.phone ?? null,
       company: user.company ?? null,
+      telegramChatId: user.telegramChatId ?? null,
+      telegramNotificationsEnabled: user.telegramNotificationsEnabled ?? false,
     };
   }
 
@@ -63,7 +74,16 @@ export class AuthController {
   async updateProfile(
     @Req() request: Request,
     @Body() dto: UpdateProfileDto,
-  ): Promise<{ id: string; email: string; role: string; name?: string | null; phone?: string | null; company?: string | null }> {
+  ): Promise<{
+    id: string;
+    email: string;
+    role: string;
+    name?: string | null;
+    phone?: string | null;
+    company?: string | null;
+    telegramChatId?: string | null;
+    telegramNotificationsEnabled?: boolean;
+  }> {
     const userId = (request as RequestWithUser).user?.userId;
 
     if (!userId) {
@@ -79,6 +99,8 @@ export class AuthController {
       name: user.name ?? null,
       phone: user.phone ?? null,
       company: user.company ?? null,
+      telegramChatId: user.telegramChatId ?? null,
+      telegramNotificationsEnabled: user.telegramNotificationsEnabled ?? false,
     };
   }
 

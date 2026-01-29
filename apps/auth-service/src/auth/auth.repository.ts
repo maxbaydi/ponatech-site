@@ -236,7 +236,13 @@ export class AuthRepository {
 
   async updateUserProfile(
     userId: string,
-    data: { name?: string | null; phone?: string | null; company?: string | null },
+    data: {
+      name?: string | null;
+      phone?: string | null;
+      company?: string | null;
+      telegramChatId?: string | null;
+      telegramNotificationsEnabled?: boolean;
+    },
   ): Promise<UserRecord> {
     return this.prisma.user.update({
       where: { id: userId },
