@@ -16,6 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { ClientOnly } from '@/components/client-only';
 import { HeaderSearch } from '@/components/layout/header-search';
 import { NotificationsDropdown } from '@/components/notifications/notifications-dropdown';
 import { useAuth } from '@/lib/auth/auth-context';
@@ -208,35 +209,44 @@ export function Header() {
           {isAuthenticated ? (
             <>
               {isCustomer && <NotificationsDropdown mode="client" />}
-              <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-9 px-2">
-                  <User className="h-5 w-5" />
-                  <ChevronDown className="h-4 w-4 opacity-70" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuLabel className="max-w-full truncate">
-                  {user?.email ?? 'Профиль'}
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/profile">Профиль</Link>
-                </DropdownMenuItem>
-                {isManager && (
-                  <>
+              <ClientOnly
+                placeholder={
+                  <Button variant="ghost" className="h-9 px-2">
+                    <User className="h-5 w-5" />
+                    <ChevronDown className="h-4 w-4 opacity-70" />
+                  </Button>
+                }
+              >
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-9 px-2">
+                      <User className="h-5 w-5" />
+                      <ChevronDown className="h-4 w-4 opacity-70" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuLabel className="max-w-full truncate">
+                      {user?.email ?? 'Профиль'}
+                    </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link href="/admin/dashboard">Админ-панель</Link>
+                      <Link href="/profile">Профиль</Link>
                     </DropdownMenuItem>
-                  </>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logout} className="text-destructive">
-                  Выйти
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-              </DropdownMenu>
+                    {isManager && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin/dashboard">Админ-панель</Link>
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={logout} className="text-destructive">
+                      Выйти
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </ClientOnly>
             </>
           ) : (
             <div className="hidden lg:flex items-center gap-2">
@@ -264,13 +274,20 @@ export function Header() {
             <Link href={REQUEST_PATH}>Оставить заявку</Link>
           </Button>
 
-          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-            <SheetTrigger asChild>
-              <Button type="button" variant="ghost" size="icon" className="lg:hidden">
-                <Menu className="h-6 w-6" />
+          <ClientOnly
+            placeholder={
+              <Button type="button" variant="ghost" size="icon" className="lg:hidden" aria-label="Меню навигации">
+                <Menu className="h-6 w-6" aria-hidden />
               </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-full sm:w-80">
+            }
+          >
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button type="button" variant="ghost" size="icon" className="lg:hidden" aria-label="Меню навигации">
+                  <Menu className="h-6 w-6" aria-hidden />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-full sm:w-80">
               <SheetTitle className="sr-only">Меню навигации</SheetTitle>
               <div className="flex flex-col gap-6 pt-6">
                 <Button asChild className="w-full">
@@ -287,7 +304,7 @@ export function Header() {
                   }}
                 >
                   <Input
-                    placeholder="Искать на PonaTech..."
+                    placeholder="Искать на PonaTech…"
                     className="h-10"
                     value={searchValue}
                     onChange={(e) => setSearchValue(e.target.value)}
@@ -343,7 +360,8 @@ export function Header() {
                 </Button>
               </div>
             </SheetContent>
-          </Sheet>
+            </Sheet>
+          </ClientOnly>
         </div>
       </div>
       </header>

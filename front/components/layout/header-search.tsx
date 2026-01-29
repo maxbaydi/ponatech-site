@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent, FocusEvent, FormEvent, KeyboardEvent, MutableRefObject, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -17,6 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { ClientOnly } from '@/components/client-only';
 import { BrandLogo } from '@/components/brands/brand-logo';
 import { BRANDS } from '@/data/brands';
 import { apiClient } from '@/lib/api/client';
@@ -49,7 +50,7 @@ type TimeoutHandle = ReturnType<typeof setTimeout>;
 const BRAND_LABEL_FULL = 'Бренды';
 const BRAND_LABEL_SHORT = 'Бренд';
 const ALL_BRANDS_LABEL = 'Все бренды';
-const SEARCH_PLACEHOLDER = 'Искать на PonaTech...';
+const SEARCH_PLACEHOLDER = 'Искать на PonaTech…';
 const SEARCH_LABEL = 'Поиск';
 const SEARCH_NOT_FOUND_LABEL = 'Ничего не найдено';
 const SEARCH_MIN_QUERY_LABEL = 'Введите минимум';
@@ -69,6 +70,7 @@ const SUGGESTIONS_STATUS: ProductFilters['status'] = 'PUBLISHED';
 const SUGGESTIONS_SORT: ProductFilters['sort'] = 'title_asc';
 const SUGGESTION_SKELETON_COUNT = 3;
 const MIN_QUERY_HINT = `${SEARCH_MIN_QUERY_LABEL} ${SUGGESTIONS_MIN_QUERY_LENGTH} символа`;
+const HEADER_SEARCH_LISTBOX_ID = 'header-search-listbox';
 
 function PanelMessage({ children }: { children: ReactNode }) {
   return <div className="px-3 py-2 text-sm text-muted-foreground">{children}</div>;
@@ -116,7 +118,7 @@ export function HeaderSearch({ value, onValueChange, onSubmit, brandsPath, produ
   const router = useRouter();
   const { data: apiBrands } = useBrands();
   const displayCurrency = useDisplayCurrency();
-  const listboxId = useId();
+  const listboxId = HEADER_SEARCH_LISTBOX_ID;
   const containerRef = useRef<HTMLDivElement | null>(null);
   const openTimerRef = useRef<TimeoutHandle | null>(null);
   const closeTimerRef = useRef<TimeoutHandle | null>(null);
@@ -361,42 +363,55 @@ export function HeaderSearch({ value, onValueChange, onSubmit, brandsPath, produ
       <div ref={containerRef} className="relative w-full max-w-2xl lg:max-w-3xl">
         <form className="flex" onSubmit={handleSubmit}>
           <div className="flex h-12 w-full items-center rounded-xl border-2 border-primary bg-background px-1.5 gap-1">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+            <ClientOnly
+              placeholder={
                 <button
                   type="button"
-                  className="-mx-1 flex h-10 items-center gap-2 rounded-lg bg-muted px-4 text-sm font-medium text-foreground hover:bg-muted transition-colors focus:outline-none shrink-0"
+                  className="-mx-1 flex h-10 items-center gap-2 rounded-lg bg-muted px-4 text-sm font-medium text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 shrink-0"
                 >
                   <span className="hidden lg:inline">{BRAND_LABEL_FULL}</span>
                   <span className="lg:hidden">{BRAND_LABEL_SHORT}</span>
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" collisionPadding={16} className="header-brand-dropdown overflow-auto p-2 scrollbar-themed">
-                <DropdownMenuItem onSelect={(event) => handleBrandMenuSelect(event)} className="font-medium">
-                  {ALL_BRANDS_LABEL}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <div className="header-brand-grid">
-                  {brandOptions.map((brand) => (
-                    <DropdownMenuItem
-                      key={brand.slug}
-                      onSelect={(event) => handleBrandMenuSelect(event, brand.slug)}
-                      className="py-2"
-                    >
-                      <BrandLogo
-                        name={brand.name}
-                        src={brand.logoSrc}
-                        size="sm"
-                        className="rounded-md"
-                        imgClassName="w-8 h-8"
-                      />
-                      <span className="min-w-0 truncate">{brand.name}</span>
-                    </DropdownMenuItem>
-                  ))}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              }
+            >
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="-mx-1 flex h-10 items-center gap-2 rounded-lg bg-muted px-4 text-sm font-medium text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 shrink-0"
+                  >
+                    <span className="hidden lg:inline">{BRAND_LABEL_FULL}</span>
+                    <span className="lg:hidden">{BRAND_LABEL_SHORT}</span>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" collisionPadding={16} className="header-brand-dropdown overflow-auto p-2 scrollbar-themed">
+                  <DropdownMenuItem onSelect={(event) => handleBrandMenuSelect(event)} className="font-medium">
+                    {ALL_BRANDS_LABEL}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <div className="header-brand-grid">
+                    {brandOptions.map((brand) => (
+                      <DropdownMenuItem
+                        key={brand.slug}
+                        onSelect={(event) => handleBrandMenuSelect(event, brand.slug)}
+                        className="py-2"
+                      >
+                        <BrandLogo
+                          name={brand.name}
+                          src={brand.logoSrc}
+                          size="sm"
+                          className="rounded-md"
+                          imgClassName="w-8 h-8"
+                        />
+                        <span className="min-w-0 truncate">{brand.name}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </ClientOnly>
 
             <Input
               placeholder={SEARCH_PLACEHOLDER}

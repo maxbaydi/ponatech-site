@@ -198,9 +198,9 @@ export default function ProfilePage() {
           <p className="text-muted-foreground">Управление аккаунтом и настройки</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div>
-            <Card>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+          <div className="flex flex-col min-h-0 max-h-[524px]">
+            <Card className="shrink-0">
               <CardContent className="p-6">
                 <div className="flex flex-col items-center text-center">
                   <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-4">
@@ -213,11 +213,11 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
-            <Card className="mt-4">
-              <CardHeader className="pb-3">
+            <Card className="mt-4 flex-1 min-h-0 flex flex-col">
+              <CardHeader className="pb-3 shrink-0">
                 <CardTitle className="text-base">Информация об аккаунте</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 flex-1 min-h-0">
                 <div className="flex items-center gap-3">
                   <Mail className="w-4 h-4 text-muted-foreground" />
                   <div>
@@ -254,7 +254,7 @@ export default function ProfilePage() {
             </Card>
           </div>
 
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 flex flex-col min-h-0">
             <Tabs value={activeTab} onValueChange={handleTabChange}>
               <TabsList className="flex flex-wrap h-auto justify-start">
                 <TabsTrigger value="profile" className="w-full sm:w-auto">Профиль</TabsTrigger>
@@ -262,7 +262,7 @@ export default function ProfilePage() {
                 <TabsTrigger value="history" className="w-full sm:w-auto">История заявок</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="profile" className="mt-6">
+              <TabsContent value="profile" className="mt-6 flex-1 min-h-0 flex flex-col">
                 <Card>
                   <CardHeader>
                     <CardTitle>Данные профиля</CardTitle>
@@ -334,7 +334,7 @@ export default function ProfilePage() {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="security" className="mt-6">
+              <TabsContent value="security" className="mt-6 flex-1 min-h-0 flex flex-col">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -407,7 +407,7 @@ export default function ProfilePage() {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="history" className="mt-6">
+              <TabsContent value="history" className="mt-6 flex-1 min-h-0 flex flex-col">
                 <Card>
                   <CardHeader>
                     <CardTitle>История заявок</CardTitle>

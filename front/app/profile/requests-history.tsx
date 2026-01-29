@@ -48,7 +48,7 @@ const TABLE_ARIA_LABEL = 'История заявок';
 const SEARCH_ARIA_LABEL = 'Поиск по номеру заявки';
 
 const DEFAULT_PAGE = 1;
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 4;
 const SKELETON_ROWS = 4;
 const SEARCH_DEBOUNCE_MS = 400;
 const EMPTY_REQUESTS: SupplyRequest[] = [];
