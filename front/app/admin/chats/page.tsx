@@ -1,6 +1,7 @@
 'use client';
 
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { MessageCircle, Search, MessagesSquare, ChevronLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -247,14 +248,17 @@ export default function AdminChatsPage() {
                   >
                     <ChevronLeft className="h-5 w-5" aria-hidden="true" />
                   </Button>
-                  <div className="min-w-0 flex-1">
+                  <Link
+                    href={`/admin/requests/${encodeURIComponent(selectedChat.requestNumber)}`}
+                    className="min-w-0 flex-1 hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
+                  >
                     <span className="text-sm font-medium lg:text-base block truncate">
                       {selectedChat.requestNumber}
                     </span>
                     <span className="text-xs text-muted-foreground lg:text-sm block truncate">
                       {selectedChat.customerName}
                     </span>
-                  </div>
+                  </Link>
                 </div>
                 <RequestStatusBadge status={selectedChat.status} className="shrink-0" />
               </div>

@@ -92,6 +92,8 @@ const ACCESS_TOKEN_KEY = 'pona_access_token';
 const REFRESH_TOKEN_KEY = 'pona_refresh_token';
 const REQUESTS_ENDPOINT = '/requests';
 const REQUESTS_STATS_ENDPOINT = '/requests/stats';
+const REQUEST_BY_NUMBER_ENDPOINT = (requestNumber: string) =>
+  `${REQUESTS_ENDPOINT}/number/${encodeURIComponent(requestNumber)}`;
 const REQUEST_STATUS_ENDPOINT = (id: string) => `${REQUESTS_ENDPOINT}/${id}/status`;
 const MY_REQUESTS_ENDPOINT = `${REQUESTS_ENDPOINT}/my`;
 const REQUESTS_WITH_ATTACHMENTS_ENDPOINT = `${REQUESTS_ENDPOINT}/with-attachments`;
@@ -583,6 +585,10 @@ class ApiClient {
     if (filters?.status) params.append('status', filters.status);
     const query = params.toString();
     return this.request<PaginatedResponse<SupplyRequest>>(`${REQUESTS_ENDPOINT}${query ? `?${query}` : ''}`);
+  }
+
+  async getSupplyRequestByNumber(requestNumber: string): Promise<SupplyRequest> {
+    return this.request<SupplyRequest>(REQUEST_BY_NUMBER_ENDPOINT(requestNumber));
   }
 
   async getMySupplyRequests(filters?: SupplyRequestsFilters): Promise<PaginatedResponse<SupplyRequest>> {

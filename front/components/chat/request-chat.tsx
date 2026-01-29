@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { MessageCircle, Mail, Building2, Hash } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ChatMessagesList } from './chat-messages-list';
@@ -21,23 +21,78 @@ export function RequestChat({ request, open, onOpenChange }: RequestChatProps) {
   const { data: messagesData, isLoading } = useChatMessages(request?.id);
   const sendMessage = useSendMessage();
   const markAsRead = useMarkChatAsRead();
-  const lastMarkedRef = useRef<string | null>(null);
+  const lastMarkedRef = useRef<{ requestId: string; unreadCount: number; lastAttemptAt: number } | null>(null);
 
   const messages = messagesData?.data ?? [];
   const requestId = request?.id ?? null;
-  const unreadCount = request?.unreadCount ?? 0;
+
+  const isManager = useMemo(
+    () => Boolean(user && ['ADMIN', 'SUPER_ADMIN', 'MANAGER'].includes(user.role)),
+    [user]
+  );
+
+  const unreadMessagesCount = useMemo(() => {
+    if (!requestId) return 0;
+    const targetSenders = isManager ? ['CUSTOMER'] : ['MANAGER', 'SYSTEM'];
+    return messages.reduce((count, message) => {
+      if (!message.isRead && targetSenders.includes(message.senderType)) {
+        return count + 1;
+      }
+      return count;
+    }, 0);
+  }, [messages, isManager, requestId]);
+
+  const tryMarkAsRead = useCallback(() => {
+    if (!open || !requestId) return;
+    if (unreadMessagesCount <= 0) {
+      lastMarkedRef.current = {
+        requestId,
+        unreadCount: 0,
+        lastAttemptAt: Date.now(),
+      };
+      return;
+    }
+    if (markAsRead.isPending) return;
+
+    if (typeof document !== 'undefined') {
+      const isVisible = document.visibilityState === 'visible';
+      const hasFocus = typeof document.hasFocus === 'function' ? document.hasFocus() : true;
+      if (!isVisible || !hasFocus) return;
+    }
+
+    const now = Date.now();
+    const lastAttempt = lastMarkedRef.current;
+    if (
+      lastAttempt &&
+      lastAttempt.requestId === requestId &&
+      lastAttempt.unreadCount === unreadMessagesCount &&
+      now - lastAttempt.lastAttemptAt < 4000
+    ) {
+      return;
+    }
+
+    lastMarkedRef.current = {
+      requestId,
+      unreadCount: unreadMessagesCount,
+      lastAttemptAt: now,
+    };
+    markAsRead.mutate(requestId);
+  }, [open, requestId, unreadMessagesCount, markAsRead, markAsRead.isPending]);
+
+  useEffect(() => {
+    tryMarkAsRead();
+  }, [tryMarkAsRead]);
 
   useEffect(() => {
     if (!open || !requestId) return;
-    if (unreadCount <= 0) {
-      lastMarkedRef.current = requestId;
-      return;
-    }
-    if (lastMarkedRef.current === requestId) return;
-
-    lastMarkedRef.current = requestId;
-    markAsRead.mutate(requestId);
-  }, [open, requestId, unreadCount]);
+    const handleVisibility = () => tryMarkAsRead();
+    window.addEventListener('focus', handleVisibility);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('focus', handleVisibility);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [open, requestId, tryMarkAsRead]);
 
   const handleSend = useCallback(
     (content: string, files: File[]) => {
@@ -65,8 +120,6 @@ export function RequestChat({ request, open, onOpenChange }: RequestChatProps) {
     },
     [user]
   );
-
-  const isManager = user && ['ADMIN', 'SUPER_ADMIN', 'MANAGER'].includes(user.role);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

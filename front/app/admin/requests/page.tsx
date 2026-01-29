@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Search, MessageCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,13 +17,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useSupplyRequests, useUpdateSupplyRequestStatus } from '@/lib/hooks/use-supply-requests';
+import { useSupplyRequests } from '@/lib/hooks/use-supply-requests';
 import { formatDate, truncate } from '@/lib/utils';
-import type { SupplyRequest, SupplyRequestStatus } from '@/lib/api/types';
+import type { SupplyRequest } from '@/lib/api/types';
 import { EMPTY_COMPANY } from './request-constants';
 import { RequestCard } from './request-card';
 import { RequestContact } from './request-contact';
-import { RequestDetailSheet } from './request-detail-sheet';
 import { formatRequestNumber } from '@/lib/requests/request-number';
 import { RequestStatusBadge } from '@/components/requests/request-status-badge';
 import { RequestStatusSelect } from './request-status-select';
@@ -47,6 +47,12 @@ const REQUEST_LABEL = 'Запрос';
 const DETAILS_LABEL = 'Подробнее';
 const CHAT_LABEL = 'Чат';
 
+const buildRequestDetailsHref = (request: SupplyRequest): string => {
+  return request.requestNumber
+    ? `/admin/requests/${encodeURIComponent(request.requestNumber)}`
+    : '/admin/requests';
+};
+
 const DEFAULT_PAGE = 1;
 const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 400;
@@ -60,7 +66,6 @@ export default function RequestsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(DEFAULT_PAGE);
   const [statusFilter, setStatusFilter] = useState<RequestStatusFilter>(REQUEST_STATUS_FILTER_ALL);
-  const [selectedRequest, setSelectedRequest] = useState<SupplyRequest | null>(null);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -83,45 +88,24 @@ export default function RequestsPage() {
   );
 
   const { data, isLoading, error } = useSupplyRequests(filters);
-  const updateStatus = useUpdateSupplyRequestStatus();
 
   const handleStatusFilterChange = useCallback((value: RequestStatusFilter) => {
     setStatusFilter(value);
     setPage(DEFAULT_PAGE);
   }, []);
 
-  const handleOpenRequest = useCallback((request: SupplyRequest) => {
-    setSelectedRequest(request);
-  }, []);
 
   const handleOpenChat = useCallback((request: SupplyRequest) => {
     router.push(`/admin/chats?request=${request.id}`);
   }, [router]);
 
-  const handleSheetOpenChange = useCallback((open: boolean) => {
-    if (!open) {
-      setSelectedRequest(null);
-    }
-  }, []);
 
-  const handleStatusChange = useCallback(
-    async (id: string, status: SupplyRequestStatus) => {
-      try {
-        const updated = await updateStatus.mutateAsync({ id, data: { status } });
-        setSelectedRequest((prev) => (prev?.id === updated.id ? updated : prev));
-      } catch {
-        return;
-      }
-    },
-    [updateStatus]
-  );
 
   const requests = data?.data ?? EMPTY_REQUESTS;
   const totalPages = data?.totalPages ?? 0;
   const total = data?.total ?? 0;
   const canGoPrev = page > DEFAULT_PAGE;
   const canGoNext = page < totalPages;
-  const sheetOpen = selectedRequest !== null;
 
   return (
     <div>
@@ -176,7 +160,8 @@ export default function RequestsPage() {
                   <RequestCard
                     key={request.id}
                     request={request}
-                    onOpen={handleOpenRequest}
+                    detailsHref={buildRequestDetailsHref(request)}
+                    detailsDisabled={!request.requestNumber}
                     onOpenChat={handleOpenChat}
                     descriptionPreviewLength={DESCRIPTION_PREVIEW_LENGTH}
                     detailsLabel={DETAILS_LABEL}
@@ -200,10 +185,22 @@ export default function RequestsPage() {
                   <TableBody>
                     {requests.map((request) => {
                       const unreadCount = request.unreadCount ?? 0;
+                      const detailsHref = buildRequestDetailsHref(request);
+                      const detailsDisabled = !request.requestNumber;
+                      const requestNumberLabel = formatRequestNumber(request.requestNumber, false);
                       return (
                         <TableRow key={request.id}>
                         <TableCell className="text-sm font-medium w-[100px] min-w-[80px] sm:w-[120px]">
-                          {formatRequestNumber(request.requestNumber, false)}
+                          {detailsDisabled ? (
+                            <span>{requestNumberLabel}</span>
+                          ) : (
+                            <Link
+                              href={detailsHref}
+                              className="underline decoration-dotted underline-offset-4 transition-colors hover:text-foreground"
+                            >
+                              {requestNumberLabel}
+                            </Link>
+                          )}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground w-[110px] min-w-[90px] sm:w-[140px]">
                           {formatDate(request.createdAt)}
@@ -226,9 +223,15 @@ export default function RequestsPage() {
                         </TableCell>
                         <TableCell className="w-[190px] min-w-[160px] align-middle py-1.5 h-20">
                           <div className="flex flex-col sm:flex-row flex-wrap justify-center text-center gap-1.5 items-center w-full max-w-[175px] min-w-0 min-h-10 p-0.5 m-0.5">
-                            <Button variant="outline" size="sm" onClick={() => handleOpenRequest(request)} className="shrink-0">
-                              {DETAILS_LABEL}
-                            </Button>
+                            {detailsDisabled ? (
+                              <Button variant="outline" size="sm" className="shrink-0" disabled>
+                                {DETAILS_LABEL}
+                              </Button>
+                            ) : (
+                              <Button variant="outline" size="sm" className="shrink-0" asChild>
+                                <Link href={detailsHref}>{DETAILS_LABEL}</Link>
+                              </Button>
+                            )}
                             <div className="relative inline-block shrink-0">
                               {unreadCount > 0 && (
                                 <Badge
@@ -291,14 +294,6 @@ export default function RequestsPage() {
           </div>
         </div>
       )}
-
-      <RequestDetailSheet
-        request={selectedRequest}
-        open={sheetOpen}
-        onOpenChange={handleSheetOpenChange}
-        onStatusChange={handleStatusChange}
-        isUpdating={updateStatus.isPending}
-      />
     </div>
   );
 }

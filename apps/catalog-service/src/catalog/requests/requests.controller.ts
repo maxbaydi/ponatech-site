@@ -96,6 +96,15 @@ export class RequestsController {
     return this.requestsService.findAll(query);
   }
 
+  @Get('number/:requestNumber')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Manager, Role.Admin, Role.SuperAdmin)
+  async findByNumber(
+    @Param('requestNumber') requestNumber: string,
+  ): Promise<SupplyRequestResponse> {
+    return this.requestsService.findByReference(requestNumber);
+  }
+
   @Get('my')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Customer, Role.Manager, Role.Admin, Role.SuperAdmin)

@@ -144,10 +144,11 @@ export function useMarkChatAsRead() {
       const previousLists = queryClient.getQueriesData<ChatListItem[]>({
         queryKey: CHAT_KEYS.lists(),
       });
-      const previousSupplyRequests = queryClient.getQueriesData<PaginatedResponse<SupplyRequest>>({
+      const previousStats = queryClient.getQueryData<ChatStats>(CHAT_KEYS.stats());
+      const previousSupplyRequests = queryClient.getQueriesData<RequestsCacheValue>({
         queryKey: [SUPPLY_REQUESTS_QUERY_KEY],
       });
-      const previousMyRequests = queryClient.getQueriesData<PaginatedResponse<SupplyRequest>>({
+      const previousMyRequests = queryClient.getQueriesData<RequestsCacheValue>({
         queryKey: [MY_SUPPLY_REQUESTS_QUERY_KEY],
       });
 
@@ -161,16 +162,26 @@ export function useMarkChatAsRead() {
             : current
       );
 
-      queryClient.setQueriesData<PaginatedResponse<SupplyRequest>>(
+      queryClient.setQueriesData<PaginatedResponse<SupplyRequest> | SupplyRequest>(
         { queryKey: [SUPPLY_REQUESTS_QUERY_KEY] },
         (current) => updateRequestsUnreadCount(current, requestId)
       );
-      queryClient.setQueriesData<PaginatedResponse<SupplyRequest>>(
+      queryClient.setQueriesData<PaginatedResponse<SupplyRequest> | SupplyRequest>(
         { queryKey: [MY_SUPPLY_REQUESTS_QUERY_KEY] },
         (current) => updateRequestsUnreadCount(current, requestId)
       );
 
-      return { previousLists, previousSupplyRequests, previousMyRequests };
+      if (previousStats) {
+        const hasUnread = hasUnreadForRequest(previousLists, previousSupplyRequests, requestId);
+        if (hasUnread && previousStats.unreadChats > 0) {
+          queryClient.setQueryData<ChatStats>(CHAT_KEYS.stats(), {
+            ...previousStats,
+            unreadChats: Math.max(0, previousStats.unreadChats - 1),
+          });
+        }
+      }
+
+      return { previousLists, previousSupplyRequests, previousMyRequests, previousStats };
     },
     onError: (_error, _requestId, context) => {
       context?.previousLists?.forEach(([queryKey, data]) => {
@@ -182,6 +193,9 @@ export function useMarkChatAsRead() {
       context?.previousMyRequests?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
+      if (context?.previousStats) {
+        queryClient.setQueryData(CHAT_KEYS.stats(), context.previousStats);
+      }
     },
     onSuccess: (_, requestId) => {
       queryClient.invalidateQueries({ queryKey: CHAT_KEYS.messagesByRequest(requestId) });
@@ -248,15 +262,21 @@ const replaceOptimisticMessage = (
   const optimisticIndex = optimisticId
     ? current.data.findIndex((item) => item.id === optimisticId)
     : -1;
-  const hasMessage = current.data.some((item) => item.id === message.id);
 
   let data = current.data;
+  if (optimisticIndex < 0) {
+    data = stripOptimisticDuplicates(data, message);
+  }
+
+  const hasMessage = data.some((item) => item.id === message.id);
 
   if (optimisticIndex >= 0) {
-    data = current.data.map((item) => (item.id === optimisticId ? message : item));
+    data = data.map((item) => (item.id === optimisticId ? message : item));
   } else if (!hasMessage) {
-    data = [...current.data, message];
+    data = [...data, message];
   }
+
+  data = stripOptimisticDuplicates(data, message);
 
   const byId = new Map<string, ChatMessage>();
   for (const item of data) {
@@ -320,18 +340,76 @@ const mergeFetchedMessages = (
   };
 };
 
+const isOptimisticMessage = (message: ChatMessage): boolean =>
+  message.id.startsWith('optimistic-');
+
+const isSameMessage = (optimistic: ChatMessage, message: ChatMessage): boolean => {
+  if (optimistic.requestId !== message.requestId) return false;
+  if (optimistic.content.trim() !== message.content.trim()) return false;
+  if (optimistic.senderType !== message.senderType) return false;
+  if ((optimistic.senderId ?? '') !== (message.senderId ?? '')) return false;
+  const optimisticTime = new Date(optimistic.createdAt).getTime();
+  const messageTime = new Date(message.createdAt).getTime();
+  return Math.abs(optimisticTime - messageTime) < 60000;
+};
+
+const stripOptimisticDuplicates = (data: ChatMessage[], message: ChatMessage): ChatMessage[] =>
+  data.filter((item) => !(isOptimisticMessage(item) && isSameMessage(item, message)));
+
+type RequestsCacheValue = PaginatedResponse<SupplyRequest> | SupplyRequest;
+
 const updateRequestsUnreadCount = (
-  current: PaginatedResponse<SupplyRequest> | undefined,
+  current: RequestsCacheValue | undefined,
   requestId: string
-): PaginatedResponse<SupplyRequest> | undefined => {
+): RequestsCacheValue | undefined => {
   if (!current) return current;
-  let changed = false;
-  const data = current.data.map((request) => {
-    if (request.id !== requestId) return request;
-    if ((request.unreadCount ?? 0) === 0) return request;
-    changed = true;
-    return { ...request, unreadCount: 0 };
+
+  if (isPaginatedRequests(current)) {
+    let changed = false;
+    const data = current.data.map((request) => {
+      if (request.id !== requestId) return request;
+      if ((request.unreadCount ?? 0) === 0) return request;
+      changed = true;
+      return { ...request, unreadCount: 0 };
+    });
+    if (!changed) return current;
+    return { ...current, data };
+  }
+
+  if (isSupplyRequest(current)) {
+    if (current.id !== requestId) return current;
+    if ((current.unreadCount ?? 0) === 0) return current;
+    return { ...current, unreadCount: 0 };
+  }
+
+  return current;
+};
+
+const isPaginatedRequests = (
+  value: RequestsCacheValue
+): value is PaginatedResponse<SupplyRequest> =>
+  'data' in value && Array.isArray(value.data);
+
+const isSupplyRequest = (value: RequestsCacheValue): value is SupplyRequest =>
+  'id' in value && !('data' in value);
+
+const hasUnreadForRequest = (
+  lists: Array<[unknown, ChatListItem[] | undefined]>,
+  requestCaches: Array<[unknown, RequestsCacheValue | undefined]>,
+  requestId: string
+): boolean => {
+  const listHasUnread = lists.some(([, data]) =>
+    data?.some((chat) => chat.requestId === requestId && (chat.unreadCount ?? 0) > 0)
+  );
+  if (listHasUnread) return true;
+
+  return requestCaches.some(([, data]) => {
+    if (!data) return false;
+    if (isPaginatedRequests(data)) {
+      return data.data.some(
+        (request) => request.id === requestId && (request.unreadCount ?? 0) > 0
+      );
+    }
+    return data.id === requestId && (data.unreadCount ?? 0) > 0;
   });
-  if (!changed) return current;
-  return { ...current, data };
 };

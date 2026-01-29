@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -13,10 +14,11 @@ import { formatRequestNumber } from '@/lib/requests/request-number';
 
 interface RequestCardProps {
   request: SupplyRequest;
-  onOpen: (request: SupplyRequest) => void;
   onOpenChat?: (request: SupplyRequest) => void;
   descriptionPreviewLength: number;
   detailsLabel: string;
+  detailsHref: string;
+  detailsDisabled?: boolean;
   chatLabel?: string;
 }
 
@@ -25,13 +27,15 @@ const REQUEST_LABEL = 'Текст запроса';
 
 export function RequestCard({
   request,
-  onOpen,
   onOpenChat,
   descriptionPreviewLength,
   detailsLabel,
+  detailsHref,
+  detailsDisabled = false,
   chatLabel = 'Чат',
 }: RequestCardProps) {
   const unreadCount = request.unreadCount ?? 0;
+  const requestNumberLabel = formatRequestNumber(request.requestNumber, false);
 
   return (
     <Card>
@@ -39,7 +43,16 @@ export function RequestCard({
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="text-xs text-muted-foreground">{formatDate(request.createdAt)}</div>
-            <div className="text-xs text-muted-foreground">{formatRequestNumber(request.requestNumber, false)}</div>
+            {detailsDisabled ? (
+              <div className="text-xs text-muted-foreground">{requestNumberLabel}</div>
+            ) : (
+              <Link
+                href={detailsHref}
+                className="text-xs text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors hover:text-foreground"
+              >
+                {requestNumberLabel}
+              </Link>
+            )}
             <RequestContact request={request} variant="card" className="mt-2" />
           </div>
           <RequestStatusBadge status={request.status} />
@@ -57,9 +70,15 @@ export function RequestCard({
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => onOpen(request)}>
-            {detailsLabel}
-          </Button>
+          {detailsDisabled ? (
+            <Button variant="outline" size="sm" disabled>
+              {detailsLabel}
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" asChild>
+              <Link href={detailsHref}>{detailsLabel}</Link>
+            </Button>
+          )}
           {onOpenChat && (
             <div className="relative inline-block">
               {unreadCount > 0 && (

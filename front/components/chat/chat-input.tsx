@@ -28,6 +28,7 @@ export function ChatInput({
   const [message, setMessage] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [fileError, setFileError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
@@ -40,6 +41,9 @@ export function ChatInput({
     setMessage('');
     setFiles([]);
     setFileError(null);
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -167,11 +171,12 @@ export function ChatInput({
             <span className="sr-only">{placeholder}</span>
             <input
               type="text"
+              ref={inputRef}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={placeholder}
-              disabled={disabled}
+              aria-disabled={disabled}
               className="h-8 w-full bg-inherit focus-visible:outline-hidden"
               aria-label="Сообщение"
               name="message"

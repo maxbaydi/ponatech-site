@@ -128,6 +128,19 @@ export class RequestsService {
     return this.requestsRepository.findAll(filters, MANAGER_UNREAD_SENDERS);
   }
 
+  async findByReference(reference: string): Promise<SupplyRequestResponse> {
+    const request = await this.requestsRepository.findByRequestReference(
+      reference,
+      MANAGER_UNREAD_SENDERS,
+    );
+
+    if (!request) {
+      throw new NotFoundException('Request not found');
+    }
+
+    return request;
+  }
+
   async findAllByEmail(
     email: string,
     filters?: GetRequestsQueryDto,

@@ -10,10 +10,31 @@ const MY_SUPPLY_REQUESTS_QUERY_KEY = 'mySupplyRequests';
 
 export { SUPPLY_REQUESTS_QUERY_KEY, SUPPLY_REQUESTS_STATS_QUERY_KEY, MY_SUPPLY_REQUESTS_QUERY_KEY };
 
-export function useSupplyRequests(filters?: SupplyRequestsFilters) {
+type SupplyRequestsQueryOptions = {
+  enabled?: boolean;
+};
+
+export function useSupplyRequests(filters?: SupplyRequestsFilters, options?: SupplyRequestsQueryOptions) {
   return useQuery({
     queryKey: [SUPPLY_REQUESTS_QUERY_KEY, filters],
     queryFn: () => apiClient.getSupplyRequests(filters),
+    ...options,
+  });
+}
+
+export function useSupplyRequestByNumber(requestNumber?: string, options?: SupplyRequestsQueryOptions) {
+  const isEnabled = options?.enabled ?? Boolean(requestNumber);
+
+  return useQuery({
+    queryKey: [SUPPLY_REQUESTS_QUERY_KEY, 'by-number', requestNumber],
+    queryFn: () => {
+      if (!requestNumber) {
+        throw new Error('Request number is required');
+      }
+      return apiClient.getSupplyRequestByNumber(requestNumber);
+    },
+    enabled: isEnabled,
+    ...options,
   });
 }
 

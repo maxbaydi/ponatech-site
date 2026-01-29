@@ -65,9 +65,13 @@ function StatCard({ title, value, icon, description, badge, cardClassName }: Sta
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
         {(description || badge) && (
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <div className="mt-2 flex flex-col items-start gap-1 text-xs text-muted-foreground">
             {description && <span>{description}</span>}
-            {badge && <Badge variant={badge.variant}>{badge.label}</Badge>}
+            {badge && (
+              <Badge variant={badge.variant} className="min-w-0 max-w-full whitespace-normal break-words text-left w-fit">
+                {badge.label}
+              </Badge>
+            )}
           </div>
         )}
       </CardContent>

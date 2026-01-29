@@ -73,6 +73,44 @@ export class RequestsRepository {
     });
   }
 
+  async findByRequestReference(
+    reference: string,
+    unreadSenderTypes: ChatMessageSender[],
+  ): Promise<SupplyRequestResponse | null> {
+    const { requestNumber, sequenceNumber } = this.normalizeRequestReference(reference);
+
+    if (!requestNumber && !sequenceNumber) {
+      return null;
+    }
+
+    const where: Prisma.SupplyRequestWhereInput = requestNumber
+      ? { requestNumber }
+      : { sequenceNumber };
+
+    const request = await this.prisma.supplyRequest.findFirst({
+      where,
+      include: {
+        _count: {
+          select: {
+            chatMessages: {
+              where: {
+                isRead: false,
+                senderType: { in: unreadSenderTypes },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!request) {
+      return null;
+    }
+
+    const { _count, ...data } = request;
+    return { ...data, unreadCount: _count.chatMessages };
+  }
+
   async findAttachmentsByRequestId(requestId: string) {
     return this.prisma.supplyRequestAttachment.findMany({
       where: { requestId },
@@ -243,11 +281,39 @@ export class RequestsRepository {
   }
 
   private normalizeRequestNumber(value: string): string | undefined {
-    const normalized = value.startsWith(REQUEST_NUMBER_PREFIX)
-      ? value.slice(REQUEST_NUMBER_PREFIX.length).trim()
-      : value;
+    const compact = value.trim().replace(/\s+/g, '');
+    const normalized = compact.startsWith(REQUEST_NUMBER_PREFIX)
+      ? compact.slice(REQUEST_NUMBER_PREFIX.length).trim()
+      : compact;
 
     return REQUEST_NUMBER_PATTERN.test(normalized) ? normalized : undefined;
+  }
+
+  private normalizeRequestReference(value: string): {
+    requestNumber?: string;
+    sequenceNumber?: number;
+  } {
+    const normalized = this.normalizeSearch(value);
+    if (!normalized) {
+      return {};
+    }
+
+    const compact = normalized.replace(/\s+/g, '');
+    const withoutPrefix = compact.startsWith(REQUEST_NUMBER_PREFIX)
+      ? compact.slice(REQUEST_NUMBER_PREFIX.length).trim()
+      : compact;
+
+    const requestNumber = this.normalizeRequestNumber(withoutPrefix);
+    if (requestNumber) {
+      return { requestNumber };
+    }
+
+    const sequenceCandidate = withoutPrefix.includes(REQUEST_NUMBER_SEPARATOR)
+      ? withoutPrefix.split(REQUEST_NUMBER_SEPARATOR)[0]
+      : withoutPrefix;
+
+    const sequenceNumber = this.parseSequenceNumber(sequenceCandidate);
+    return sequenceNumber ? { sequenceNumber } : {};
   }
 
   private parseSequenceNumber(value: string): number | undefined {
