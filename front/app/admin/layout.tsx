@@ -329,7 +329,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <NotificationsDropdown />
           </header>
 
-          <div className="flex flex-1 min-h-0 flex-col admin-content w-full max-w-[1248px] mx-auto">{children}</div>
+          <div className="flex flex-1 min-h-0 flex-col admin-content w-full max-w-[1248px] mx-auto overflow-y-auto scrollbar-themed">{children}</div>
         </div>
       </div>
     </div>
