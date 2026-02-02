@@ -13,7 +13,7 @@ export function CtaSection() {
   const inView = useInView(ref, { once: true, margin: '-100px' });
 
   return (
-    <section className="relative w-full overflow-hidden bg-primary py-12 sm:py-16 lg:py-24 lg:max-w-7xl lg:mx-auto lg:rounded-3xl lg:mb-24" ref={ref}>
+    <section className="relative w-full overflow-hidden bg-primary py-12 sm:py-16 lg:py-24 lg:max-w-7xl lg:mx-auto lg:rounded-3xl lg:mt-24 lg:mb-24" ref={ref}>
       <div className="absolute inset-0">
         <div className="absolute top-0 left-1/4 w-64 h-64 sm:w-80 sm:h-80 lg:w-96 lg:h-96 bg-white/5 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-64 h-64 sm:w-80 sm:h-80 lg:w-96 lg:h-96 bg-white/5 rounded-full blur-3xl" />

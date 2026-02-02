@@ -81,7 +81,7 @@ export function HeroSection() {
   const getLogo = (index: number) => LOGOS[logoOrder[index]];
 
   return (
-    <section className="relative w-full min-h-[600px] lg:min-h-[700px] flex items-center justify-center overflow-hidden bg-slate-900 py-12 md:py-24 lg:mt-4 lg:rounded-3xl lg:max-w-7xl lg:mx-auto">
+    <section className="relative w-full min-h-[400px] lg:min-h-[500px] flex items-center justify-center overflow-hidden bg-slate-900 mt-6 md:mt-8 lg:mt-10 py-6 md:py-12 px-4 sm:px-6 lg:px-8 lg:rounded-3xl lg:max-w-7xl lg:mx-auto">
       {/* Background with Overlay */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -96,9 +96,9 @@ export function HeroSection() {
       </div>
 
       <div className="container-custom relative z-10 w-full h-full">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center h-full">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-center h-full">
           {/* Left Column */}
-          <div className="flex flex-col gap-8 relative">
+          <div className="flex flex-col gap-5 relative">
             {/* Slot 0: Top Logos (Omron spot) */}
             <div className="flex items-center gap-8 mb-2">
               <LogoContainer 
@@ -171,12 +171,12 @@ export function HeroSection() {
               logo={getLogo(2)}
               index={2} 
               visible={visible}
-              className="mt-8 ml-24" 
+              className="mt-4 ml-24" 
             />
           </div>
 
           {/* Right Column */}
-          <div className="flex flex-col h-full relative min-h-[400px] lg:min-h-full">
+          <div className="flex flex-col h-full relative min-h-[280px] lg:min-h-full">
             {/* Slot 3: Top Right Logo (ABB spot) */}
             <LogoContainer 
               logo={getLogo(3)}
@@ -188,7 +188,7 @@ export function HeroSection() {
 
             {/* Features List */}
             <motion.div
-              className="ml-auto flex flex-col gap-6 mt-16 lg:mt-24"
+              className="ml-auto flex flex-col gap-4 mt-10 lg:mt-14"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}
@@ -224,7 +224,7 @@ export function HeroSection() {
                logo={getLogo(6)}
                index={6} 
                visible={visible}
-               className="ml-auto mt-8 hidden lg:block"
+               className="ml-auto mt-4 hidden lg:block"
                imageClassName="h-12 w-auto"
              />
 
@@ -241,7 +241,7 @@ export function HeroSection() {
               logo={getLogo(5)}
               index={5} 
               visible={visible}
-              className="flex justify-end mt-12 mb-8 lg:mt-0 lg:mb-0 lg:absolute lg:bottom-12 lg:left-0" 
+              className="flex justify-end mt-6 mb-4 lg:mt-0 lg:mb-0 lg:absolute lg:bottom-8 lg:left-0" 
               imageClassName="h-8 lg:h-12 w-auto"
             />
           </div>
