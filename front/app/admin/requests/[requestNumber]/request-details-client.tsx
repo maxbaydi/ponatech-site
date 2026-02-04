@@ -378,14 +378,14 @@ export function RequestDetailsClient({ requestNumber }: RequestDetailsClientProp
         </div>
       </div>
 
-      <div className="min-w-0 grid gap-6 lg:grid-cols-3 lg:items-stretch">
+      <div className="min-w-0 grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-stretch">
         <div className="space-y-6 lg:col-span-2 min-h-0">
           <Card>
             <CardHeader>
               <CardTitle>{META_TITLE}</CardTitle>
               <CardDescription>{META_DESCRIPTION}</CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-6 lg:grid-cols-2">
+            <CardContent className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               <div className="space-y-4">
                 <div>
                   <div className="text-xs text-muted-foreground">{CONTACT_LABEL}</div>

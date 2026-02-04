@@ -203,7 +203,7 @@ export function ImportProductsDialog() {
                 id="products-csv-file"
                 type="file"
                 accept=".csv,text/csv"
-                className="text-center file:mr-2 w-full"
+                className="text-center w-full justify-center items-start align-middle pb-0 pt-1 pl-1 file:rounded-md file:border file:border-input file:bg-muted file:px-2.5 file:py-1 file:mr-2 file:text-xs file:font-semibold file:text-foreground file:shadow-sm file:cursor-pointer file:select-none file:transition-colors file:hover:bg-muted/80"
                 onChange={(e) => {
                   const selectedFile = e.target.files?.[0];
                   if (selectedFile) handleFileChange(selectedFile);
