@@ -233,7 +233,7 @@ export default function EditCategoryPage() {
                   <FormItem>
                     <FormLabel>Описание</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Описание категории..." className="min-h-[100px]" {...field} />
+                      <Textarea placeholder="Описание категории…" className="min-h-[100px]" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

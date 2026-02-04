@@ -157,7 +157,16 @@ function RegisterPageContent() {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="email@example.com" {...field} />
+                  <Input
+                    type="email"
+                    placeholder="email@example.com"
+                    autoComplete="email"
+                    inputMode="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -175,6 +184,7 @@ function RegisterPageContent() {
                     <Input
                       type={showPassword ? 'text' : 'password'}
                       placeholder={PASSWORD_PLACEHOLDER}
+                      autoComplete="new-password"
                       {...field}
                     />
                     <Button
@@ -183,11 +193,13 @@ function RegisterPageContent() {
                       size="icon"
                       className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                       onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
+                      aria-pressed={showPassword}
                     >
                       {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                       ) : (
-                        <Eye className="h-4 w-4 text-muted-foreground" />
+                        <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                       )}
                     </Button>
                   </div>
@@ -208,6 +220,7 @@ function RegisterPageContent() {
                     <Input
                       type={showPassword ? 'text' : 'password'}
                       placeholder="Повторите пароль"
+                      autoComplete="new-password"
                       {...field}
                     />
                     <Button
@@ -216,11 +229,13 @@ function RegisterPageContent() {
                       size="icon"
                       className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                       onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
+                      aria-pressed={showPassword}
                     >
                       {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                       ) : (
-                        <Eye className="h-4 w-4 text-muted-foreground" />
+                        <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                       )}
                     </Button>
                   </div>

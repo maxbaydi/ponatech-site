@@ -17,7 +17,7 @@ const ACTIVE_LABEL = 'Активен';
 const EMAIL_PLACEHOLDER = 'user@example.com';
 const ROLE_PLACEHOLDER = 'Выберите роль';
 const NAME_PLACEHOLDER = 'Иван Иванов';
-const PHONE_PLACEHOLDER = '+7...';
+const PHONE_PLACEHOLDER = '+7…';
 const COMPANY_PLACEHOLDER = 'ООО Пример';
 const EMPTY_SELECT_VALUE = '';
 
@@ -45,7 +45,16 @@ export function UserFormFields({ form }: UserFormFieldsProps) {
             <FormItem>
               <FormLabel>{EMAIL_LABEL}</FormLabel>
               <FormControl>
-                <Input placeholder={EMAIL_PLACEHOLDER} type="email" {...field} />
+                <Input
+                  placeholder={EMAIL_PLACEHOLDER}
+                  type="email"
+                  autoComplete="off"
+                  inputMode="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -103,7 +112,13 @@ export function UserFormFields({ form }: UserFormFieldsProps) {
             <FormItem>
               <FormLabel>{PHONE_LABEL}</FormLabel>
               <FormControl>
-                <Input placeholder={PHONE_PLACEHOLDER} {...field} />
+                <Input
+                  placeholder={PHONE_PLACEHOLDER}
+                  type="tel"
+                  autoComplete="off"
+                  inputMode="tel"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

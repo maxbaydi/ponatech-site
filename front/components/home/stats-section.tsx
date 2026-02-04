@@ -57,7 +57,7 @@ function StatCard({ icon, value, suffix, label, delay }: StatItemProps) {
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.5, delay }}
     >
-      <div className="flex flex-col items-center justify-center text-center h-full p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-primary to-primary/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 border border-white/10 group-hover:-translate-y-1">
+      <div className="flex flex-col items-center justify-center text-center h-full p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-primary to-primary/90 text-white shadow-lg hover:shadow-xl transition-[box-shadow,transform] duration-300 border border-white/10 group-hover:-translate-y-1">
         <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/10 flex items-center justify-center mb-4 backdrop-blur-sm group-hover:bg-white/20 transition-colors">
           {icon}
         </div>

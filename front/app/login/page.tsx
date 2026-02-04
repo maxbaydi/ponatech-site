@@ -145,7 +145,16 @@ function LoginPageContent() {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="email@example.com" {...field} />
+                  <Input
+                    type="email"
+                    placeholder="email@example.com"
+                    autoComplete="email"
+                    inputMode="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -163,6 +172,7 @@ function LoginPageContent() {
                     <Input
                       type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
+                      autoComplete="current-password"
                       {...field}
                     />
                     <Button
@@ -171,11 +181,13 @@ function LoginPageContent() {
                       size="icon"
                       className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                       onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
+                      aria-pressed={showPassword}
                     >
                       {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                       ) : (
-                        <Eye className="h-4 w-4 text-muted-foreground" />
+                        <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                       )}
                     </Button>
                   </div>

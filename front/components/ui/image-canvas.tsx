@@ -17,11 +17,14 @@ export function ImageCanvas({ src, alt = '', className = '', showPlaceholder = t
         <img
           src={src}
           alt={alt}
+          width={800}
+          height={600}
+          loading="lazy"
           className="absolute inset-0 m-auto max-w-full max-h-full object-contain"
         />
       ) : showPlaceholder ? (
         <div className="absolute inset-0 flex items-center justify-center">
-          <Package className="w-16 h-16 text-muted-foreground/30" />
+          <Package className="w-16 h-16 text-muted-foreground/30" aria-hidden="true" />
         </div>
       ) : null}
     </div>

@@ -165,7 +165,7 @@ export function ExportProductsDialog({ searchQuery, selectedIds }: ExportProduct
             Отмена
           </Button>
           <Button onClick={handleExport} disabled={exportCsv.isPending || columns.size === 0}>
-            {exportCsv.isPending ? 'Экспорт...' : 'Скачать CSV'}
+            {exportCsv.isPending ? 'Экспорт…' : 'Скачать CSV'}
           </Button>
         </DialogFooter>
       </DialogContent>

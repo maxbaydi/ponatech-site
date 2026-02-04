@@ -143,7 +143,16 @@ export default function NewBrandPage() {
                     <FormItem>
                       <FormLabel>URL логотипа</FormLabel>
                       <FormControl>
-                        <Input placeholder="https://..." {...field} />
+                        <Input
+                          type="url"
+                          placeholder="https://…"
+                          autoComplete="off"
+                          inputMode="url"
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -158,7 +167,7 @@ export default function NewBrandPage() {
                   <FormItem>
                     <FormLabel>Описание</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Описание бренда..." className="min-h-[100px]" {...field} />
+                      <Textarea placeholder="Описание бренда…" className="min-h-[100px]" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

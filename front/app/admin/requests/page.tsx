@@ -120,6 +120,7 @@ export default function RequestsPage() {
             <div className="relative w-full lg:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <Input
+                type="search"
                 placeholder={SEARCH_PLACEHOLDER}
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
@@ -127,6 +128,7 @@ export default function RequestsPage() {
                 aria-label={SEARCH_PLACEHOLDER}
                 name="search"
                 autoComplete="off"
+                inputMode="search"
               />
             </div>
             <div className="w-full lg:max-w-[220px]">

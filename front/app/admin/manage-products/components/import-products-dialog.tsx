@@ -396,7 +396,7 @@ export function ImportProductsDialog() {
             Отмена
           </Button>
           <Button onClick={handleImport} disabled={!canImport} className="w-full sm:w-auto">
-            {importCsv.isPending ? 'Импорт...' : 'Подтвердить импорт'}
+            {importCsv.isPending ? 'Импорт…' : 'Подтвердить импорт'}
           </Button>
         </DialogFooter>
       </DialogContent>

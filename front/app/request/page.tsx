@@ -56,8 +56,8 @@ const ATTACHMENTS_BUTTON_LABEL = 'Добавить файлы';
 const ATTACHMENTS_EMPTY_LABEL = 'Файлы не добавлены';
 const REMOVE_ATTACHMENT_LABEL = 'Удалить файл';
 const SUBMIT_BUTTON_LABEL = 'Отправить заявку';
-const SUBMITTING_LABEL = 'Отправляем заявку...';
-const SUBMITTING_FILES_LABEL = 'Загрузка файлов...';
+const SUBMITTING_LABEL = 'Отправляем заявку…';
+const SUBMITTING_FILES_LABEL = 'Загрузка файлов…';
 const SUBMIT_SUCCESS_TITLE = 'Заявка отправлена';
 const SUBMIT_SUCCESS_MESSAGE = 'Мы получили заявку и скоро начнем ее обрабатывать.';
 const SUBMIT_SUCCESS_HELP = 'Если хотите что-то уточнить или дополнить, напишите нам в чат по заявке.';
@@ -410,7 +410,16 @@ function RequestForm() {
                   <FormItem>
                     <FormLabel>Email *</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="email@example.com" {...field} />
+                      <Input
+                        type="email"
+                        placeholder="email@example.com"
+                        autoComplete="off"
+                        inputMode="email"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck={false}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -426,7 +435,13 @@ function RequestForm() {
                   <FormItem>
                     <FormLabel>Телефон *</FormLabel>
                     <FormControl>
-                      <Input type="tel" placeholder="+7 (___) ___-__-__" {...field} />
+                      <Input
+                        type="tel"
+                        placeholder="+7 (___) ___-__-__"
+                        autoComplete="off"
+                        inputMode="tel"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -455,7 +470,7 @@ function RequestForm() {
                   <FormLabel>Ваш запрос *</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Впишите список товаров/брендов/SKU и количество, требования, сроки, особенности доставки..."
+                      placeholder="Впишите список товаров/брендов/SKU и количество, требования, сроки, особенности доставки…"
                       className="min-h-[160px]"
                       {...field}
                     />
@@ -585,7 +600,7 @@ export default function RequestPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
             <div className="lg:col-span-2">
-              <Suspense fallback={<div>Загрузка...</div>}>
+              <Suspense fallback={<div>Загрузка…</div>}>
                 <RequestForm />
               </Suspense>
             </div>

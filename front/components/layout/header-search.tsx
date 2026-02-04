@@ -414,6 +414,7 @@ export function HeaderSearch({ value, onValueChange, onSubmit, brandsPath, produ
             </ClientOnly>
 
             <Input
+              type="search"
               placeholder={SEARCH_PLACEHOLDER}
               value={value}
               onChange={handleInputChange}
@@ -425,6 +426,10 @@ export function HeaderSearch({ value, onValueChange, onSubmit, brandsPath, produ
               aria-controls={listboxId}
               aria-autocomplete="list"
               aria-activedescendant={activeDescendantId}
+              aria-label={SEARCH_LABEL}
+              name="headerSearch"
+              autoComplete="off"
+              inputMode="search"
               className="h-full flex-1 border-0 rounded-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
             />
 
@@ -434,7 +439,7 @@ export function HeaderSearch({ value, onValueChange, onSubmit, brandsPath, produ
               className="-mx-1 h-10 w-14 rounded-lg bg-primary hover:bg-primary-dark text-white shrink-0"
               aria-label={SEARCH_LABEL}
             >
-              <Search className="h-5 w-5" />
+              <Search className="h-5 w-5" aria-hidden="true" />
               <span className="sr-only">{SEARCH_LABEL}</span>
             </Button>
           </div>
@@ -442,7 +447,7 @@ export function HeaderSearch({ value, onValueChange, onSubmit, brandsPath, produ
 
         <div
           className={cn(
-            'absolute left-0 mt-2 rounded-xl border border-border bg-popover shadow-lg dropdown-content transition-all duration-150 ease-out',
+            'absolute left-0 mt-2 rounded-xl border border-border bg-popover shadow-lg dropdown-content transition-[opacity,transform] duration-150 ease-out',
             'w-full min-w-72 lg:min-w-96 max-w-[calc(100vw-2rem)]',
             isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1 pointer-events-none',
           )}

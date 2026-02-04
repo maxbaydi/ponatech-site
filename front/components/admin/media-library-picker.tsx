@@ -71,6 +71,9 @@ export function MediaLibraryPicker({ value, onChange, trigger }: MediaLibraryPic
           <img
             src={value.url}
             alt={value.alt || value.originalName}
+            width={192}
+            height={192}
+            loading="lazy"
             className="absolute inset-0 w-full h-full object-contain"
           />
           <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -79,7 +82,7 @@ export function MediaLibraryPicker({ value, onChange, trigger }: MediaLibraryPic
         </>
       ) : (
         <>
-          <ImageIcon className="w-8 h-8 text-muted-foreground/50" />
+          <ImageIcon className="w-8 h-8 text-muted-foreground/50" aria-hidden="true" />
           <span className="text-xs text-muted-foreground">Выбрать</span>
         </>
       )}
@@ -97,12 +100,17 @@ export function MediaLibraryPicker({ value, onChange, trigger }: MediaLibraryPic
 
           <div className="flex items-center gap-2 mb-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <Input
-                placeholder="Поиск..."
+                type="search"
+                placeholder="Поиск…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-10"
+                aria-label="Поиск изображений"
+                name="mediaSearch"
+                autoComplete="off"
+                inputMode="search"
               />
             </div>
             <input
@@ -118,9 +126,9 @@ export function MediaLibraryPicker({ value, onChange, trigger }: MediaLibraryPic
               disabled={uploadMedia.isPending}
             >
               {uploadMedia.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
               ) : (
-                <Upload className="mr-2 h-4 w-4" />
+                <Upload className="mr-2 h-4 w-4" aria-hidden="true" />
               )}
               Загрузить
             </Button>
@@ -142,7 +150,7 @@ export function MediaLibraryPicker({ value, onChange, trigger }: MediaLibraryPic
                       key={file.id}
                       type="button"
                       onClick={() => setSelected(isSelected ? null : file)}
-                      className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                      className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-[border-color,box-shadow] ${
                         isSelected
                           ? 'border-primary ring-2 ring-primary/20'
                           : 'border-transparent hover:border-muted-foreground/30'
@@ -151,11 +159,14 @@ export function MediaLibraryPicker({ value, onChange, trigger }: MediaLibraryPic
                       <img
                         src={file.url}
                         alt={file.alt || file.originalName}
+                        width={192}
+                        height={192}
+                        loading="lazy"
                         className="w-full h-full object-cover"
                       />
                       {isSelected && (
                         <div className="absolute top-1 right-1 bg-primary text-primary-foreground rounded-full p-0.5">
-                          <Check className="w-3 h-3" />
+                          <Check className="w-3 h-3" aria-hidden="true" />
                         </div>
                       )}
                     </button>
@@ -164,7 +175,7 @@ export function MediaLibraryPicker({ value, onChange, trigger }: MediaLibraryPic
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                <ImageIcon className="w-12 h-12 mb-2 opacity-50" />
+                <ImageIcon className="w-12 h-12 mb-2 opacity-50" aria-hidden="true" />
                 <p>Нет изображений</p>
               </div>
             )}

@@ -191,7 +191,16 @@ export default function ContactsPage() {
                           <FormItem>
                             <FormLabel>Email *</FormLabel>
                             <FormControl>
-                              <Input type="email" placeholder="email@example.com" {...field} />
+                              <Input
+                                type="email"
+                                placeholder="email@example.com"
+                                autoComplete="off"
+                                inputMode="email"
+                                autoCapitalize="none"
+                                autoCorrect="off"
+                                spellCheck={false}
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -207,7 +216,13 @@ export default function ContactsPage() {
                           <FormItem>
                             <FormLabel>Телефон</FormLabel>
                             <FormControl>
-                              <Input type="tel" placeholder="+7 (___) ___-__-__" {...field} />
+                              <Input
+                                type="tel"
+                                placeholder="+7 (___) ___-__-__"
+                                autoComplete="off"
+                                inputMode="tel"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -235,11 +250,11 @@ export default function ContactsPage() {
                         <FormItem>
                           <FormLabel>Сообщение *</FormLabel>
                           <FormControl>
-                            <Textarea
-                              placeholder="Опишите ваш запрос..."
-                              className="min-h-[120px]"
-                              {...field}
-                            />
+                              <Textarea
+                                placeholder="Опишите ваш запрос…"
+                                className="min-h-[120px]"
+                                {...field}
+                              />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

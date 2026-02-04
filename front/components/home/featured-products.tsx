@@ -105,7 +105,7 @@ export function FeaturedProducts() {
         ) : (
           <div className="text-center py-10 sm:py-12">
             <Package className="w-12 h-12 sm:w-16 sm:h-16 text-muted-foreground/30 mx-auto mb-4" />
-            <p className="text-muted-foreground">Каталог товаров загружается...</p>
+            <p className="text-muted-foreground">Каталог товаров загружается…</p>
             <Button variant="outline" asChild className="mt-4 w-full sm:w-auto">
               <Link href="/catalog">Перейти в каталог</Link>
             </Button>

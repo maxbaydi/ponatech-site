@@ -117,17 +117,21 @@ export default function FaqPage() {
                 </p>
 
                 <div className="relative max-w-lg mx-auto">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                    <Search className="h-5 w-5" />
-                  </div>
-                  <Input
-                    type="text"
-                    placeholder="Поиск по вопросам..."
-                    className="pl-10 h-12 text-base shadow-sm border-muted-foreground/20 focus-visible:ring-primary/20 transition-all hover:border-primary/50"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                  <Search className="h-5 w-5" aria-hidden="true" />
                 </div>
+                <Input
+                  type="search"
+                  placeholder="Поиск по вопросам…"
+                  className="pl-10 h-12 text-base shadow-sm border-muted-foreground/20 focus-visible:ring-primary/20 transition-[border-color,box-shadow] hover:border-primary/50"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  aria-label="Поиск по вопросам"
+                  name="faqSearch"
+                  autoComplete="off"
+                  inputMode="search"
+                />
+              </div>
               </motion.div>
             </div>
           </div>

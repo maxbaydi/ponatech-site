@@ -105,7 +105,14 @@ export function CategoriesSection() {
                         )}
                       >
                         {CATEGORY_IMAGES[item.slug] ? (
-                          <img src={CATEGORY_IMAGES[item.slug]!} alt={item.name} className="w-full h-full object-contain" />
+                          <img
+                            src={CATEGORY_IMAGES[item.slug]!}
+                            alt={item.name}
+                            width={96}
+                            height={96}
+                            loading="lazy"
+                            className="w-full h-full object-contain"
+                          />
                         ) : (
                           <span>{PLACEHOLDER_EMOJIS[item.slug]}</span>
                         )}

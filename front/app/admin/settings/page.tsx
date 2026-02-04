@@ -130,7 +130,7 @@ export default function SettingsPage() {
                     </SelectContent>
                   </Select>
                   {updateSiteSettings.isPending && (
-                    <p className="text-xs text-muted-foreground mt-2">Сохраняем...</p>
+                    <p className="text-xs text-muted-foreground mt-2">Сохраняем…</p>
                   )}
                 </div>
               </CardContent>
@@ -157,9 +157,11 @@ export default function SettingsPage() {
                   <Input
                     id="telegram-bot-token"
                     type="password"
-                    placeholder="123456:ABCDEF..."
+                    placeholder="123456:ABCDEF…"
                     value={botToken}
                     onChange={(event) => setBotToken(event.target.value)}
+                    autoComplete="off"
+                    spellCheck={false}
                   />
                   <p className="text-xs text-muted-foreground">
                     Токен не отображается после сохранения. Чтобы отключить бота, сохраните пустое значение.

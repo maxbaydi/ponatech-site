@@ -50,14 +50,30 @@ const LOGO_SIZES: Record<GridSize, string> = {
   sm: 'w-14 h-14 lg:w-20 lg:h-20',
 };
 
+const LOGO_DIMENSIONS: Record<GridSize, number> = {
+  xl: 208,
+  lg: 176,
+  sm: 80,
+};
+
+const MOBILE_LOGO_SIZE = 64;
+
 function BrandLogoBox({ name, src, size, isMobile }: { name: string; src?: string; size: GridSize; isMobile?: boolean }) {
   const initials = name.slice(0, 2).toUpperCase();
   const sizeClass = isMobile ? 'w-16 h-16' : LOGO_SIZES[size];
+  const logoSize = isMobile ? MOBILE_LOGO_SIZE : LOGO_DIMENSIONS[size];
   
   return (
     <div className={cn('flex items-center justify-center', sizeClass)}>
       {src ? (
-        <img src={src} alt={name} className="w-full h-full object-contain" />
+        <img
+          src={src}
+          alt={name}
+          width={logoSize}
+          height={logoSize}
+          loading="lazy"
+          className="w-full h-full object-contain"
+        />
       ) : (
         <span className="font-bold text-muted-foreground text-xl">{initials}</span>
       )}
@@ -90,7 +106,7 @@ export function TopBrandsGrid() {
             style={item.style}
           >
             <Link href={`/brands/${item.slug}`} className="block h-full">
-              <div className="relative h-full bg-card rounded-xl border border-border/50 shadow-sm flex items-center justify-center transition-all duration-300 hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5 group overflow-hidden">
+              <div className="relative h-full bg-card rounded-xl border border-border/50 shadow-sm flex items-center justify-center transition-[box-shadow,transform,border-color] duration-300 hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5 group overflow-hidden">
                 <BrandLogoBox name={item.name} src={item.logo} size={item.size} />
               </div>
             </Link>
@@ -107,7 +123,7 @@ export function TopBrandsGrid() {
             transition={{ duration: 0.3, delay: index * 0.02 }}
           >
             <Link href={`/brands/${item.slug}`} className="block">
-              <div className="aspect-square bg-card rounded-xl border border-border/50 shadow-sm flex items-center justify-center transition-all duration-300 hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5 group overflow-hidden p-3">
+              <div className="aspect-square bg-card rounded-xl border border-border/50 shadow-sm flex items-center justify-center transition-[box-shadow,transform,border-color] duration-300 hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5 group overflow-hidden p-3">
                 <BrandLogoBox name={item.name} src={item.logo} size="sm" isMobile />
               </div>
             </Link>

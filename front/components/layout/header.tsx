@@ -308,6 +308,11 @@ export function Header() {
                     className="h-10"
                     value={searchValue}
                     onChange={(e) => setSearchValue(e.target.value)}
+                    type="search"
+                    aria-label="Искать на PonaTech"
+                    name="mobileSearch"
+                    autoComplete="off"
+                    inputMode="search"
                   />
                 </form>
 

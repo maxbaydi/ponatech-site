@@ -159,11 +159,15 @@ export default function AdminChatsPage() {
               <Search size={15} className="me-2 stroke-slate-500" />
               <span className="sr-only">{SEARCH_PLACEHOLDER}</span>
               <input
-                type="text"
+                type="search"
                 className="w-full flex-1 bg-inherit text-sm focus-visible:outline-hidden"
                 placeholder={SEARCH_PLACEHOLDER}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label={SEARCH_PLACEHOLDER}
+                name="chatSearch"
+                autoComplete="off"
+                inputMode="search"
               />
             </label>
           </div>

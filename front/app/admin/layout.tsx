@@ -292,7 +292,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="admin-shell flex flex-1 min-h-0 flex-col gap-4 lg:flex-row lg:gap-6">
         <aside
           className={cn(
-            'admin-sidebar-frame admin-sidebar-sticky hidden lg:flex flex-col rounded-2xl border bg-background shadow-sm overflow-hidden self-start transition-all duration-200',
+            'admin-sidebar-frame admin-sidebar-sticky hidden lg:flex flex-col rounded-2xl border bg-background shadow-sm overflow-hidden self-start transition-[width] duration-200',
             isCompact ? 'w-16' : 'w-64'
           )}
         >

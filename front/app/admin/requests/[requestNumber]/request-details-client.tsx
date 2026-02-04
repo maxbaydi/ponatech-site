@@ -44,7 +44,7 @@ const COPY_LABEL = 'Скопировать';
 const COPIED_LABEL = 'Скопировано';
 const COPY_RESET_DELAY_MS = 1800;
 const ATTACHMENTS_EMPTY_LABEL = 'Файлы не прикреплены.';
-const ATTACHMENTS_LOADING_LABEL = 'Загрузка файлов...';
+const ATTACHMENTS_LOADING_LABEL = 'Загрузка файлов…';
 const ATTACHMENTS_DOWNLOAD_ALL_LABEL = 'Скачать все';
 const ATTACHMENTS_OPEN_LABEL = 'Открыть';
 const ATTACHMENTS_DOWNLOAD_LABEL = 'Скачать';
@@ -52,7 +52,7 @@ const REQUEST_NOT_FOUND_TITLE = 'Заявка не найдена';
 const REQUEST_NOT_FOUND_DESCRIPTION = 'Проверьте номер заявки или вернитесь к списку.';
 const REQUEST_ERROR_TITLE = 'Не удалось загрузить заявку';
 const REQUEST_ERROR_DESCRIPTION = 'Попробуйте обновить страницу или вернуться к списку заявок.';
-const CHAT_PLACEHOLDER = 'Введите сообщение для клиента...';
+const CHAT_PLACEHOLDER = 'Введите сообщение для клиента…';
 
 const COPY_REQUEST_PREFIX = 'Заявка от';
 const COPY_NUMBER_LABEL = 'Номер заявки';

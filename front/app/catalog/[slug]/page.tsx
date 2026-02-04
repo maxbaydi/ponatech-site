@@ -92,6 +92,15 @@ function ImageGallery({ images, title }: { images: ProductImage[]; title: string
         <motion.div
           className="relative aspect-square bg-background rounded-2xl flex items-center justify-center overflow-hidden group cursor-zoom-in product-image-frame"
           onClick={() => setIsZoomed(true)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              setIsZoomed(true);
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label="Увеличить изображение"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
@@ -101,6 +110,8 @@ function ImageGallery({ images, title }: { images: ProductImage[]; title: string
               key={selectedIndex}
               src={mainImage.url}
               alt={mainImage.alt || title}
+              width={800}
+              height={800}
               className="object-contain w-full h-full product-image-preview"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -109,7 +120,7 @@ function ImageGallery({ images, title }: { images: ProductImage[]; title: string
             />
           </AnimatePresence>
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors flex items-center justify-center product-image-frame-overlay">
-            <ZoomIn className="w-8 h-8 text-foreground/0 group-hover:text-foreground/50 transition-colors" />
+            <ZoomIn className="w-8 h-8 text-foreground/0 group-hover:text-foreground/50 transition-colors" aria-hidden="true" />
           </div>
           {images.length > 1 && (
             <>
@@ -146,7 +157,7 @@ function ImageGallery({ images, title }: { images: ProductImage[]; title: string
                 key={img.id}
               type="button"
                 onClick={() => setSelectedIndex(index)}
-                className={`flex-shrink-0 product-image-thumb rounded-lg border-2 overflow-hidden transition-all ${
+                className={`flex-shrink-0 product-image-thumb rounded-lg border-2 overflow-hidden transition-[border-color,box-shadow] ${
                   index === selectedIndex
                     ? 'border-primary ring-2 ring-primary/20'
                     : 'border-border hover:border-primary/50'
@@ -156,7 +167,14 @@ function ImageGallery({ images, title }: { images: ProductImage[]; title: string
                 transition={{ duration: 0.3, delay: index * 0.05 }}
               aria-label={buildThumbnailLabel(index, images.length)}
               >
-                <img src={img.url} alt={img.alt || ''} className="object-cover w-full h-full" />
+                <img
+                  src={img.url}
+                  alt={img.alt || ''}
+                  width={64}
+                  height={64}
+                  loading="lazy"
+                  className="object-cover w-full h-full"
+                />
               </motion.button>
             ))}
           </div>
@@ -195,10 +213,13 @@ function ProductPlaceholder({
         <img
           src={logoSrc}
           alt={logoAlt ?? title}
+          width={128}
+          height={128}
+          loading="lazy"
           className="w-24 h-24 sm:w-32 sm:h-32 object-contain mb-4"
         />
       ) : (
-        <Package className="w-16 h-16 sm:w-24 sm:h-24 text-muted-foreground/20 mb-4" />
+        <Package className="w-16 h-16 sm:w-24 sm:h-24 text-muted-foreground/20 mb-4" aria-hidden="true" />
       )}
       <p className="text-muted-foreground/50 text-sm">Изображение недоступно</p>
     </motion.div>

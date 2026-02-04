@@ -45,7 +45,7 @@ const CLEAR_FILTERS_LABEL = 'Сбросить фильтры';
 const PRICE_MIN_PLACEHOLDER = 'От';
 const PRICE_MAX_PLACEHOLDER = 'До';
 const CLEAR_BRAND_SEARCH_LABEL = 'Очистить поиск';
-const BRAND_SEARCH_INPUT_TYPE = 'text';
+const BRAND_SEARCH_INPUT_TYPE = 'search';
 const PRICE_MIN_VALUE = 0;
 const PRICE_NEGATIVE_ERROR = 'Цена не может быть отрицательной';
 const PRICE_RANGE_ERROR = 'Минимальная цена не может быть больше максимальной';
@@ -526,6 +526,10 @@ export function FilterContent() {
             value={brandQuery}
             onChange={(event) => setBrandQuery(event.target.value)}
             className="h-8 pr-8"
+            aria-label={BRAND_SEARCH_PLACEHOLDER}
+            name="brandFilterSearch"
+            autoComplete="off"
+            inputMode="search"
           />
           {brandQuery && (
             <Button
@@ -536,7 +540,7 @@ export function FilterContent() {
               className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
               aria-label={CLEAR_BRAND_SEARCH_LABEL}
             >
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4" aria-hidden="true" />
             </Button>
           )}
         </div>

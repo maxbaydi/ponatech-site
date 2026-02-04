@@ -43,7 +43,7 @@ const SEARCH_DEBOUNCE_MS = 500;
 const DATE_LOCALE = 'ru-RU';
 const DATE_OPTIONS: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
 const SKELETON_ROWS = 5;
-const SEARCH_PLACEHOLDER = 'Поиск по email, имени, телефону или компании...';
+const SEARCH_PLACEHOLDER = 'Поиск по email, имени, телефону или компании…';
 const ADD_USER_LABEL = 'Добавить пользователя';
 const EDIT_USER_LABEL = 'Редактировать';
 const DELETE_USER_LABEL = 'Удалить';
@@ -140,12 +140,17 @@ export default function UsersPage() {
         <CardHeader className="pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="relative w-full sm:max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <Input
+                type="search"
                 placeholder={SEARCH_PLACEHOLDER}
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="pl-10"
+                aria-label={SEARCH_PLACEHOLDER}
+                name="userSearch"
+                autoComplete="off"
+                inputMode="search"
               />
             </div>
           </div>

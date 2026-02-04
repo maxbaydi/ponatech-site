@@ -20,6 +20,12 @@ const SIZE_STYLES = {
   },
 } as const;
 
+const IMAGE_DIMENSIONS: Record<BrandLogoSize, number> = {
+  sm: 32,
+  md: 80,
+  lg: 64,
+};
+
 export type BrandLogoSize = keyof typeof SIZE_STYLES;
 
 interface BrandLogoProps {
@@ -33,6 +39,7 @@ interface BrandLogoProps {
 export function BrandLogo({ name, src, size = 'md', className, imgClassName }: BrandLogoProps) {
   const initials = name.slice(0, INITIALS_LEN).toUpperCase();
   const styles = SIZE_STYLES[size];
+  const imageSize = IMAGE_DIMENSIONS[size];
 
   return (
     <div
@@ -43,7 +50,14 @@ export function BrandLogo({ name, src, size = 'md', className, imgClassName }: B
       )}
     >
       {src ? (
-        <img src={src} alt={name} className={cn(styles.image, 'object-contain', imgClassName)} />
+        <img
+          src={src}
+          alt={name}
+          width={imageSize}
+          height={imageSize}
+          loading="lazy"
+          className={cn(styles.image, 'object-contain', imgClassName)}
+        />
       ) : (
         <span className={cn(styles.fallbackText, 'font-bold text-muted-foreground')}>{initials}</span>
       )}

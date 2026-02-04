@@ -163,7 +163,7 @@ export function RequestChat({ request, open, onOpenChange }: RequestChatProps) {
         <ChatInput
           onSend={handleSend}
           disabled={sendMessage.isPending}
-          placeholder="Введите сообщение..."
+          placeholder="Введите сообщение…"
         />
       </SheetContent>
     </Sheet>

@@ -58,12 +58,17 @@ export function ProductSearch() {
 
   return (
     <div className="relative w-full sm:max-w-md flex-1 min-w-0">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
       <Input
-        placeholder="Поиск по названию или SKU..."
+        type="search"
+        placeholder="Поиск по названию или SKU…"
         value={value}
         onChange={(e) => handleChange(e.target.value)}
         className="pl-10 pr-10"
+        aria-label="Поиск по названию или SKU"
+        name="catalogSearch"
+        autoComplete="off"
+        inputMode="search"
       />
       {value && (
         <Button
@@ -74,7 +79,7 @@ export function ProductSearch() {
           onClick={clearSearch}
           aria-label={CLEAR_SEARCH_LABEL}
         >
-          <X className="h-4 w-4" />
+          <X className="h-4 w-4" aria-hidden="true" />
         </Button>
       )}
     </div>

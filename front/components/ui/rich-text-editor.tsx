@@ -49,7 +49,7 @@ export function RichTextEditor({ value, onChange, className }: RichTextEditorPro
   if (!editor) {
     return (
       <div className={cn('border rounded-md bg-background p-3 text-sm text-muted-foreground', className)}>
-        Загрузка редактора...
+        Загрузка редактора…
       </div>
     );
   }
@@ -62,32 +62,40 @@ export function RichTextEditor({ value, onChange, className }: RichTextEditorPro
           variant={editor.isActive('bold') ? 'secondary' : 'ghost'}
           size="sm"
           onClick={() => editor.chain().focus().toggleBold().run()}
+          aria-label="Жирный текст"
+          aria-pressed={editor.isActive('bold')}
         >
-          <Bold className="h-4 w-4" />
+          <Bold className="h-4 w-4" aria-hidden="true" />
         </Button>
         <Button
           type="button"
           variant={editor.isActive('italic') ? 'secondary' : 'ghost'}
           size="sm"
           onClick={() => editor.chain().focus().toggleItalic().run()}
+          aria-label="Курсив"
+          aria-pressed={editor.isActive('italic')}
         >
-          <Italic className="h-4 w-4" />
+          <Italic className="h-4 w-4" aria-hidden="true" />
         </Button>
         <Button
           type="button"
           variant={editor.isActive('bulletList') ? 'secondary' : 'ghost'}
           size="sm"
           onClick={() => editor.chain().focus().toggleBulletList().run()}
+          aria-label="Маркированный список"
+          aria-pressed={editor.isActive('bulletList')}
         >
-          <List className="h-4 w-4" />
+          <List className="h-4 w-4" aria-hidden="true" />
         </Button>
         <Button
           type="button"
           variant={editor.isActive('orderedList') ? 'secondary' : 'ghost'}
           size="sm"
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          aria-label="Нумерованный список"
+          aria-pressed={editor.isActive('orderedList')}
         >
-          <ListOrdered className="h-4 w-4" />
+          <ListOrdered className="h-4 w-4" aria-hidden="true" />
         </Button>
         <Button
           type="button"
@@ -98,8 +106,10 @@ export function RichTextEditor({ value, onChange, className }: RichTextEditorPro
             if (!url) return;
             editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
           }}
+          aria-label="Добавить ссылку"
+          aria-pressed={editor.isActive('link')}
         >
-          <Link2 className="h-4 w-4" />
+          <Link2 className="h-4 w-4" aria-hidden="true" />
         </Button>
         <Button
           type="button"
@@ -107,8 +117,9 @@ export function RichTextEditor({ value, onChange, className }: RichTextEditorPro
           size="sm"
           disabled={!editor.isActive('link')}
           onClick={() => editor.chain().focus().unsetLink().run()}
+          aria-label="Удалить ссылку"
         >
-          <Unlink className="h-4 w-4" />
+          <Unlink className="h-4 w-4" aria-hidden="true" />
         </Button>
       </div>
 
@@ -116,4 +127,3 @@ export function RichTextEditor({ value, onChange, className }: RichTextEditorPro
     </div>
   );
 }
-

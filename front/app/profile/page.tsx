@@ -304,7 +304,13 @@ export default function ProfilePage() {
                               <FormItem>
                                 <FormLabel>Телефон</FormLabel>
                                 <FormControl>
-                                  <Input type="tel" placeholder="+7 (___) ___-__-__" {...field} />
+                                  <Input
+                                    type="tel"
+                                    placeholder="+7 (___) ___-__-__"
+                                    autoComplete="off"
+                                    inputMode="tel"
+                                    {...field}
+                                  />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -365,7 +371,7 @@ export default function ProfilePage() {
                             <FormItem>
                               <FormLabel>Текущий пароль</FormLabel>
                               <FormControl>
-                                <Input type="password" {...field} />
+                                <Input type="password" autoComplete="current-password" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -378,7 +384,7 @@ export default function ProfilePage() {
                             <FormItem>
                               <FormLabel>Новый пароль</FormLabel>
                               <FormControl>
-                                <Input type="password" {...field} />
+                                <Input type="password" autoComplete="new-password" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -391,7 +397,7 @@ export default function ProfilePage() {
                             <FormItem>
                               <FormLabel>Подтвердите пароль</FormLabel>
                               <FormControl>
-                                <Input type="password" {...field} />
+                                <Input type="password" autoComplete="new-password" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>

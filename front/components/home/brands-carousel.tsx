@@ -112,7 +112,7 @@ function BrandsCarouselRow({ category, categoryIndex }: { category: BrandCategor
           <div ref={groupRef} className="flex gap-3 sm:gap-4 shrink-0">
             {categoryBrands.map((brand) => (
               <Link key={brand.slug} href={`/brands/${brand.slug}`} className="flex-shrink-0 group">
-                <div className="flex items-center gap-2 sm:gap-3 px-4 py-2 sm:px-5 sm:py-3 bg-background rounded-xl border border-border/50 shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5">
+                <div className="flex items-center gap-2 sm:gap-3 px-4 py-2 sm:px-5 sm:py-3 bg-background rounded-xl border border-border/50 shadow-sm transition-[box-shadow,transform,border-color] duration-300 hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5">
                   <BrandLogo name={brand.name} src={brand.logo} size="sm" imgClassName="w-8 h-8 sm:w-10 sm:h-10" />
                   <div>
                     <p className="font-medium text-sm group-hover:text-primary transition-colors">
@@ -128,7 +128,7 @@ function BrandsCarouselRow({ category, categoryIndex }: { category: BrandCategor
           <div className="flex gap-3 sm:gap-4 shrink-0">
             {categoryBrands.map((brand) => (
               <Link key={`${brand.slug}-dup`} href={`/brands/${brand.slug}`} className="flex-shrink-0 group">
-                <div className="flex items-center gap-2 sm:gap-3 px-4 py-2 sm:px-5 sm:py-3 bg-background rounded-xl border border-border/50 shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5">
+                <div className="flex items-center gap-2 sm:gap-3 px-4 py-2 sm:px-5 sm:py-3 bg-background rounded-xl border border-border/50 shadow-sm transition-[box-shadow,transform,border-color] duration-300 hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5">
                   <BrandLogo name={brand.name} src={brand.logo} size="sm" imgClassName="w-8 h-8 sm:w-10 sm:h-10" />
                   <div>
                     <p className="font-medium text-sm group-hover:text-primary transition-colors">

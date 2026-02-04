@@ -87,8 +87,9 @@ export default function BrandsPage() {
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6 sm:mb-8">
             <div className="relative w-full sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <Input
+                type="search"
                 placeholder="Поиск по бренду"
                 value={searchInput}
                 onChange={(e) => {
@@ -96,6 +97,10 @@ export default function BrandsPage() {
                   setActiveLetter(null);
                 }}
                 className="pl-10 h-9"
+                aria-label="Поиск по бренду"
+                name="brandSearch"
+                autoComplete="off"
+                inputMode="search"
               />
             </div>
             <div className="flex items-center gap-0.5 sm:gap-1 flex-wrap">

@@ -240,12 +240,17 @@ export function DeletedProductsTable() {
         <CardHeader className="pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="relative w-full sm:max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <Input
-                placeholder="Поиск в корзине..."
+                type="search"
+                placeholder="Поиск в корзине…"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="pl-10"
+                aria-label="Поиск в корзине"
+                name="deletedProductSearch"
+                autoComplete="off"
+                inputMode="search"
               />
             </div>
 

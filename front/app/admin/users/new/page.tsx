@@ -121,7 +121,7 @@ export default function NewUserPage() {
                   <FormItem>
                     <FormLabel>{PASSWORD_LABEL}</FormLabel>
                     <FormControl>
-                      <Input placeholder={PASSWORD_PLACEHOLDER} type="password" {...field} />
+                      <Input placeholder={PASSWORD_PLACEHOLDER} type="password" autoComplete="new-password" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

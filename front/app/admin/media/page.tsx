@@ -270,26 +270,32 @@ export default function MediaLibraryPage() {
                   className="h-8 w-8"
                   onClick={toggleSelectAll}
                   title={allSelected ? 'Снять выбор' : 'Выбрать все'}
+                  aria-label={allSelected ? 'Снять выбор' : 'Выбрать все'}
                 >
                   {allSelected ? (
-                    <CheckSquare className="h-4 w-4" />
+                    <CheckSquare className="h-4 w-4" aria-hidden="true" />
                   ) : someSelected ? (
-                    <CheckSquare className="h-4 w-4 opacity-50" />
+                    <CheckSquare className="h-4 w-4 opacity-50" aria-hidden="true" />
                   ) : (
-                    <Square className="h-4 w-4" />
+                    <Square className="h-4 w-4" aria-hidden="true" />
                   )}
                 </Button>
               )}
               <div className="relative w-full sm:w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <Input
-                  placeholder="Поиск файлов..."
+                  type="search"
+                  placeholder="Поиск файлов…"
                   value={search}
                   onChange={(e) => {
                     setSearch(e.target.value);
                     setPage(1);
                   }}
                   className="pl-10"
+                  aria-label="Поиск файлов"
+                  name="mediaSearch"
+                  autoComplete="off"
+                  inputMode="search"
                 />
               </div>
             </div>
@@ -325,13 +331,16 @@ export default function MediaLibraryPage() {
                             setSelectedFile(file);
                           }
                         }}
-                        className={`relative w-full aspect-square rounded-lg overflow-hidden border bg-muted hover:ring-2 hover:ring-primary focus:outline-none focus:ring-2 focus:ring-primary transition-all ${
+                        className={`relative w-full aspect-square rounded-lg overflow-hidden border bg-muted hover:ring-2 hover:ring-primary focus:outline-none focus:ring-2 focus:ring-primary transition-[box-shadow] ${
                           isSelected ? 'ring-2 ring-primary' : ''
                         }`}
                       >
                         <img
                           src={file.url}
                           alt={file.alt || file.originalName}
+                          width={256}
+                          height={256}
+                          loading="lazy"
                           className="w-full h-full object-cover"
                         />
                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
@@ -434,6 +443,9 @@ export default function MediaLibraryPage() {
                 <img
                   src={selectedFile.url}
                   alt={selectedFile.alt || selectedFile.originalName}
+                  width={640}
+                  height={360}
+                  loading="lazy"
                   className="max-w-full max-h-full object-contain"
                 />
               </div>
